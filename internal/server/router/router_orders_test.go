@@ -58,7 +58,7 @@ func Test_GetOrders(t *testing.T) {
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
 
-			result, err = req.Get("/api/user/orders")
+			result, err = req.Get(uriApiUserOrders)
 			assert.NoError(t, err)
 
 			assert.Equalf(t, tt.want.httpStatus, result.StatusCode(), "tt.given: %v", tt.given)

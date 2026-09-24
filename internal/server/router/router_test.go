@@ -24,6 +24,8 @@ type want struct {
 }
 
 func setupMockLogger(t *testing.T) *logger.MockLogger {
+	t.Helper()
+
 	logMe := logger.NewMockLogger(t)
 
 	//Не знаю как лучше сделать возможное переменное количество параметров для вызова таких методов... :(
@@ -36,6 +38,8 @@ func setupMockLogger(t *testing.T) *logger.MockLogger {
 }
 
 func setupMockConfigServer(t *testing.T) *config.MockProvider {
+	t.Helper()
+
 	cfg := config.NewMockProvider(t)
 
 	cfg.EXPECT().Address().Maybe().Return("localhost:8080")

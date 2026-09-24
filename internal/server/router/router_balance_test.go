@@ -50,7 +50,7 @@ func Test_GetBalance(t *testing.T) {
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
-			result, err = req.Get("/api/user/balance")
+			result, err = req.Get(uriApiUserBalance)
 			assert.NoError(t, err)
 
 			assert.Equalf(t, tt.want.httpStatus, result.StatusCode(), "tt.given: %v", tt.given)

@@ -8,6 +8,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+const (
+	uriApiUserRegister        string = "/api/user/register"
+	uriApiUserLogin           string = "/api/user/login"
+	uriApiUserOrderUpload     string = "/api/user/orders"
+	uriApiUserOrders          string = "/api/user/orders"
+	uriApiUserBalance         string = "/api/user/balance"
+	uriApiUserBalanceWithdraw string = "/api/user/balance/withdraw"
+	uriApiUserWithdrawals     string = "/api/user/withdrawals"
+)
+
 func New(handlers *handler.Handlers) http.Handler {
 	r := chi.NewRouter()
 
@@ -15,31 +25,26 @@ func New(handlers *handler.Handlers) http.Handler {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
-	r.With(middleware.AllowContentType("application/json")).
-		Post("/api/user/register", handlers.UserRegister.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON := r.With(middleware.AllowContentType("application/json"))
 
-	r.With(middleware.AllowContentType("application/json")).
-		Post("/api/user/login", handlers.UserLogin.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserRegister, handlers.UserRegister.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("text/plain")).
-		Post("/api/user/orders", handlers.OrderUpload.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserLogin, handlers.UserLogin.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("application/json")).
-		Get("/api/user/orders", handlers.Orders.ServeHTTP)
+	r.With(middleware.AllowContentType("text/plain")).Post(uriApiUserOrderUpload, handlers.OrderUpload.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("application/json")).
-		Get("/api/user/balance", handlers.Balance.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserOrders, handlers.Orders.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("application/json")).
-		Post("/api/user/balance/withdraw", handlers.BalanceWithdrawals.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserBalance, handlers.Balance.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("application/json")).
-		Get("/api/user/withdrawals", handlers.BalanceWithdrawals.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserBalanceWithdraw, handlers.BalanceWithdrawals.ServeHTTP)
+
+	//TODO implement + проверка аутентификации
+	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserWithdrawals, handlers.BalanceWithdrawals.ServeHTTP)
 
 	return r
 }
