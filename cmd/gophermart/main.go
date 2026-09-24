@@ -11,7 +11,6 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/router"
 )
 
 func main() {
@@ -36,8 +35,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		routeHandler := router.New()
-		serverApp := server.New(appContext, routeHandler)
+		serverApp := server.New(appContext)
 
 		err := serverApp.Run(ctx)
 		if err != nil {

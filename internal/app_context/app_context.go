@@ -7,10 +7,10 @@ import (
 
 type AppContext struct {
 	Logger       logger.Logger
-	ServerConfig *config.Config
+	ServerConfig config.Provider
 }
 
-func New(logger logger.Logger, serverConfig *config.Config) *AppContext {
+func New(logger logger.Logger, serverConfig config.Provider) *AppContext {
 	return &AppContext{
 		Logger:       logger,
 		ServerConfig: serverConfig,

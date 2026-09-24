@@ -3,49 +3,43 @@ package router
 import (
 	"net/http"
 
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-func New() http.Handler {
+func New(handlers *handler.Handlers) http.Handler {
 	r := chi.NewRouter()
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
-	r.Post("/api/user/register", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
-	r.Post("/api/user/login", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	r.With(middleware.AllowContentType("application/json")).
+		Post("/api/user/register", handlers.UserRegister.ServeHTTP)
 
-	r.Post("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement + проверка аутентификации
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	r.With(middleware.AllowContentType("application/json")).
+		Post("/api/user/login", handlers.UserLogin.ServeHTTP)
 
-	r.Get("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement + проверка аутентификации
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	//TODO implement + проверка аутентификации
+	r.With(middleware.AllowContentType("text/plain")).
+		Post("/api/user/orders", handlers.OrderUpload.ServeHTTP)
 
-	r.Get("/api/user/balance", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement + проверка аутентификации
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	//TODO implement + проверка аутентификации
+	r.With(middleware.AllowContentType("application/json")).
+		Get("/api/user/orders", handlers.Orders.ServeHTTP)
 
-	r.Post("/api/user/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement + проверка аутентификации
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	//TODO implement + проверка аутентификации
+	r.With(middleware.AllowContentType("application/json")).
+		Get("/api/user/balance", handlers.Balance.ServeHTTP)
 
-	r.Get("/api/user/withdrawals", func(w http.ResponseWriter, r *http.Request) {
-		//TODO implement + проверка аутентификации
-		http.Error(w, "TODO implement", http.StatusNotFound)
-	})
+	//TODO implement + проверка аутентификации
+	r.With(middleware.AllowContentType("application/json")).
+		Post("/api/user/balance/withdraw", handlers.BalanceWithdrawals.ServeHTTP)
+
+	//TODO implement + проверка аутентификации
+	r.With(middleware.AllowContentType("application/json")).
+		Get("/api/user/withdrawals", handlers.BalanceWithdrawals.ServeHTTP)
 
 	return r
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/router"
 )
 
 type Server struct {
@@ -14,11 +16,14 @@ type Server struct {
 	appContext *app_context.AppContext
 }
 
-func New(appContext *app_context.AppContext, handler http.Handler) *Server {
+func New(appContext *app_context.AppContext) *Server {
+
+	handlers := handler.New(appContext)
+	routeHandler := router.New(handlers)
 	return &Server{
 		httpServer: &http.Server{
 			Addr:         appContext.ServerConfig.Address(),
-			Handler:      handler,
+			Handler:      routeHandler,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
