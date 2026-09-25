@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 )
 
 // LoyaltySystem - обработка запросов к api программы лояльности
 type LoyaltySystem struct {
-	appContext     *app_context.AppContext
+	appContext     *appcontext.AppContext
 	loyaltyManager *service.LoyaltyManager
 }
 
-func NewLoyaltySystem(appContext *app_context.AppContext, loyaltyManager *service.LoyaltyManager) *LoyaltySystem {
+func NewLoyaltySystem(appContext *appcontext.AppContext, loyaltyManager *service.LoyaltyManager) *LoyaltySystem {
 	return &LoyaltySystem{
 		appContext:     appContext,
 		loyaltyManager: loyaltyManager,

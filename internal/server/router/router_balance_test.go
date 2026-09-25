@@ -76,7 +76,7 @@ func Test_GetBalance(t *testing.T) {
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
-			result, err = req.Get(uriApiUserBalance)
+			result, err = req.Get(uriUserBalance)
 			assert.NoError(t, err)
 
 			assertResult(t, result, tt.want, tt.given)
@@ -161,7 +161,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
 
-			result, err = req.Get(uriApiUserWithdrawals)
+			result, err = req.Get(uriUserWithdrawals)
 			assert.NoErrorf(t, err, "given: %+v", tt.given)
 
 			assertResult(t, result, tt.want, result)

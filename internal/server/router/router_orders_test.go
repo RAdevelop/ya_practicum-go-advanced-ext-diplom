@@ -92,7 +92,7 @@ func Test_GetOrders(t *testing.T) {
 			req := client.R().
 				SetHeader("Content-Type", "application/json").SetDoNotParseResponse(true)
 
-			result, err = req.Get(uriApiUserOrders)
+			result, err = req.Get(uriUserOrders)
 			assert.NoError(t, err)
 
 			assertResult(t, result, tt.want, tt.given)

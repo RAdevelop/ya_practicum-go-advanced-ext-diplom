@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	uriApiUserRegister        string = "/api/user/register"
-	uriApiUserLogin           string = "/api/user/login"
-	uriApiUserOrderUpload     string = "/api/user/orders"
-	uriApiUserOrders          string = "/api/user/orders"
-	uriApiUserBalance         string = "/api/user/balance"
-	uriApiUserBalanceWithdraw string = "/api/user/balance/withdraw"
-	uriApiUserWithdrawals     string = "/api/user/withdrawals"
+	uriUserRegister        string = "/api/user/register"
+	uriUserLogin           string = "/api/user/login"
+	uriUserOrderUpload     string = "/api/user/orders"
+	uriUserOrders          string = "/api/user/orders"
+	uriUserBalance         string = "/api/user/balance"
+	uriUserBalanceWithdraw string = "/api/user/balance/withdraw"
+	uriUserWithdrawals     string = "/api/user/withdrawals"
 )
 
 func New(handlers *handler.Handlers) http.Handler {
@@ -27,24 +27,24 @@ func New(handlers *handler.Handlers) http.Handler {
 
 	routeWithAllowContentTypeApplicationJSON := r.With(middleware.AllowContentType("application/json"))
 
-	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserRegister, handlers.UserRegister.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriUserRegister, handlers.UserRegister.ServeHTTP)
 
-	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserLogin, handlers.UserLogin.ServeHTTP)
-
-	//TODO implement + проверка аутентификации
-	r.With(middleware.AllowContentType("text/plain")).Post(uriApiUserOrderUpload, handlers.OrderUpload.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriUserLogin, handlers.UserLogin.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserOrders, handlers.Orders.ServeHTTP)
+	r.With(middleware.AllowContentType("text/plain")).Post(uriUserOrderUpload, handlers.OrderUpload.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserBalance, handlers.Balance.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Get(uriUserOrders, handlers.Orders.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserBalanceWithdraw, handlers.BalanceWithdraw.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Get(uriUserBalance, handlers.Balance.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserWithdrawals, handlers.BalanceWithdrawals.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriUserBalanceWithdraw, handlers.BalanceWithdraw.ServeHTTP)
+
+	//TODO implement + проверка аутентификации
+	routeWithAllowContentTypeApplicationJSON.Get(uriUserWithdrawals, handlers.BalanceWithdrawals.ServeHTTP)
 
 	return r
 }

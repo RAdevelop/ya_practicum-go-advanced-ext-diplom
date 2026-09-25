@@ -7,7 +7,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
@@ -26,7 +26,7 @@ func main() {
 	cfgServer := config.New(envSrv)
 
 	cfgServer.AddressSet("localhost:8080") //TODO get from flag or env
-	appContext := app_context.New(logApp, cfgServer)
+	appContext := appcontext.New(logApp, cfgServer)
 
 	var wg sync.WaitGroup
 

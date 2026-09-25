@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
@@ -56,7 +56,7 @@ loyaltyStorage - будем создавать моки в зависимост�
 func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage) *resty.Client {
 	t.Helper()
 
-	appContext := app_context.New(setupMockLogger(t), setupMockConfigServer(t))
+	appContext := appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
 	handlers := handler.New(appContext, service.NewLoyaltyManager(loyaltyStorage))
 	srv := httptest.NewServer(New(handlers))
 	t.Cleanup(srv.Close)

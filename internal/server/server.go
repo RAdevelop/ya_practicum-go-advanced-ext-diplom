@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/router"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
@@ -14,10 +14,10 @@ import (
 
 type Server struct {
 	httpServer *http.Server
-	appContext *app_context.AppContext
+	appContext *appcontext.AppContext
 }
 
-func New(appContext *app_context.AppContext) *Server {
+func New(appContext *appcontext.AppContext) *Server {
 
 	var loyaltyStorage service.LoyaltyStorage
 
