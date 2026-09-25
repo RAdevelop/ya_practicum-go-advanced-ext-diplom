@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	"github.com/stretchr/testify/assert"
@@ -101,5 +102,106 @@ func Test_GetOrders(t *testing.T) {
 }
 
 func Test_PostOrders(t *testing.T) {
-	t.Skip("TODO implement")
+
+	type given struct {
+		userID           uint64
+		orderNumber      string
+		orderUploadError error
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "StatusOK",
+			given: given{
+				userID:           1,
+				orderNumber:      "79927398713",
+				orderUploadError: perror.ErrOrderAlreadyUploadedByUser,
+			},
+			want: want{
+				httpStatus:   http.StatusOK,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusAccepted",
+			given: given{
+				userID:           1,
+				orderNumber:      "4532015112830366",
+				orderUploadError: nil,
+			},
+			want: want{
+				httpStatus:   http.StatusAccepted,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusBadRequest",
+			given: given{
+				userID:           1,
+				orderNumber:      "",
+				orderUploadError: nil,
+			},
+			want: want{
+				httpStatus:   http.StatusBadRequest,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		/*{
+			TODO name: "StatusUnauthorized",
+		},*/
+		{
+			name: "StatusConflict",
+			given: given{
+				userID:           1,
+				orderNumber:      "4532015112830366",
+				orderUploadError: perror.ErrOrderAlreadyUploadedByOther,
+			},
+			want: want{
+				httpStatus:   http.StatusConflict,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnprocessableEntity",
+			given: given{
+				userID:           1,
+				orderNumber:      "12345string",
+				orderUploadError: nil,
+			},
+			want: want{
+				httpStatus:   http.StatusUnprocessableEntity,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		/*{
+			name: "StatusInternalServerError",
+		},*/
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loyaltyStorage := service.NewMockLoyaltyStorage(t)
+			loyaltyStorage.EXPECT().OrderUpload(tt.given.userID, tt.given.orderNumber).Maybe().Return(tt.given.orderUploadError)
+
+			client := setupServer(t, loyaltyStorage)
+
+			req := client.R().
+				SetHeader("Content-Type", "text/plain").
+				SetDoNotParseResponse(true).
+				SetBody(tt.given.orderNumber)
+
+			result, err = req.Post(uriUserOrders)
+			assert.NoError(t, err)
+
+			assertResult(t, result, tt.want, tt.given)
+		})
+	}
 }

@@ -14,14 +14,19 @@ func TestIsValidLuhn(t *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "valid number",
+			name:   "valid number 12345678903",
 			number: "12345678903",
 			want:   true,
 		},
 		{
-			name:   "not valid number",
+			name:   "not valid number 123456",
 			number: "123456",
 			want:   false,
+		},
+		{
+			name:   "not valid number 4532015112830366",
+			number: "4532015112830366",
+			want:   true,
 		},
 		{
 			name:   "is string",
