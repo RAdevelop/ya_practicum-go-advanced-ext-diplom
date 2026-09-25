@@ -41,7 +41,7 @@ func New(handlers *handler.Handlers) http.Handler {
 	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserBalance, handlers.Balance.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
-	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserBalanceWithdraw, handlers.BalanceWithdrawals.ServeHTTP)
+	routeWithAllowContentTypeApplicationJSON.Post(uriApiUserBalanceWithdraw, handlers.BalanceWithdraw.ServeHTTP)
 
 	//TODO implement + проверка аутентификации
 	routeWithAllowContentTypeApplicationJSON.Get(uriApiUserWithdrawals, handlers.BalanceWithdrawals.ServeHTTP)

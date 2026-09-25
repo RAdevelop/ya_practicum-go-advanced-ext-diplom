@@ -1,15 +1,23 @@
 package router
 
 import (
-	"io"
+	"errors"
 	"net/http"
 	"testing"
+	"time"
 
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_GetBalance(t *testing.T) {
-	t.Skip("TODO implement")
+
+	type given struct {
+		userID     uint64
+		balance    *model.Balance
+		balanceErr error
+	}
 
 	tests := []struct {
 		name  string
@@ -17,35 +25,53 @@ func Test_GetBalance(t *testing.T) {
 		want  want
 	}{
 		{
-			name:  "StatusOK",
-			given: given{},
+			name: "StatusOK",
+			given: given{
+				userID: 1,
+				balance: &model.Balance{
+					ID:        1,
+					UserID:    1,
+					Current:   19.05,
+					Withdrawn: 2019.05,
+				},
+				balanceErr: nil,
+			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `TODO`,
+				responseBody: `{"id":1,"user_id":1,"current":19.05,"withdrawn":2019.05}`,
+				contentType:  "application/json",
 			},
 		},
-		{
-			name:  "StatusUnauthorized",
+		/*{
+			TODO name:  "StatusUnauthorized",
 			given: given{},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
 			},
-		},
+		},*/
 		{
-			name:  "StatusInternalServerError",
-			given: given{},
+			name: "StatusInternalServerError",
+			given: given{
+				userID:     1,
+				balance:    nil,
+				balanceErr: errors.New("some error"),
+			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
 				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
 			},
 		},
 	}
 
-	client := setupServer(t)
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			loyaltyStorage := service.NewMockLoyaltyStorage(t)
+			loyaltyStorage.EXPECT().Balance(tt.given.userID).Return(tt.given.balance, tt.given.balanceErr)
+
+			client := setupServer(t, loyaltyStorage)
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
@@ -53,13 +79,7 @@ func Test_GetBalance(t *testing.T) {
 			result, err = req.Get(uriApiUserBalance)
 			assert.NoError(t, err)
 
-			assert.Equalf(t, tt.want.httpStatus, result.StatusCode(), "tt.given: %v", tt.given)
-			assert.Equalf(t, "application/json", result.Header().Get("Content-Type"), "tt.given: %v", tt.given)
-
-			// io.Discard выступает в качестве приёмника ненужных данных
-			_, err = io.Copy(io.Discard, result.RawResponse.Body)
-			assert.NoError(t, err)
-			assert.NoError(t, result.RawResponse.Body.Close())
+			assertResult(t, result, tt.want, tt.given)
 		})
 	}
 }
@@ -68,5 +88,83 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 }
 
 func Test_GetWithdrawals(t *testing.T) {
-	t.Skip("TODO implement")
+
+	type given struct {
+		userID         uint64
+		withdrawals    []model.Withdrawal
+		withdrawalsErr error
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "StatusOK",
+			given: given{
+				userID: 1,
+				withdrawals: []model.Withdrawal{
+					{
+						ID:          123,
+						UserID:      1,
+						Order:       "12345",
+						Sum:         123.45,
+						ProcessedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
+					},
+				},
+				withdrawalsErr: nil,
+			},
+			want: want{
+				httpStatus:   http.StatusOK,
+				responseBody: `[{"id":123,"user_id":1,"order":"12345","sum":123.45,"processed_at":"2026-09-25T13:12:16Z"}]`,
+				contentType:  "application/json",
+			},
+		},
+		{
+			name: "StatusNoContent",
+			given: given{
+				userID:         1,
+				withdrawals:    nil,
+				withdrawalsErr: nil,
+			},
+			want: want{
+				httpStatus:   http.StatusNoContent,
+				responseBody: ``,
+				contentType:  "application/json",
+			},
+		},
+		/*{
+			TODO name: "StatusUnauthorized",
+		},*/
+		{
+			name: "StatusInternalServerError",
+			given: given{
+				userID:         1,
+				withdrawals:    nil,
+				withdrawalsErr: errors.New("some error"),
+			},
+			want: want{
+				httpStatus:   http.StatusInternalServerError,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loyaltyStorage := service.NewMockLoyaltyStorage(t)
+			loyaltyStorage.EXPECT().BalanceWithdrawals(tt.given.userID).Return(tt.given.withdrawals, tt.given.withdrawalsErr)
+			client := setupServer(t, loyaltyStorage)
+			req := client.R().
+				SetHeader("Content-Type", "application/json").
+				SetDoNotParseResponse(true)
+
+			result, err = req.Get(uriApiUserWithdrawals)
+			assert.NoErrorf(t, err, "given: %+v", tt.given)
+
+			assertResult(t, result, tt.want, result)
+		})
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 )
 
 type Handlers struct {
@@ -16,9 +17,9 @@ type Handlers struct {
 	BalanceWithdrawals http.Handler
 }
 
-func New(appContext *app_context.AppContext) *Handlers {
+func New(appContext *app_context.AppContext, loyaltyManager *service.LoyaltyManager) *Handlers {
 
-	ls := NewLoyaltySystem(appContext)
+	ls := NewLoyaltySystem(appContext, loyaltyManager)
 
 	return &Handlers{
 		UserRegister:       http.HandlerFunc(ls.UserRegister),
