@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -83,8 +85,143 @@ func Test_GetBalance(t *testing.T) {
 		})
 	}
 }
+
 func Test_PostBalanceWithdraw(t *testing.T) {
-	t.Skip("TODO implement")
+	type given struct {
+		userID      uint64
+		orderNumber string
+		sum         float64
+		balanceErr  error
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "StatusOK",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         19.05,
+				balanceErr:  nil,
+			},
+			want: want{
+				httpStatus:   http.StatusOK,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		/*{
+			TODO name: "StatusUnauthorized",
+		},*/
+		{
+			name: "StatusNotFound",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         19.05,
+				balanceErr:  perror.ErrOrderNotFound,
+			},
+			want: want{
+				httpStatus:   http.StatusNotFound,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusPaymentRequired",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         19.05,
+				balanceErr:  perror.ErrBalanceInsufficient,
+			},
+			want: want{
+				httpStatus:   http.StatusPaymentRequired,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnprocessableEntity orderNumber",
+			given: given{
+				userID:      1,
+				orderNumber: "234",
+				sum:         19.05,
+				balanceErr:  nil,
+			},
+			want: want{
+				httpStatus:   http.StatusUnprocessableEntity,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnprocessableEntity sum zero",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         0,
+				balanceErr:  nil,
+			},
+			want: want{
+				httpStatus:   http.StatusUnprocessableEntity,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnprocessableEntity sum negative",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         -100.25,
+				balanceErr:  nil,
+			},
+			want: want{
+				httpStatus:   http.StatusUnprocessableEntity,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusInternalServerError",
+			given: given{
+				userID:      1,
+				orderNumber: "4532015112830366",
+				sum:         100.25,
+				balanceErr:  errors.New("some error"),
+			},
+			want: want{
+				httpStatus:   http.StatusInternalServerError,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loyaltyStorage := service.NewMockLoyaltyStorage(t)
+			loyaltyStorage.EXPECT().BalanceWithdraw(tt.given.userID, tt.given.orderNumber, tt.given.sum).Maybe().Return(tt.given.balanceErr)
+
+			client := setupServer(t, loyaltyStorage)
+
+			balanceWithdraw := dto.BalanceWithdraw{
+				OrderNumber: tt.given.orderNumber,
+				Sum:         tt.given.sum,
+			}
+
+			req := client.R().
+				SetHeader("Content-Type", "application/json").
+				SetDoNotParseResponse(true).SetBody(balanceWithdraw)
+
+			result, err = req.Post(uriUserBalanceWithdraw)
+			assert.NoError(t, err)
+			assertResult(t, result, tt.want, tt.given)
+		})
+	}
 }
 
 func Test_GetWithdrawals(t *testing.T) {

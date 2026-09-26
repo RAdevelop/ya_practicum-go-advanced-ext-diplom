@@ -10,6 +10,7 @@ type LoyaltyStorage interface {
 	Orders(userID uint64) ([]model.Order, error)
 	Balance(userID uint64) (*model.Balance, error)
 	BalanceWithdrawals(userID uint64) ([]model.Withdrawal, error)
+	BalanceWithdraw(userID uint64, orderNumber string, sum float64) error
 }
 
 // LoyaltyManager - сервис для работы с программой лояльности
@@ -41,4 +42,9 @@ func (lm *LoyaltyManager) Balance(userID uint64) (*model.Balance, error) {
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(userID uint64) ([]model.Withdrawal, error) {
 	return lm.storage.BalanceWithdrawals(userID)
+}
+
+// BalanceWithdraw - списание средств
+func (lm *LoyaltyManager) BalanceWithdraw(userID uint64, orderNumber string, sum float64) error {
+	return lm.storage.BalanceWithdraw(userID, orderNumber, sum)
 }

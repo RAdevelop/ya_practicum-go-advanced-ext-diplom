@@ -98,6 +98,69 @@ func (_c *MockLoyaltyStorage_Balance_Call) RunAndReturn(run func(userID uint64) 
 	return _c
 }
 
+// BalanceWithdraw provides a mock function for the type MockLoyaltyStorage
+func (_mock *MockLoyaltyStorage) BalanceWithdraw(userID uint64, orderNumber string, sum float64) error {
+	ret := _mock.Called(userID, orderNumber, sum)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BalanceWithdraw")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(uint64, string, float64) error); ok {
+		r0 = returnFunc(userID, orderNumber, sum)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLoyaltyStorage_BalanceWithdraw_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BalanceWithdraw'
+type MockLoyaltyStorage_BalanceWithdraw_Call struct {
+	*mock.Call
+}
+
+// BalanceWithdraw is a helper method to define mock.On call
+//   - userID uint64
+//   - orderNumber string
+//   - sum float64
+func (_e *MockLoyaltyStorage_Expecter) BalanceWithdraw(userID any, orderNumber any, sum any) *MockLoyaltyStorage_BalanceWithdraw_Call {
+	return &MockLoyaltyStorage_BalanceWithdraw_Call{Call: _e.mock.On("BalanceWithdraw", userID, orderNumber, sum)}
+}
+
+func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) Run(run func(userID uint64, orderNumber string, sum float64)) *MockLoyaltyStorage_BalanceWithdraw_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 uint64
+		if args[0] != nil {
+			arg0 = args[0].(uint64)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 float64
+		if args[2] != nil {
+			arg2 = args[2].(float64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) Return(err error) *MockLoyaltyStorage_BalanceWithdraw_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) RunAndReturn(run func(userID uint64, orderNumber string, sum float64) error) *MockLoyaltyStorage_BalanceWithdraw_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // BalanceWithdrawals provides a mock function for the type MockLoyaltyStorage
 func (_mock *MockLoyaltyStorage) BalanceWithdrawals(userID uint64) ([]model.Withdrawal, error) {
 	ret := _mock.Called(userID)

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/validator"
@@ -44,19 +45,13 @@ func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	if r.Body == nil || r.ContentLength == 0 {
-		ls.appContext.Logger.Error("OrderUpload", "body is empty")
-		http.Error(w, "", http.StatusBadRequest)
+	reqBody, hasError := ls.requestBodyGet(w, r, "OrderUpload")
+	if hasError {
 		return
 	}
 
-	reqBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		ls.appContext.Logger.Error("OrderUpload", "read body err", err)
-		http.Error(w, "", http.StatusBadRequest)
-		return
-	}
 	orderNumber := strings.TrimSpace(string(reqBody))
+
 	if !validator.IsValidLuhn(orderNumber) {
 		ls.appContext.Logger.Error("OrderUpload", "invalid orderNumber", orderNumber)
 		http.Error(w, "", http.StatusUnprocessableEntity)
@@ -69,9 +64,9 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 	*/
 	userID := uint64(1)
 
-	err = ls.loyaltyManager.OrderUpload(userID, orderNumber)
+	err := ls.loyaltyManager.OrderUpload(userID, orderNumber)
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:
 		w.WriteHeader(http.StatusAccepted)
@@ -107,7 +102,7 @@ func (ls LoyaltySystem) Orders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	responseSetHeaderContentTypeApplicationJSON(w)
 	if len(orders) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -139,7 +134,7 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	responseSetHeaderContentTypeApplicationJSON(w)
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(balance)
 	if err != nil {
@@ -152,7 +147,52 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	http.Error(w, "TODO implement BalanceWithdraw", http.StatusNotImplemented)
+	reqBody, hasError := ls.requestBodyGet(w, r, "BalanceWithdraw")
+	if hasError {
+		return
+	}
+
+	var balanceWithdraw dto.BalanceWithdraw
+	err := json.Unmarshal(reqBody, &balanceWithdraw)
+	if err != nil {
+		ls.appContext.Logger.Error("Can't parse balanceWithdraw", "err", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if !validator.IsValidLuhn(balanceWithdraw.OrderNumber) {
+		ls.appContext.Logger.Error("BalanceWithdraw", "invalid orderNumber", balanceWithdraw.OrderNumber)
+		http.Error(w, "", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if balanceWithdraw.Sum <= 0 {
+		ls.appContext.Logger.Error("BalanceWithdraw", "invalid sum", balanceWithdraw.Sum)
+		http.Error(w, "", http.StatusUnprocessableEntity)
+		return
+	}
+
+	/*
+		TODO get from token JWT and convert to uint64?!!
+			так же подумать, как сделать получения id пользователя для тестов
+	*/
+	userID := uint64(1)
+
+	err = ls.loyaltyManager.BalanceWithdraw(userID, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
+	responseSetHeaderContentTypeTextPlain(w)
+	switch {
+	case err == nil:
+		w.WriteHeader(http.StatusOK)
+	case errors.Is(err, perror.ErrBalanceInsufficient):
+		ls.appContext.Logger.Error("BalanceWithdraw", "ErrBalanceInsufficient", err)
+		http.Error(w, "", http.StatusPaymentRequired)
+	case errors.Is(err, perror.ErrOrderNotFound):
+		ls.appContext.Logger.Error("BalanceWithdraw", "ErrOrderNotFound", err)
+		http.Error(w, "", http.StatusNotFound)
+	default:
+		ls.appContext.Logger.Error("BalanceWithdraw", "err", err)
+		http.Error(w, "", http.StatusInternalServerError)
+	}
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
@@ -172,7 +212,8 @@ func (ls LoyaltySystem) BalanceWithdrawals(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	responseSetHeaderContentTypeApplicationJSON(w)
 
 	if len(withdrawals) == 0 {
 		w.WriteHeader(http.StatusNoContent)
@@ -197,4 +238,29 @@ func (ls LoyaltySystem) requestBodyClose(r *http.Request) {
 	if err != nil {
 		ls.appContext.Logger.Error("error", "err", err)
 	}
+}
+
+func (ls LoyaltySystem) requestBodyGet(w http.ResponseWriter, r *http.Request, methodName string) ([]byte, bool) {
+	if r.Body == nil || r.ContentLength == 0 {
+		ls.appContext.Logger.Error(methodName, "body is empty")
+		http.Error(w, "", http.StatusBadRequest)
+		return nil, true
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		ls.appContext.Logger.Error(methodName, "read body err", err)
+		http.Error(w, "", http.StatusBadRequest)
+		return nil, true
+	}
+
+	return body, false
+}
+
+func responseSetHeaderContentTypeApplicationJSON(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+}
+
+func responseSetHeaderContentTypeTextPlain(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 }
