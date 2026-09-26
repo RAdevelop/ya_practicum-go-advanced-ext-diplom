@@ -6,20 +6,27 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/app_context"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/router"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 )
 
 type Server struct {
 	httpServer *http.Server
-	appContext *app_context.AppContext
+	appContext *appcontext.AppContext
 }
 
-func New(appContext *app_context.AppContext) *Server {
+func New(appContext *appcontext.AppContext) *Server {
 
-	handlers := handler.New(appContext)
+	var loyaltyStorage service.LoyaltyStorage
+
+	//TODO create real loyaltyStorage
+
+	loyaltyManager := service.NewLoyaltyManager(loyaltyStorage)
+	handlers := handler.New(appContext, loyaltyManager)
 	routeHandler := router.New(handlers)
+
 	return &Server{
 		httpServer: &http.Server{
 			Addr:         appContext.ServerConfig.Address(),

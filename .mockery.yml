@@ -32,4 +32,9 @@ packages:
       all: false
     interfaces:
       Logger:
+  github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service:
+    config:
+      all: false
+    interfaces:
+      LoyaltyStorage:
 

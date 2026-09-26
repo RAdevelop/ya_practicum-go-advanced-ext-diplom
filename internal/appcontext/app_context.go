@@ -1,4 +1,4 @@
-package app_context
+package appcontext
 
 import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
