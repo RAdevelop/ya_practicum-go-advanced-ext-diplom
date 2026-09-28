@@ -18,9 +18,17 @@ import (
 func Test_GetOrders(t *testing.T) {
 
 	type given struct {
-		userID     uint64
-		orderList  []model.Order
-		orderError error
+		inputUserID        uint64
+		outOrderList       []model.Order
+		outOrderError      error
+		makeLoyaltyStorage func(inputUserID uint64, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage
+	}
+
+	makeLoyaltyStorageOrdersOnce := func(inputUserID uint64, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage {
+		loyaltyStorage := service.NewMockLoyaltyStorage(t)
+		loyaltyStorage.EXPECT().Orders(mock.Anything, inputUserID).Return(outOrderList, outOrderError).Once()
+
+		return loyaltyStorage
 	}
 
 	tests := []struct {
@@ -31,8 +39,8 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				userID: 1,
-				orderList: []model.Order{
+				inputUserID: 1,
+				outOrderList: []model.Order{
 					{
 						Number:     "12345",
 						UserID:     1,
@@ -40,7 +48,8 @@ func Test_GetOrders(t *testing.T) {
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
 				},
-				orderError: nil,
+				outOrderError:      nil,
+				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -51,9 +60,10 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusNoContent",
 			given: given{
-				userID:     1,
-				orderList:  nil,
-				orderError: nil,
+				inputUserID:        1,
+				outOrderList:       nil,
+				outOrderError:      nil,
+				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusNoContent,
@@ -62,8 +72,12 @@ func Test_GetOrders(t *testing.T) {
 			},
 		},
 		/*{
-			TODO name:  "StatusUnauthorized",
-			given: given{},
+			TODO name: "StatusUnauthorized",
+			given: given{
+				makeLoyaltyStorage: func(inputUserID uint64, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage {
+					return service.NewMockLoyaltyStorage(t)
+				},
+			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
@@ -72,9 +86,10 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				userID:     1,
-				orderList:  nil,
-				orderError: errors.New("some error"),
+				inputUserID:        1,
+				outOrderList:       nil,
+				outOrderError:      errors.New("some error"),
+				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
@@ -87,10 +102,7 @@ func Test_GetOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().Orders(mock.Anything, tt.given.userID).Maybe().Return(tt.given.orderList, tt.given.orderError)
-
-			client := setupServer(t, loyaltyStorage)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(tt.given.inputUserID, tt.given.outOrderList, tt.given.outOrderError))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").SetDoNotParseResponse(true)
@@ -108,9 +120,20 @@ func Test_GetOrders(t *testing.T) {
 func Test_PostOrders(t *testing.T) {
 
 	type given struct {
-		userID           uint64
-		orderNumber      string
-		orderUploadError error
+		inputUserID         uint64
+		inputOrderNumber    string
+		outOrderUploadError error
+		makeLoyaltyStorage  func(t *testing.T, inputUserID uint64, inputOrderNumber string, outOrderUploadError error) service.LoyaltyStorage
+	}
+
+	makeLoyaltyStorageOrderUploadOnce := func(t *testing.T, inputUserID uint64, inputOrderNumber string, outOrderUploadError error) service.LoyaltyStorage {
+		loyaltyStorage := service.NewMockLoyaltyStorage(t)
+		loyaltyStorage.EXPECT().OrderUpload(mock.Anything, inputUserID, inputOrderNumber).Return(outOrderUploadError).Once()
+		return loyaltyStorage
+	}
+
+	makeLoyaltyStorageOrderUploadNever := func(t *testing.T, inputUserID uint64, inputOrderNumber string, outOrderUploadError error) service.LoyaltyStorage {
+		return service.NewMockLoyaltyStorage(t)
 	}
 
 	tests := []struct {
@@ -121,9 +144,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				userID:           1,
-				orderNumber:      "79927398713",
-				orderUploadError: perror.ErrOrderAlreadyUploadedByUser,
+				inputUserID:         1,
+				inputOrderNumber:    "79927398713",
+				outOrderUploadError: perror.ErrOrderAlreadyUploadedByUser,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -134,9 +158,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusAccepted",
 			given: given{
-				userID:           1,
-				orderNumber:      "4532015112830366",
-				orderUploadError: nil,
+				inputUserID:         1,
+				inputOrderNumber:    "4532015112830366",
+				outOrderUploadError: nil,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusAccepted,
@@ -147,9 +172,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusBadRequest",
 			given: given{
-				userID:           1,
-				orderNumber:      "",
-				orderUploadError: nil,
+				inputUserID:         1,
+				inputOrderNumber:    "",
+				outOrderUploadError: nil,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
 			},
 			want: want{
 				httpStatus:   http.StatusBadRequest,
@@ -163,9 +189,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusConflict",
 			given: given{
-				userID:           1,
-				orderNumber:      "4532015112830366",
-				orderUploadError: perror.ErrOrderAlreadyUploadedByOther,
+				inputUserID:         1,
+				inputOrderNumber:    "4532015112830366",
+				outOrderUploadError: perror.ErrOrderAlreadyUploadedByOther,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusConflict,
@@ -176,9 +203,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusUnprocessableEntity",
 			given: given{
-				userID:           1,
-				orderNumber:      "12345string",
-				orderUploadError: nil,
+				inputUserID:         1,
+				inputOrderNumber:    "12345string",
+				outOrderUploadError: nil,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
 			},
 			want: want{
 				httpStatus:   http.StatusUnprocessableEntity,
@@ -189,9 +217,10 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				userID:           1,
-				orderNumber:      "4532015112830366",
-				orderUploadError: errors.New("some error"),
+				inputUserID:         1,
+				inputOrderNumber:    "4532015112830366",
+				outOrderUploadError: errors.New("some error"),
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
@@ -202,15 +231,13 @@ func Test_PostOrders(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().OrderUpload(mock.Anything, tt.given.userID, tt.given.orderNumber).Maybe().Return(tt.given.orderUploadError)
 
-			client := setupServer(t, loyaltyStorage)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserID, tt.given.inputOrderNumber, tt.given.outOrderUploadError))
 
 			req := client.R().
 				SetHeader("Content-Type", "text/plain").
 				SetDoNotParseResponse(true).
-				SetBody(tt.given.orderNumber)
+				SetBody(tt.given.inputOrderNumber)
 
 			var result *resty.Response
 			var err error
