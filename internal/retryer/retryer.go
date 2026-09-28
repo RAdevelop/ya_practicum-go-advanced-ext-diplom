@@ -17,7 +17,7 @@ RetryLinear - повторяем вызов ф-ции attempts раз, с лин
 Если attempts задать равным nil, то будет бесконечное повторение.
 Если stepSeconds = 0, то интервалы между попытами будут равны baseInterval
 */
-func RetryLinear[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *int) (T, error) {
+func RetryLinear[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *uint) (T, error) {
 
 	linearCalc := func(sleepInterval time.Duration, stepSeconds uint) time.Duration {
 		sleepInterval += time.Duration(stepSeconds) * time.Second
@@ -32,7 +32,7 @@ RetryExponential - повторяем вызов ф-ции attempts раз, с �
 Если attempts задать равным nil, то будет бесконечное повторение.
 Если stepSeconds = 0, то интервалы между попытами будут равны baseInterval
 */
-func RetryExponential[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *int) (T, error) {
+func RetryExponential[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *uint) (T, error) {
 	exponentialCalc := func(sleepInterval time.Duration, stepSeconds uint) time.Duration {
 		sleepInterval *= time.Duration(stepSeconds)
 		return sleepInterval
@@ -40,14 +40,14 @@ func RetryExponential[T any](ctx context.Context, fn func(ctx context.Context) (
 	return retryFn(ctx, fn, stepSeconds, attempts, exponentialCalc)
 }
 
-func retryFn[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *int, sleepIntervalCalc func(sleepInterval time.Duration, stepSeconds uint) time.Duration) (T, error) {
+func retryFn[T any](ctx context.Context, fn func(ctx context.Context) (T, error), stepSeconds uint, attempts *uint, sleepIntervalCalc func(sleepInterval time.Duration, stepSeconds uint) time.Duration) (T, error) {
 	var result T
 	var err error
 
 	// Инициализируем счётчик попыток
-	var attemptsCounter *int
+	var attemptsCounter *uint
 	if attempts != nil {
-		attemptsCounter = new(int)
+		attemptsCounter = new(uint)
 		*attemptsCounter = *attempts + 1 // +1, потому что "0-я" попытка это для потенциального успешного выполнения
 	}
 

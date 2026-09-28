@@ -44,13 +44,16 @@ func NewLoyaltyManager(storage LoyaltyStorage) *LoyaltyManager {
 	}
 }
 
+const retryLinearStepSeconds uint = 2
+const retryLinearAttempts uint = 3
+
 // OrderUpload - Загрузка заказа
 func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userID uint64, number string) error {
 	var err error
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
 		err = lm.storage.OrderUpload(ctx, userID, number)
 		return struct{}{}, err
-	}, 2, new(3))
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	return err
 }
@@ -59,21 +62,21 @@ func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userID uint64, number
 func (lm *LoyaltyManager) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Order, error) {
 		return lm.storage.Orders(ctx, userID)
-	}, 2, new(3))
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // Balance - Получение текущего баланса пользователя
 func (lm *LoyaltyManager) Balance(ctx context.Context, userID uint64) (*model.Balance, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Balance, error) {
 		return lm.storage.Balance(ctx, userID)
-	}, 2, new(3))
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Withdrawal, error) {
 		return lm.storage.BalanceWithdrawals(ctx, userID)
-	}, 2, new(3))
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // BalanceWithdraw - списание средств
@@ -83,7 +86,7 @@ func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userID uint64, or
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
 		err = lm.storage.BalanceWithdraw(ctx, userID, orderNumber, sum)
 		return struct{}{}, err
-	}, 2, new(3))
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	return err
 }

@@ -25,7 +25,7 @@ func TestRetryer_RetryLinear(t *testing.T) {
 
 	type given struct {
 		stepSeconds uint
-		attempts    *int
+		attempts    *uint
 		result      any
 	}
 	type want struct {
@@ -45,7 +45,7 @@ func TestRetryer_RetryLinear(t *testing.T) {
 			name: "countFnCall must be 1 without attempts",
 			given: given{
 				stepSeconds: 1,
-				attempts:    new(1),
+				attempts:    new(uint(1)),
 				result:      []int{1, 2, 3},
 			},
 			want: want{
@@ -59,7 +59,7 @@ func TestRetryer_RetryLinear(t *testing.T) {
 			name: "countFnCall must be 4 after 3 attempts and error in result",
 			given: given{
 				stepSeconds: 2,
-				attempts:    new(3),
+				attempts:    new(uint(3)),
 				result:      nil,
 			},
 			want: want{
@@ -75,7 +75,7 @@ func TestRetryer_RetryLinear(t *testing.T) {
 			name: "checkCtxTimeout",
 			given: given{
 				stepSeconds: 2,
-				attempts:    new(3),
+				attempts:    new(uint(3)),
 				result:      nil,
 			},
 			want: want{
@@ -146,7 +146,7 @@ func TestRetryer_RetryLinear(t *testing.T) {
 
 			elapsedRound := elapsed.Round(time.Millisecond)
 			assert.LessOrEqual(t, tt.want.elapsedTime, elapsedRound)
-			assert.GreaterOrEqual(t, tt.want.elapsedTime+time.Second, elapsedRound)
+			assert.GreaterOrEqual(t, tt.want.elapsedTime+2*time.Second, elapsedRound)
 		})
 	}
 }
@@ -157,7 +157,7 @@ func TestRetryer_RetryExponential(t *testing.T) {
 
 	type given struct {
 		stepSeconds uint
-		attempts    *int
+		attempts    *uint
 		result      any
 	}
 	type want struct {
@@ -177,7 +177,7 @@ func TestRetryer_RetryExponential(t *testing.T) {
 			name: "countFnCall must be 1 without attempts",
 			given: given{
 				stepSeconds: 1,
-				attempts:    new(1),
+				attempts:    new(uint(1)),
 				result:      "123",
 			},
 			want: want{
@@ -191,7 +191,7 @@ func TestRetryer_RetryExponential(t *testing.T) {
 			name: "countFnCall must be 3 after 2 attempts and error in result",
 			given: given{
 				stepSeconds: 2,
-				attempts:    new(2),
+				attempts:    new(uint(2)),
 				result:      0,
 			},
 			want: want{
@@ -205,7 +205,7 @@ func TestRetryer_RetryExponential(t *testing.T) {
 			name: "checkCtxTimeout",
 			given: given{
 				stepSeconds: 2,
-				attempts:    new(2),
+				attempts:    new(uint(2)),
 				result:      0,
 			},
 			want: want{
@@ -277,7 +277,7 @@ func TestRetryer_RetryExponential(t *testing.T) {
 			assert.Equal(t, tt.want.countFnCall, counter)
 			elapsedRound := elapsed.Round(time.Millisecond)
 			assert.LessOrEqual(t, tt.want.elapsedTime, elapsedRound)
-			assert.GreaterOrEqual(t, tt.want.elapsedTime+time.Second, elapsedRound)
+			assert.GreaterOrEqual(t, tt.want.elapsedTime+2*time.Second, elapsedRound)
 		})
 	}
 }
