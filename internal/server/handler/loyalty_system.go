@@ -1,26 +1,34 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/validator"
 )
+
+// jsonBufPool - переиспользуемый буфер для json ответов у хендлеров
+var jsonBufPool = sync.Pool{
+	New: func() any {
+		return bytes.NewBuffer(nil)
+	},
+}
 
 // LoyaltySystem - обработка запросов к api программы лояльности
 type LoyaltySystem struct {
 	appContext     *appcontext.AppContext
-	loyaltyManager *service.LoyaltyManager
+	loyaltyManager LoyaltyManageable
 }
 
-func NewLoyaltySystem(appContext *appcontext.AppContext, loyaltyManager *service.LoyaltyManager) *LoyaltySystem {
+func NewLoyaltySystem(appContext *appcontext.AppContext, loyaltyManager LoyaltyManageable) *LoyaltySystem {
 	return &LoyaltySystem{
 		appContext:     appContext,
 		loyaltyManager: loyaltyManager,
@@ -64,7 +72,7 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 	*/
 	userID := uint64(1)
 
-	err := ls.loyaltyManager.OrderUpload(userID, orderNumber)
+	err := ls.loyaltyManager.OrderUpload(r.Context(), userID, orderNumber)
 
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
@@ -95,26 +103,12 @@ func (ls LoyaltySystem) Orders(w http.ResponseWriter, r *http.Request) {
 	*/
 	userID := uint64(1)
 
-	orders, err := ls.loyaltyManager.Orders(userID)
+	orders, err := ls.loyaltyManager.Orders(r.Context(), userID)
 	if err != nil {
 		ls.appContext.Logger.Error("Orders", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
 	}
 
-	responseSetHeaderContentTypeApplicationJSON(w)
-	if len(orders) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(orders)
-
-	if err != nil {
-		ls.appContext.Logger.Error("Can't write response", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-	}
+	ls.responseJSON(w, orders, len(orders) == 0, err)
 }
 
 // Balance - Получение текущего баланса пользователя
@@ -128,19 +122,12 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 	*/
 	userID := uint64(1)
 
-	balance, err := ls.loyaltyManager.Balance(userID)
+	balance, err := ls.loyaltyManager.Balance(r.Context(), userID)
 	if err != nil {
 		ls.appContext.Logger.Error("Balance", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
 	}
-	responseSetHeaderContentTypeApplicationJSON(w)
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(balance)
-	if err != nil {
-		ls.appContext.Logger.Error("Can't write response", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-	}
+
+	ls.responseJSON(w, balance, false, err)
 }
 
 // BalanceWithdraw - Запрос на списание средств
@@ -178,7 +165,7 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	*/
 	userID := uint64(1)
 
-	err = ls.loyaltyManager.BalanceWithdraw(userID, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
+	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), userID, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:
@@ -205,27 +192,13 @@ func (ls LoyaltySystem) BalanceWithdrawals(w http.ResponseWriter, r *http.Reques
 			так же подумать, как сделать получения id пользователя для тестов
 	*/
 	userID := uint64(1)
-	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(userID)
+	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(r.Context(), userID)
 
 	if err != nil {
 		ls.appContext.Logger.Error("BalanceWithdrawals", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
 	}
 
-	responseSetHeaderContentTypeApplicationJSON(w)
-
-	if len(withdrawals) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(withdrawals)
-	if err != nil {
-		ls.appContext.Logger.Error("Can't write response", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
-	}
+	ls.responseJSON(w, withdrawals, len(withdrawals) == 0, err)
 }
 
 func (ls LoyaltySystem) requestBodyClose(r *http.Request) {
@@ -257,10 +230,34 @@ func (ls LoyaltySystem) requestBodyGet(w http.ResponseWriter, r *http.Request, m
 	return body, false
 }
 
-func responseSetHeaderContentTypeApplicationJSON(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-
 func responseSetHeaderContentTypeTextPlain(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+}
+
+func (ls LoyaltySystem) responseJSON(w http.ResponseWriter, respData any, isRespDataEmpty bool, err error) {
+
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if isRespDataEmpty {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	jsonBuf := jsonBufPool.Get().(*bytes.Buffer)
+	jsonBuf.Reset()
+	defer jsonBufPool.Put(jsonBuf)
+
+	if err := json.NewEncoder(jsonBuf).Encode(respData); err != nil {
+		ls.appContext.Logger.Error("Can't write response", "err", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(jsonBuf.Bytes())
 }

@@ -5,6 +5,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -37,8 +39,8 @@ func (_m *MockLoyaltyStorage) EXPECT() *MockLoyaltyStorage_Expecter {
 }
 
 // Balance provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) Balance(userID uint64) (*model.Balance, error) {
-	ret := _mock.Called(userID)
+func (_mock *MockLoyaltyStorage) Balance(ctx context.Context, userID uint64) (*model.Balance, error) {
+	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Balance")
@@ -46,18 +48,18 @@ func (_mock *MockLoyaltyStorage) Balance(userID uint64) (*model.Balance, error) 
 
 	var r0 *model.Balance
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(uint64) (*model.Balance, error)); ok {
-		return returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) (*model.Balance, error)); ok {
+		return returnFunc(ctx, userID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(uint64) *model.Balance); ok {
-		r0 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) *model.Balance); ok {
+		r0 = returnFunc(ctx, userID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Balance)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(uint64) error); ok {
-		r1 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = returnFunc(ctx, userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -70,19 +72,25 @@ type MockLoyaltyStorage_Balance_Call struct {
 }
 
 // Balance is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID uint64
-func (_e *MockLoyaltyStorage_Expecter) Balance(userID any) *MockLoyaltyStorage_Balance_Call {
-	return &MockLoyaltyStorage_Balance_Call{Call: _e.mock.On("Balance", userID)}
+func (_e *MockLoyaltyStorage_Expecter) Balance(ctx any, userID any) *MockLoyaltyStorage_Balance_Call {
+	return &MockLoyaltyStorage_Balance_Call{Call: _e.mock.On("Balance", ctx, userID)}
 }
 
-func (_c *MockLoyaltyStorage_Balance_Call) Run(run func(userID uint64)) *MockLoyaltyStorage_Balance_Call {
+func (_c *MockLoyaltyStorage_Balance_Call) Run(run func(ctx context.Context, userID uint64)) *MockLoyaltyStorage_Balance_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 uint64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(uint64)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uint64
+		if args[1] != nil {
+			arg1 = args[1].(uint64)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -93,22 +101,22 @@ func (_c *MockLoyaltyStorage_Balance_Call) Return(balance *model.Balance, err er
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_Balance_Call) RunAndReturn(run func(userID uint64) (*model.Balance, error)) *MockLoyaltyStorage_Balance_Call {
+func (_c *MockLoyaltyStorage_Balance_Call) RunAndReturn(run func(ctx context.Context, userID uint64) (*model.Balance, error)) *MockLoyaltyStorage_Balance_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // BalanceWithdraw provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) BalanceWithdraw(userID uint64, orderNumber string, sum float64) error {
-	ret := _mock.Called(userID, orderNumber, sum)
+func (_mock *MockLoyaltyStorage) BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error {
+	ret := _mock.Called(ctx, userID, orderNumber, sum)
 
 	if len(ret) == 0 {
 		panic("no return value specified for BalanceWithdraw")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(uint64, string, float64) error); ok {
-		r0 = returnFunc(userID, orderNumber, sum)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64, string, float64) error); ok {
+		r0 = returnFunc(ctx, userID, orderNumber, sum)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -121,31 +129,37 @@ type MockLoyaltyStorage_BalanceWithdraw_Call struct {
 }
 
 // BalanceWithdraw is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID uint64
 //   - orderNumber string
 //   - sum float64
-func (_e *MockLoyaltyStorage_Expecter) BalanceWithdraw(userID any, orderNumber any, sum any) *MockLoyaltyStorage_BalanceWithdraw_Call {
-	return &MockLoyaltyStorage_BalanceWithdraw_Call{Call: _e.mock.On("BalanceWithdraw", userID, orderNumber, sum)}
+func (_e *MockLoyaltyStorage_Expecter) BalanceWithdraw(ctx any, userID any, orderNumber any, sum any) *MockLoyaltyStorage_BalanceWithdraw_Call {
+	return &MockLoyaltyStorage_BalanceWithdraw_Call{Call: _e.mock.On("BalanceWithdraw", ctx, userID, orderNumber, sum)}
 }
 
-func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) Run(run func(userID uint64, orderNumber string, sum float64)) *MockLoyaltyStorage_BalanceWithdraw_Call {
+func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) Run(run func(ctx context.Context, userID uint64, orderNumber string, sum float64)) *MockLoyaltyStorage_BalanceWithdraw_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 uint64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(uint64)
+			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 uint64
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(uint64)
 		}
-		var arg2 float64
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(float64)
+			arg2 = args[2].(string)
+		}
+		var arg3 float64
+		if args[3] != nil {
+			arg3 = args[3].(float64)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -156,14 +170,14 @@ func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) Return(err error) *MockLoyalt
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) RunAndReturn(run func(userID uint64, orderNumber string, sum float64) error) *MockLoyaltyStorage_BalanceWithdraw_Call {
+func (_c *MockLoyaltyStorage_BalanceWithdraw_Call) RunAndReturn(run func(ctx context.Context, userID uint64, orderNumber string, sum float64) error) *MockLoyaltyStorage_BalanceWithdraw_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // BalanceWithdrawals provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) BalanceWithdrawals(userID uint64) ([]model.Withdrawal, error) {
-	ret := _mock.Called(userID)
+func (_mock *MockLoyaltyStorage) BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error) {
+	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for BalanceWithdrawals")
@@ -171,18 +185,18 @@ func (_mock *MockLoyaltyStorage) BalanceWithdrawals(userID uint64) ([]model.With
 
 	var r0 []model.Withdrawal
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(uint64) ([]model.Withdrawal, error)); ok {
-		return returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) ([]model.Withdrawal, error)); ok {
+		return returnFunc(ctx, userID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(uint64) []model.Withdrawal); ok {
-		r0 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) []model.Withdrawal); ok {
+		r0 = returnFunc(ctx, userID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Withdrawal)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(uint64) error); ok {
-		r1 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = returnFunc(ctx, userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -195,19 +209,25 @@ type MockLoyaltyStorage_BalanceWithdrawals_Call struct {
 }
 
 // BalanceWithdrawals is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID uint64
-func (_e *MockLoyaltyStorage_Expecter) BalanceWithdrawals(userID any) *MockLoyaltyStorage_BalanceWithdrawals_Call {
-	return &MockLoyaltyStorage_BalanceWithdrawals_Call{Call: _e.mock.On("BalanceWithdrawals", userID)}
+func (_e *MockLoyaltyStorage_Expecter) BalanceWithdrawals(ctx any, userID any) *MockLoyaltyStorage_BalanceWithdrawals_Call {
+	return &MockLoyaltyStorage_BalanceWithdrawals_Call{Call: _e.mock.On("BalanceWithdrawals", ctx, userID)}
 }
 
-func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) Run(run func(userID uint64)) *MockLoyaltyStorage_BalanceWithdrawals_Call {
+func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) Run(run func(ctx context.Context, userID uint64)) *MockLoyaltyStorage_BalanceWithdrawals_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 uint64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(uint64)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uint64
+		if args[1] != nil {
+			arg1 = args[1].(uint64)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -218,22 +238,22 @@ func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) Return(withdrawals []model
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) RunAndReturn(run func(userID uint64) ([]model.Withdrawal, error)) *MockLoyaltyStorage_BalanceWithdrawals_Call {
+func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) RunAndReturn(run func(ctx context.Context, userID uint64) ([]model.Withdrawal, error)) *MockLoyaltyStorage_BalanceWithdrawals_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // OrderUpload provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrderUpload(userID uint64, number string) error {
-	ret := _mock.Called(userID, number)
+func (_mock *MockLoyaltyStorage) OrderUpload(ctx context.Context, userID uint64, number string) error {
+	ret := _mock.Called(ctx, userID, number)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrderUpload")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(uint64, string) error); ok {
-		r0 = returnFunc(userID, number)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
+		r0 = returnFunc(ctx, userID, number)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -246,25 +266,31 @@ type MockLoyaltyStorage_OrderUpload_Call struct {
 }
 
 // OrderUpload is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID uint64
 //   - number string
-func (_e *MockLoyaltyStorage_Expecter) OrderUpload(userID any, number any) *MockLoyaltyStorage_OrderUpload_Call {
-	return &MockLoyaltyStorage_OrderUpload_Call{Call: _e.mock.On("OrderUpload", userID, number)}
+func (_e *MockLoyaltyStorage_Expecter) OrderUpload(ctx any, userID any, number any) *MockLoyaltyStorage_OrderUpload_Call {
+	return &MockLoyaltyStorage_OrderUpload_Call{Call: _e.mock.On("OrderUpload", ctx, userID, number)}
 }
 
-func (_c *MockLoyaltyStorage_OrderUpload_Call) Run(run func(userID uint64, number string)) *MockLoyaltyStorage_OrderUpload_Call {
+func (_c *MockLoyaltyStorage_OrderUpload_Call) Run(run func(ctx context.Context, userID uint64, number string)) *MockLoyaltyStorage_OrderUpload_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 uint64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(uint64)
+			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 uint64
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(uint64)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -275,14 +301,14 @@ func (_c *MockLoyaltyStorage_OrderUpload_Call) Return(err error) *MockLoyaltySto
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_OrderUpload_Call) RunAndReturn(run func(userID uint64, number string) error) *MockLoyaltyStorage_OrderUpload_Call {
+func (_c *MockLoyaltyStorage_OrderUpload_Call) RunAndReturn(run func(ctx context.Context, userID uint64, number string) error) *MockLoyaltyStorage_OrderUpload_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Orders provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) Orders(userID uint64) ([]model.Order, error) {
-	ret := _mock.Called(userID)
+func (_mock *MockLoyaltyStorage) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
+	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Orders")
@@ -290,18 +316,18 @@ func (_mock *MockLoyaltyStorage) Orders(userID uint64) ([]model.Order, error) {
 
 	var r0 []model.Order
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(uint64) ([]model.Order, error)); ok {
-		return returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) ([]model.Order, error)); ok {
+		return returnFunc(ctx, userID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(uint64) []model.Order); ok {
-		r0 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64) []model.Order); ok {
+		r0 = returnFunc(ctx, userID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Order)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(uint64) error); ok {
-		r1 = returnFunc(userID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = returnFunc(ctx, userID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -314,19 +340,25 @@ type MockLoyaltyStorage_Orders_Call struct {
 }
 
 // Orders is a helper method to define mock.On call
+//   - ctx context.Context
 //   - userID uint64
-func (_e *MockLoyaltyStorage_Expecter) Orders(userID any) *MockLoyaltyStorage_Orders_Call {
-	return &MockLoyaltyStorage_Orders_Call{Call: _e.mock.On("Orders", userID)}
+func (_e *MockLoyaltyStorage_Expecter) Orders(ctx any, userID any) *MockLoyaltyStorage_Orders_Call {
+	return &MockLoyaltyStorage_Orders_Call{Call: _e.mock.On("Orders", ctx, userID)}
 }
 
-func (_c *MockLoyaltyStorage_Orders_Call) Run(run func(userID uint64)) *MockLoyaltyStorage_Orders_Call {
+func (_c *MockLoyaltyStorage_Orders_Call) Run(run func(ctx context.Context, userID uint64)) *MockLoyaltyStorage_Orders_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 uint64
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(uint64)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uint64
+		if args[1] != nil {
+			arg1 = args[1].(uint64)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -337,7 +369,7 @@ func (_c *MockLoyaltyStorage_Orders_Call) Return(orders []model.Order, err error
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_Orders_Call) RunAndReturn(run func(userID uint64) ([]model.Order, error)) *MockLoyaltyStorage_Orders_Call {
+func (_c *MockLoyaltyStorage_Orders_Call) RunAndReturn(run func(ctx context.Context, userID uint64) ([]model.Order, error)) *MockLoyaltyStorage_Orders_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_GetOrders(t *testing.T) {
@@ -86,13 +88,15 @@ func Test_GetOrders(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().Orders(tt.given.userID).Maybe().Return(tt.given.orderList, tt.given.orderError)
+			loyaltyStorage.EXPECT().Orders(mock.Anything, tt.given.userID).Maybe().Return(tt.given.orderList, tt.given.orderError)
 
 			client := setupServer(t, loyaltyStorage)
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").SetDoNotParseResponse(true)
 
+			var result *resty.Response
+			var err error
 			result, err = req.Get(uriUserOrders)
 			assert.NoError(t, err)
 
@@ -199,7 +203,7 @@ func Test_PostOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().OrderUpload(tt.given.userID, tt.given.orderNumber).Maybe().Return(tt.given.orderUploadError)
+			loyaltyStorage.EXPECT().OrderUpload(mock.Anything, tt.given.userID, tt.given.orderNumber).Maybe().Return(tt.given.orderUploadError)
 
 			client := setupServer(t, loyaltyStorage)
 
@@ -208,6 +212,8 @@ func Test_PostOrders(t *testing.T) {
 				SetDoNotParseResponse(true).
 				SetBody(tt.given.orderNumber)
 
+			var result *resty.Response
+			var err error
 			result, err = req.Post(uriUserOrders)
 			assert.NoError(t, err)
 

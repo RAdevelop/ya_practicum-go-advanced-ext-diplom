@@ -16,9 +16,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var result *resty.Response
-var err error
-
 type want struct {
 	httpStatus   int
 	responseBody string

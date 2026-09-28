@@ -10,7 +10,9 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_GetBalance(t *testing.T) {
@@ -71,13 +73,15 @@ func Test_GetBalance(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().Balance(tt.given.userID).Return(tt.given.balance, tt.given.balanceErr)
+			loyaltyStorage.EXPECT().Balance(mock.Anything, tt.given.userID).Return(tt.given.balance, tt.given.balanceErr)
 
 			client := setupServer(t, loyaltyStorage)
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
+			var result *resty.Response
+			var err error
 			result, err = req.Get(uriUserBalance)
 			assert.NoError(t, err)
 
@@ -204,7 +208,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().BalanceWithdraw(tt.given.userID, tt.given.orderNumber, tt.given.sum).Maybe().Return(tt.given.balanceErr)
+			loyaltyStorage.EXPECT().BalanceWithdraw(mock.Anything, tt.given.userID, tt.given.orderNumber, tt.given.sum).Maybe().Return(tt.given.balanceErr)
 
 			client := setupServer(t, loyaltyStorage)
 
@@ -217,6 +221,8 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true).SetBody(balanceWithdraw)
 
+			var result *resty.Response
+			var err error
 			result, err = req.Post(uriUserBalanceWithdraw)
 			assert.NoError(t, err)
 			assertResult(t, result, tt.want, tt.given)
@@ -292,16 +298,18 @@ func Test_GetWithdrawals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loyaltyStorage := service.NewMockLoyaltyStorage(t)
-			loyaltyStorage.EXPECT().BalanceWithdrawals(tt.given.userID).Return(tt.given.withdrawals, tt.given.withdrawalsErr)
+			loyaltyStorage.EXPECT().BalanceWithdrawals(mock.Anything, tt.given.userID).Return(tt.given.withdrawals, tt.given.withdrawalsErr)
 			client := setupServer(t, loyaltyStorage)
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
 
+			var result *resty.Response
+			var err error
 			result, err = req.Get(uriUserWithdrawals)
 			assert.NoErrorf(t, err, "given: %+v", tt.given)
 
-			assertResult(t, result, tt.want, result)
+			assertResult(t, result, tt.want, tt.given)
 		})
 	}
 }
