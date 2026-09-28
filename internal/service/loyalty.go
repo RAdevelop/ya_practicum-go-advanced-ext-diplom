@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/retryer"
 )
 
 // LoyaltyStorage - интерфейс для определения работы с хранилищем данных по программе лояльности
@@ -45,25 +46,44 @@ func NewLoyaltyManager(storage LoyaltyStorage) *LoyaltyManager {
 
 // OrderUpload - Загрузка заказа
 func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userID uint64, number string) error {
-	return lm.storage.OrderUpload(ctx, userID, number)
+	var err error
+	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
+		err = lm.storage.OrderUpload(ctx, userID, number)
+		return struct{}{}, err
+	}, 2, new(3))
+
+	return err
 }
 
 // Orders - Получение списка загруженных номеров заказов
 func (lm *LoyaltyManager) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
-	return lm.storage.Orders(ctx, userID)
+	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Order, error) {
+		return lm.storage.Orders(ctx, userID)
+	}, 2, new(3))
 }
 
 // Balance - Получение текущего баланса пользователя
 func (lm *LoyaltyManager) Balance(ctx context.Context, userID uint64) (*model.Balance, error) {
-	return lm.storage.Balance(ctx, userID)
+	return retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Balance, error) {
+		return lm.storage.Balance(ctx, userID)
+	}, 2, new(3))
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error) {
-	return lm.storage.BalanceWithdrawals(ctx, userID)
+	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Withdrawal, error) {
+		return lm.storage.BalanceWithdrawals(ctx, userID)
+	}, 2, new(3))
 }
 
 // BalanceWithdraw - списание средств
 func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error {
-	return lm.storage.BalanceWithdraw(ctx, userID, orderNumber, sum)
+
+	var err error
+	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
+		err = lm.storage.BalanceWithdraw(ctx, userID, orderNumber, sum)
+		return struct{}{}, err
+	}, 2, new(3))
+
+	return err
 }
