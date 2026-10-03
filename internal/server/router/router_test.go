@@ -58,6 +58,8 @@ func setupMockConfigServer(t *testing.T) *config.MockProvider {
 }
 
 func setupAppContext(t *testing.T) *appcontext.AppContext {
+	t.Helper()
+
 	return appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
 }
 
