@@ -22,6 +22,7 @@ func Test_GetBalance(t *testing.T) {
 		outBalance         *model.Balance
 		outBalanceErr      error
 		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage
+		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
 	makeLoyaltyStorageBalanceOnce := func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
@@ -47,6 +48,7 @@ func Test_GetBalance(t *testing.T) {
 				},
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -57,10 +59,11 @@ func Test_GetBalance(t *testing.T) {
 		{
 			name: "StatusUnauthorized",
 			given: given{
-				inputUserDTO: nil,
+				inputUserDTO: nil, // причина StatusUnauthorized
 				makeLoyaltyStorage: func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
 					return service.NewMockLoyaltyStorage(t)
 				},
+				authHeaderSet: authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
@@ -75,6 +78,7 @@ func Test_GetBalance(t *testing.T) {
 				outBalance:         nil,
 				outBalanceErr:      errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
@@ -87,11 +91,14 @@ func Test_GetBalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outBalance, tt.given.outBalanceErr), tt.given.inputUserDTO)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outBalance, tt.given.outBalanceErr))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
+
+			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
+
 			var result *resty.Response
 			var err error
 			result, err = req.Get(uriUserBalance)
@@ -109,6 +116,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		inputSum           float64
 		outBalanceErr      error
 		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage
+		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
 	makeLoyaltyStorageBalanceWithdrawOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
@@ -134,6 +142,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           19.05,
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -144,11 +153,12 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusUnauthorized",
 			given: given{
-				inputUserDTO:       nil,
+				inputUserDTO:       nil, // причина StatusUnauthorized
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
@@ -164,6 +174,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrOrderNotFound,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusNotFound,
@@ -179,6 +190,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrBalanceInsufficient,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusPaymentRequired,
@@ -194,6 +206,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           19.05,
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnprocessableEntity,
@@ -209,6 +222,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           0,
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnprocessableEntity,
@@ -224,6 +238,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           -100.25,
 				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnprocessableEntity,
@@ -239,6 +254,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputSum:           100.25,
 				outBalanceErr:      errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
@@ -250,7 +266,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr), tt.given.inputUserDTO)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr))
 
 			balanceWithdraw := dto.BalanceWithdraw{
 				OrderNumber: tt.given.inputOrderNumber,
@@ -260,6 +276,8 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true).SetBody(balanceWithdraw)
+
+			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
 
 			var result *resty.Response
 			var err error
@@ -277,6 +295,7 @@ func Test_GetWithdrawals(t *testing.T) {
 		outWithdrawals     []model.Withdrawal
 		outWithdrawalsErr  error
 		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage
+		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
 	makeLoyaltyStorageBalanceWithdrawalsOnce := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
@@ -309,6 +328,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				},
 				outWithdrawalsErr:  nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -323,6 +343,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusNoContent,
@@ -333,7 +354,9 @@ func Test_GetWithdrawals(t *testing.T) {
 		{
 			name: "StatusUnauthorized",
 			given: given{
+				inputUserDTO:       nil, // причина StatusUnauthorized
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsNever,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
@@ -348,6 +371,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
@@ -360,10 +384,12 @@ func Test_GetWithdrawals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.given.outWithdrawalsErr), tt.given.inputUserDTO)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.given.outWithdrawalsErr))
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
+
+			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
 
 			var result *resty.Response
 			var err error

@@ -2,17 +2,16 @@ package router
 
 import (
 	"io"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
@@ -30,6 +29,8 @@ var testUserDTO = &dto.User{
 	ID:    1,
 	Login: "TestLogin",
 }
+
+const testJWTSecret = "Накопительная система лояльности Гофермарт первый выпускной проект"
 
 func setupMockLogger(t *testing.T) *logger.MockLogger {
 	t.Helper()
@@ -51,39 +52,30 @@ func setupMockConfigServer(t *testing.T) *config.MockProvider {
 	cfg := config.NewMockProvider(t)
 
 	cfg.EXPECT().Address().Maybe().Return("localhost:8080")
+	cfg.EXPECT().JWTSecret().Maybe().Return(testJWTSecret)
 
 	return cfg
+}
+
+func setupAppContext(t *testing.T) *appcontext.AppContext {
+	return appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
 }
 
 /*
 setupServer - создание сервера для фича-тестов
 loyaltyStorage - будем создавать моки в зависимости от того, какой кейс будем тестировать
 */
-func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage, userDTO *dto.User) *resty.Client {
+func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage) *resty.Client {
 	t.Helper()
 
-	appContext := appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
+	appContext := setupAppContext(t)
 	handlers := handler.New(appContext, service.NewLoyaltyManager(loyaltyStorage))
 	router := New(handlers)
-
-	if userDTO != nil {
-		router = withTestUser(userDTO)(router)
-	}
 
 	srv := httptest.NewServer(router)
 	t.Cleanup(srv.Close)
 
 	return resty.New().SetBaseURL(srv.URL)
-}
-
-// withTestUser - middleware для тестов эмуляции авторизованного пользователя
-func withTestUser(userDTO *dto.User) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := middleware.UserDTOPutToCtx(r.Context(), userDTO)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
 }
 
 // assertResult - выполняем проверки по результатам выполнения запросов к api
@@ -99,4 +91,24 @@ func assertResult(t *testing.T, result *resty.Response, want want, given any) {
 	b := strings.TrimSpace(string(body))
 	assert.Equalf(t, want.responseBody, b, "given: %+v", given)
 	assert.NoErrorf(t, result.RawResponse.Body.Close(), "given: %+v", given)
+}
+
+// tokenGenerate - генерируем токен, если userDTO задан
+func tokenGenerate(t *testing.T, userDTO *dto.User) string {
+	t.Helper()
+
+	if userDTO != nil {
+		token, err := jwtoken.Generate(*userDTO, []byte(testJWTSecret))
+		assert.NoErrorf(t, err, "userDTO: %+v", userDTO)
+		return token
+	}
+
+	return ""
+}
+
+func authHeaderSetCorrect(t *testing.T, req *resty.Request, userDTO *dto.User) {
+	t.Helper()
+
+	token := tokenGenerate(t, userDTO)
+	req.SetHeader("Authorization", "Bearer "+token)
 }

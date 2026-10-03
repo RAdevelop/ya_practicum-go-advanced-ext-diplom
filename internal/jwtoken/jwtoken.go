@@ -21,8 +21,9 @@ const (
 
 /*
 Generate - создаёт подписанный JWT для пользователя.
-  - userID попадает в Subject, login — в кастомный клейм.
-  - Секрет должен быть криптостойким (>= 32 байта для HS256).
+
+- userID попадает в Subject, login — в кастомный клейм.
+- Секрет должен быть криптостойким (>= 32 байта для HS256).
 */
 func Generate(user dto.User, secret []byte) (string, error) {
 	now := time.Now()

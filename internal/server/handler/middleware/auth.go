@@ -11,8 +11,9 @@ import (
 )
 
 const keyUserDTO = "userDTO"
+const prefix = "Bearer "
 
-func Auth(appContext appcontext.AppContext, next http.Handler) http.Handler {
+func Auth(appContext *appcontext.AppContext, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if header == "" {
@@ -20,16 +21,18 @@ func Auth(appContext appcontext.AppContext, next http.Handler) http.Handler {
 			return
 		}
 
-		const prefix = "Bearer "
 		if !strings.HasPrefix(header, prefix) {
 			http.Error(w, "", http.StatusUnauthorized)
+			return
 		}
-		token := strings.TrimPrefix(header, prefix)
 
+		token := strings.TrimPrefix(header, prefix)
 		userDTO, err := jwtoken.Parse(token, []byte(appContext.ServerConfig.JWTSecret()))
 
 		if err != nil {
+			appContext.Logger.Error("jwtoken.Parse", "error", err)
 			http.Error(w, "", http.StatusUnauthorized)
+			return
 		}
 
 		next.ServeHTTP(w, r.WithContext(UserDTOPutToCtx(r.Context(), userDTO)))

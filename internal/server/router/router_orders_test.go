@@ -23,6 +23,7 @@ func Test_GetOrders(t *testing.T) {
 		outOrderList       []model.Order
 		outOrderError      error
 		makeLoyaltyStorage func(inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage
+		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
 	makeLoyaltyStorageOrdersOnce := func(inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage {
@@ -51,6 +52,7 @@ func Test_GetOrders(t *testing.T) {
 				},
 				outOrderError:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -65,25 +67,12 @@ func Test_GetOrders(t *testing.T) {
 				outOrderList:       nil,
 				outOrderError:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusNoContent,
 				responseBody: ``,
 				contentType:  "application/json",
-			},
-		},
-		{
-			name: "StatusUnauthorized",
-			given: given{
-				inputUserDTO: nil,
-				makeLoyaltyStorage: func(inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage {
-					return service.NewMockLoyaltyStorage(t)
-				},
-			},
-			want: want{
-				httpStatus:   http.StatusUnauthorized,
-				responseBody: ``,
-				contentType:  "text/plain; charset=utf-8",
 			},
 		},
 		{
@@ -93,9 +82,25 @@ func Test_GetOrders(t *testing.T) {
 				outOrderList:       nil,
 				outOrderError:      errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageOrdersOnce,
+				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnauthorized",
+			given: given{
+				inputUserDTO: nil, // причина StatusUnauthorized
+				makeLoyaltyStorage: func(inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) service.LoyaltyStorage {
+					return service.NewMockLoyaltyStorage(t)
+				},
+				authHeaderSet: authHeaderSetCorrect,
+			},
+			want: want{
+				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
 				contentType:  "text/plain; charset=utf-8",
 			},
@@ -105,10 +110,12 @@ func Test_GetOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(tt.given.inputUserDTO, tt.given.outOrderList, tt.given.outOrderError), tt.given.inputUserDTO)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(tt.given.inputUserDTO, tt.given.outOrderList, tt.given.outOrderError))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").SetDoNotParseResponse(true)
+
+			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
 
 			var result *resty.Response
 			var err error
@@ -127,6 +134,7 @@ func Test_PostOrders(t *testing.T) {
 		inputOrderNumber    string
 		outOrderUploadError error
 		makeLoyaltyStorage  func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outOrderUploadError error) service.LoyaltyStorage
+		authHeaderSet       func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
 	makeLoyaltyStorageOrderUploadOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outOrderUploadError error) service.LoyaltyStorage {
@@ -151,6 +159,7 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "79927398713",
 				outOrderUploadError: perror.ErrOrderAlreadyUploadedByUser,
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
@@ -165,6 +174,7 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: nil,
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusAccepted,
@@ -179,23 +189,10 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "",
 				outOrderUploadError: nil,
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusBadRequest,
-				responseBody: ``,
-				contentType:  "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "StatusUnauthorized",
-			given: given{
-				inputUserDTO:        nil,
-				inputOrderNumber:    "4532015112830366",
-				outOrderUploadError: nil,
-				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
-			},
-			want: want{
-				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
 				contentType:  "text/plain; charset=utf-8",
 			},
@@ -207,6 +204,7 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: perror.ErrOrderAlreadyUploadedByOther,
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusConflict,
@@ -221,6 +219,7 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "12345string",
 				outOrderUploadError: nil,
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusUnprocessableEntity,
@@ -235,9 +234,25 @@ func Test_PostOrders(t *testing.T) {
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: errors.New("some error"),
 				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadOnce,
+				authHeaderSet:       authHeaderSetCorrect,
 			},
 			want: want{
 				httpStatus:   http.StatusInternalServerError,
+				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "StatusUnauthorized",
+			given: given{
+				inputUserDTO:        nil, // причина StatusUnauthorized
+				inputOrderNumber:    "4532015112830366",
+				outOrderUploadError: nil,
+				makeLoyaltyStorage:  makeLoyaltyStorageOrderUploadNever,
+				authHeaderSet:       authHeaderSetCorrect,
+			},
+			want: want{
+				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
 				contentType:  "text/plain; charset=utf-8",
 			},
@@ -246,12 +261,14 @@ func Test_PostOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.outOrderUploadError), tt.given.inputUserDTO)
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.outOrderUploadError))
 
 			req := client.R().
 				SetHeader("Content-Type", "text/plain").
 				SetDoNotParseResponse(true).
 				SetBody(tt.given.inputOrderNumber)
+
+			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
 
 			var result *resty.Response
 			var err error

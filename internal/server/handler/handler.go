@@ -7,6 +7,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 )
 
 type LoyaltyManageable interface {
@@ -35,10 +36,10 @@ func New(appContext *appcontext.AppContext, loyaltyManager LoyaltyManageable) *H
 	return &Handlers{
 		UserRegister:       http.HandlerFunc(ls.UserRegister),
 		UserLogin:          http.HandlerFunc(ls.UserLogin),
-		OrderUpload:        http.HandlerFunc(ls.OrderUpload),
-		Orders:             http.HandlerFunc(ls.Orders),
-		Balance:            http.HandlerFunc(ls.Balance),
-		BalanceWithdraw:    http.HandlerFunc(ls.BalanceWithdraw),
-		BalanceWithdrawals: http.HandlerFunc(ls.BalanceWithdrawals),
+		OrderUpload:        middleware.Auth(appContext, http.HandlerFunc(ls.OrderUpload)),
+		Orders:             middleware.Auth(appContext, http.HandlerFunc(ls.Orders)),
+		Balance:            middleware.Auth(appContext, http.HandlerFunc(ls.Balance)),
+		BalanceWithdraw:    middleware.Auth(appContext, http.HandlerFunc(ls.BalanceWithdraw)),
+		BalanceWithdrawals: middleware.Auth(appContext, http.HandlerFunc(ls.BalanceWithdrawals)),
 	}
 }
