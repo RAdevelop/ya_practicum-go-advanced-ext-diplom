@@ -8,9 +8,11 @@ require (
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/stretchr/testify v1.12.1
+	golang.org/x/crypto v0.41.0
 )
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect

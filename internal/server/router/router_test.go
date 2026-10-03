@@ -2,14 +2,17 @@ package router
 
 import (
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +23,12 @@ type want struct {
 	httpStatus   int
 	responseBody string
 	contentType  string
+}
+
+// testUserDTO - эмуляция пользователя
+var testUserDTO = &dto.User{
+	ID:    1,
+	Login: "TestLogin",
 }
 
 func setupMockLogger(t *testing.T) *logger.MockLogger {
@@ -50,15 +59,31 @@ func setupMockConfigServer(t *testing.T) *config.MockProvider {
 setupServer - создание сервера для фича-тестов
 loyaltyStorage - будем создавать моки в зависимости от того, какой кейс будем тестировать
 */
-func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage) *resty.Client {
+func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage, userDTO *dto.User) *resty.Client {
 	t.Helper()
 
 	appContext := appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
 	handlers := handler.New(appContext, service.NewLoyaltyManager(loyaltyStorage))
-	srv := httptest.NewServer(New(handlers))
+	router := New(handlers)
+
+	if userDTO != nil {
+		router = withTestUser(userDTO)(router)
+	}
+
+	srv := httptest.NewServer(router)
 	t.Cleanup(srv.Close)
 
 	return resty.New().SetBaseURL(srv.URL)
+}
+
+// withTestUser - middleware для тестов эмуляции авторизованного пользователя
+func withTestUser(userDTO *dto.User) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := middleware.UserDTOPutToCtx(r.Context(), userDTO)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 // assertResult - выполняем проверки по результатам выполнения запросов к api

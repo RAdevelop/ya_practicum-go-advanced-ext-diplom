@@ -5,15 +5,17 @@ import (
 	"net/http"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 )
 
 type LoyaltyManageable interface {
-	OrderUpload(ctx context.Context, userID uint64, number string) error
-	Orders(ctx context.Context, userID uint64) ([]model.Order, error)
-	Balance(ctx context.Context, userID uint64) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error
+	OrderUpload(ctx context.Context, userDTO *dto.User, number string) error
+	Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error)
+	Balance(ctx context.Context, userDTO *dto.User) (*model.Balance, error)
+	BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error)
+	BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error
+	UserRegister(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error)
 }
 
 type Handlers struct {

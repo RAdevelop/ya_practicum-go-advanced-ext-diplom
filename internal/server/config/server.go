@@ -5,16 +5,19 @@ package config
 //go:generate mockery
 type Provider interface {
 	Address() string
+	JWTSecret() string
 }
 
 // Config - настройки для сервера
 type Config struct {
-	addr string
+	addr      string
+	jwtSecret string
 }
 
 func New(cfg Provider) *Config {
 	conf := &Config{}
 	conf.AddressSet(cfg.Address())
+	conf.JWTSecretSet(cfg.JWTSecret())
 
 	return conf
 }
@@ -25,4 +28,12 @@ func (c *Config) Address() string {
 }
 func (c *Config) AddressSet(addr string) {
 	c.addr = addr
+}
+
+func (c *Config) JWTSecret() string {
+	return c.jwtSecret
+}
+
+func (c *Config) JWTSecretSet(jwtSecret string) {
+	c.jwtSecret = jwtSecret
 }

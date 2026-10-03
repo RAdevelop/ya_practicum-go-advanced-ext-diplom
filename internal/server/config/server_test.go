@@ -9,11 +9,13 @@ import (
 func TestConfig_Address(t *testing.T) {
 
 	type given struct {
-		addr string
+		addr      string
+		jwtSecret string
 	}
 
 	type want struct {
-		addr string
+		addr      string
+		jwtSecret string
 	}
 
 	tests := []struct {
@@ -22,9 +24,10 @@ func TestConfig_Address(t *testing.T) {
 		want  want
 	}{
 		{
-			name: "empty address",
+			name: "empty value",
 			given: given{
-				addr: "",
+				addr:      "",
+				jwtSecret: "",
 			},
 			want: want{
 				addr: "",
@@ -48,14 +51,25 @@ func TestConfig_Address(t *testing.T) {
 				addr: "localhost:8080",
 			},
 		},
+		{
+			name: "jwtSecret",
+			given: given{
+				jwtSecret: "jwtSecret",
+			},
+			want: want{
+				jwtSecret: "jwtSecret",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfgProvider := NewMockProvider(t)
 			cfgProvider.EXPECT().Address().Return(tt.want.addr)
+			cfgProvider.EXPECT().JWTSecret().Return(tt.want.jwtSecret)
 
 			cfg := New(cfgProvider)
 			assert.Equal(t, tt.want.addr, cfg.Address())
+			assert.Equal(t, tt.want.jwtSecret, cfg.JWTSecret())
 		})
 	}
 }

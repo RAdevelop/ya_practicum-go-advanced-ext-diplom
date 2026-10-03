@@ -12,6 +12,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/validator"
 )
 
@@ -39,7 +40,34 @@ func NewLoyaltySystem(appContext *appcontext.AppContext, loyaltyManager LoyaltyM
 func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	http.Error(w, "TODO implement UserRegister", http.StatusNotImplemented)
+	var userCredentials dto.UserCredentials
+	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
+		ls.appContext.Logger.Error("UserRegister", "error", err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
+	// тут стоит добавить проверку логина и пароля по определенным правилам (длинна, допустимые символы, регистр)
+	if userCredentials.Login == "" || userCredentials.Password == "" {
+		ls.appContext.Logger.Info("UserRegister", "error", "invalid credentials", userCredentials)
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
+	token, err := ls.loyaltyManager.UserRegister(r.Context(), userCredentials, ls.appContext.ServerConfig.JWTSecret())
+
+	switch {
+	case err == nil:
+		w.Header().Set("Authorization", "Bearer "+token)
+		w.WriteHeader(http.StatusOK)
+
+	case errors.Is(err, perror.ErrLoginAlreadyExists):
+		http.Error(w, "", http.StatusConflict)
+
+	default:
+		ls.appContext.Logger.Error("UserRegister", "err", err)
+		http.Error(w, "", http.StatusInternalServerError)
+	}
 }
 
 // UserLogin - Аутентификация пользователя
@@ -66,13 +94,13 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		TODO get from token JWT and convert to uint64?!!
-			так же подумать, как сделать получения id пользователя для тестов
-	*/
-	userID := uint64(1)
+	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	if !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
 
-	err := ls.loyaltyManager.OrderUpload(r.Context(), userID, orderNumber)
+	err := ls.loyaltyManager.OrderUpload(r.Context(), userDTO, orderNumber)
 
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
@@ -97,13 +125,14 @@ func (ls LoyaltySystem) Orders(w http.ResponseWriter, r *http.Request) {
 
 	defer ls.requestBodyClose(r)
 
-	/*
-		TODO get from token JWT and convert to uint64?!!
-			так же подумать, как сделать получения id пользователя для тестов
-	*/
-	userID := uint64(1)
+	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
 
-	orders, err := ls.loyaltyManager.Orders(r.Context(), userID)
+	if !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	orders, err := ls.loyaltyManager.Orders(r.Context(), userDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Orders", "err", err)
 	}
@@ -116,13 +145,14 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 
 	defer ls.requestBodyClose(r)
 
-	/*
-		TODO get from token JWT and convert to uint64?!!
-			так же подумать, как сделать получения id пользователя для тестов
-	*/
-	userID := uint64(1)
+	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
 
-	balance, err := ls.loyaltyManager.Balance(r.Context(), userID)
+	if !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	balance, err := ls.loyaltyManager.Balance(r.Context(), userDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Balance", "err", err)
 	}
@@ -159,13 +189,14 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	/*
-		TODO get from token JWT and convert to uint64?!!
-			так же подумать, как сделать получения id пользователя для тестов
-	*/
-	userID := uint64(1)
+	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
 
-	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), userID, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
+	if !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), userDTO, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:
@@ -187,12 +218,13 @@ func (ls LoyaltySystem) BalanceWithdrawals(w http.ResponseWriter, r *http.Reques
 
 	defer ls.requestBodyClose(r)
 
-	/*
-		TODO get from token JWT and convert to uint64?!!
-			так же подумать, как сделать получения id пользователя для тестов
-	*/
-	userID := uint64(1)
-	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(r.Context(), userID)
+	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+
+	if !ok {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(r.Context(), userDTO)
 
 	if err != nil {
 		ls.appContext.Logger.Error("BalanceWithdrawals", "err", err)

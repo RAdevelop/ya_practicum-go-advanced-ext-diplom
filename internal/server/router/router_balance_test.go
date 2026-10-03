@@ -18,15 +18,15 @@ import (
 func Test_GetBalance(t *testing.T) {
 
 	type given struct {
-		inputUserID        uint64
+		inputUserDTO       *dto.User
 		outBalance         *model.Balance
 		outBalanceErr      error
-		makeLoyaltyStorage func(t *testing.T, inputUserID uint64, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage
+		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage
 	}
 
-	makeLoyaltyStorageBalanceOnce := func(t *testing.T, inputUserID uint64, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
+	makeLoyaltyStorageBalanceOnce := func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
 		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().Balance(mock.Anything, inputUserID).Return(outBalance, outBalanceErr).Once()
+		loyaltyStorage.EXPECT().Balance(mock.Anything, inputUserDTO).Return(outBalance, outBalanceErr).Once()
 		return loyaltyStorage
 	}
 
@@ -38,7 +38,7 @@ func Test_GetBalance(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserID: 1,
+				inputUserDTO: testUserDTO,
 				outBalance: &model.Balance{
 					ID:        1,
 					UserID:    1,
@@ -54,22 +54,24 @@ func Test_GetBalance(t *testing.T) {
 				contentType:  "application/json",
 			},
 		},
-		/*{
-			TODO name: "StatusUnauthorized",
+		{
+			name: "StatusUnauthorized",
 			given: given{
-				makeLoyaltyStorage: func(t *testing.T, inputUserID uint64, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
+				inputUserDTO: nil,
+				makeLoyaltyStorage: func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
 					return service.NewMockLoyaltyStorage(t)
 				},
 			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
+				contentType:  "text/plain; charset=utf-8",
 			},
-		},*/
+		},
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				outBalance:         nil,
 				outBalanceErr:      errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceOnce,
@@ -85,7 +87,7 @@ func Test_GetBalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserID, tt.given.outBalance, tt.given.outBalanceErr))
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outBalance, tt.given.outBalanceErr), tt.given.inputUserDTO)
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
@@ -102,20 +104,20 @@ func Test_GetBalance(t *testing.T) {
 
 func Test_PostBalanceWithdraw(t *testing.T) {
 	type given struct {
-		inputUserID        uint64
+		inputUserDTO       *dto.User
 		inputOrderNumber   string
 		inputSum           float64
 		outBalanceErr      error
-		makeLoyaltyStorage func(t *testing.T, inputUserID uint64, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage
+		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage
 	}
 
-	makeLoyaltyStorageBalanceWithdrawOnce := func(t *testing.T, inputUserID uint64, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
+	makeLoyaltyStorageBalanceWithdrawOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
 		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().BalanceWithdraw(mock.Anything, inputUserID, inputOrderNumber, inputSum).Return(outBalanceErr)
+		loyaltyStorage.EXPECT().BalanceWithdraw(mock.Anything, inputUserDTO, inputOrderNumber, inputSum).Return(outBalanceErr)
 		return loyaltyStorage
 	}
 
-	makeLoyaltyStorageBalanceWithdrawNever := func(t *testing.T, inputUserID uint64, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
+	makeLoyaltyStorageBalanceWithdrawNever := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
 		return service.NewMockLoyaltyStorage(t)
 	}
 
@@ -127,7 +129,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
@@ -139,9 +141,13 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				contentType:  "text/plain; charset=utf-8",
 			},
 		},
-		/*{
-			TODO name: "StatusUnauthorized",
+		{
+			name: "StatusUnauthorized",
 			given: given{
+				inputUserDTO:       nil,
+				inputOrderNumber:   "4532015112830366",
+				inputSum:           19.05,
+				outBalanceErr:      nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
 			},
 			want: want{
@@ -149,11 +155,11 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				responseBody: ``,
 				contentType:  "text/plain; charset=utf-8",
 			},
-		},*/
+		},
 		{
 			name: "StatusNotFound",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrOrderNotFound,
@@ -168,7 +174,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusPaymentRequired",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrBalanceInsufficient,
@@ -183,7 +189,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusUnprocessableEntity orderNumber",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "234",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
@@ -198,7 +204,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusUnprocessableEntity sum zero",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           0,
 				outBalanceErr:      nil,
@@ -213,7 +219,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusUnprocessableEntity sum negative",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           -100.25,
 				outBalanceErr:      nil,
@@ -228,7 +234,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           100.25,
 				outBalanceErr:      errors.New("some error"),
@@ -244,7 +250,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserID, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr))
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr), tt.given.inputUserDTO)
 
 			balanceWithdraw := dto.BalanceWithdraw{
 				OrderNumber: tt.given.inputOrderNumber,
@@ -267,23 +273,22 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 func Test_GetWithdrawals(t *testing.T) {
 
 	type given struct {
-		inputUserID        uint64
+		inputUserDTO       *dto.User
 		outWithdrawals     []model.Withdrawal
 		outWithdrawalsErr  error
-		makeLoyaltyStorage func(t *testing.T, inputUserID uint64, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage
+		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage
 	}
 
-	makeLoyaltyStorageBalanceWithdrawalsOnce := func(t *testing.T, inputUserID uint64, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
+	makeLoyaltyStorageBalanceWithdrawalsOnce := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
 		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().BalanceWithdrawals(mock.Anything, inputUserID).Return(outWithdrawals, outWithdrawalsErr).Once()
+		loyaltyStorage.EXPECT().BalanceWithdrawals(mock.Anything, inputUserDTO).Return(outWithdrawals, outWithdrawalsErr).Once()
 		return loyaltyStorage
 	}
-	/*
-	   TODO for StatusUnauthorized
-	   	makeLoyaltyStorageBalanceWithdrawalsNever := func(t *testing.T, inputUserID uint64, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
-	   		return service.NewMockLoyaltyStorage(t)
-	   	}
-	*/
+
+	makeLoyaltyStorageBalanceWithdrawalsNever := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
+		return service.NewMockLoyaltyStorage(t)
+	}
+
 	tests := []struct {
 		name  string
 		given given
@@ -292,7 +297,7 @@ func Test_GetWithdrawals(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserID: 1,
+				inputUserDTO: testUserDTO,
 				outWithdrawals: []model.Withdrawal{
 					{
 						ID:          123,
@@ -314,7 +319,7 @@ func Test_GetWithdrawals(t *testing.T) {
 		{
 			name: "StatusNoContent",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  nil,
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
@@ -325,21 +330,21 @@ func Test_GetWithdrawals(t *testing.T) {
 				contentType:  "application/json",
 			},
 		},
-		/*{
-			TODO name: "StatusUnauthorized",
+		{
+			name: "StatusUnauthorized",
 			given: given{
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsNever,
 			},
 			want: want{
 				httpStatus:   http.StatusUnauthorized,
 				responseBody: ``,
-				contentType:  "application/json",
+				contentType:  "text/plain; charset=utf-8",
 			},
-		},*/
+		},
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserID:        1,
+				inputUserDTO:       testUserDTO,
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  errors.New("some error"),
 				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
@@ -355,7 +360,7 @@ func Test_GetWithdrawals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserID, tt.given.outWithdrawals, tt.given.outWithdrawalsErr))
+			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.given.outWithdrawalsErr), tt.given.inputUserDTO)
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)
