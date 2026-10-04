@@ -57,10 +57,11 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case err == nil:
+		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Authorization", "Bearer "+token)
 		w.WriteHeader(http.StatusOK)
 
-	case errors.Is(err, perror.ErrLoginAlreadyExists):
+	case errors.Is(err, perror.ErrUserAlreadyExists):
 		http.Error(w, "", http.StatusConflict)
 
 	default:
@@ -73,7 +74,34 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	http.Error(w, "TODO implement UserLogin", http.StatusNotImplemented)
+	var userCredentials dto.UserCredentials
+	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
+		ls.appContext.Logger.Error("UserLogin", "error", err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
+	if err := validator.IsValidUserCredentials(userCredentials); err != nil {
+		ls.appContext.Logger.Warn("UserLogin", "error", err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
+	token, err := ls.loyaltyManager.UserLogin(r.Context(), userCredentials, ls.appContext.ServerConfig.JWTSecret())
+
+	switch {
+	case err == nil:
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Authorization", "Bearer "+token)
+		w.WriteHeader(http.StatusOK)
+
+	case errors.Is(err, perror.ErrUserNotFound):
+		http.Error(w, "", http.StatusUnauthorized)
+
+	default:
+		ls.appContext.Logger.Error("UserLogin", "err", err)
+		http.Error(w, "", http.StatusInternalServerError)
+	}
 }
 
 // OrderUpload - Загрузка заказа

@@ -31,19 +31,14 @@ func New(handlers *handler.Handlers) http.Handler {
 
 	routeWithAllowContentTypeApplicationJSON.Post(uriUserLogin, handlers.UserLogin.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
 	r.With(middleware.AllowContentType("text/plain")).Post(uriUserOrderUpload, handlers.OrderUpload.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
 	routeWithAllowContentTypeApplicationJSON.Get(uriUserOrders, handlers.Orders.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
 	routeWithAllowContentTypeApplicationJSON.Get(uriUserBalance, handlers.Balance.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
 	routeWithAllowContentTypeApplicationJSON.Post(uriUserBalanceWithdraw, handlers.BalanceWithdraw.ServeHTTP)
 
-	//TODO implement + проверка аутентификации
 	routeWithAllowContentTypeApplicationJSON.Get(uriUserWithdrawals, handlers.BalanceWithdrawals.ServeHTTP)
 
 	return r

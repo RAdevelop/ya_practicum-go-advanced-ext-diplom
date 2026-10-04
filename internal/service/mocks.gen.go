@@ -375,6 +375,74 @@ func (_c *MockLoyaltyStorage_Orders_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
+// UserByLogin provides a mock function for the type MockLoyaltyStorage
+func (_mock *MockLoyaltyStorage) UserByLogin(ctx context.Context, login string) (*model.User, error) {
+	ret := _mock.Called(ctx, login)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UserByLogin")
+	}
+
+	var r0 *model.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.User, error)); ok {
+		return returnFunc(ctx, login)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.User); ok {
+		r0 = returnFunc(ctx, login)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, login)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockLoyaltyStorage_UserByLogin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UserByLogin'
+type MockLoyaltyStorage_UserByLogin_Call struct {
+	*mock.Call
+}
+
+// UserByLogin is a helper method to define mock.On call
+//   - ctx context.Context
+//   - login string
+func (_e *MockLoyaltyStorage_Expecter) UserByLogin(ctx any, login any) *MockLoyaltyStorage_UserByLogin_Call {
+	return &MockLoyaltyStorage_UserByLogin_Call{Call: _e.mock.On("UserByLogin", ctx, login)}
+}
+
+func (_c *MockLoyaltyStorage_UserByLogin_Call) Run(run func(ctx context.Context, login string)) *MockLoyaltyStorage_UserByLogin_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_UserByLogin_Call) Return(user *model.User, err error) *MockLoyaltyStorage_UserByLogin_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_UserByLogin_Call) RunAndReturn(run func(ctx context.Context, login string) (*model.User, error)) *MockLoyaltyStorage_UserByLogin_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UserCreate provides a mock function for the type MockLoyaltyStorage
 func (_mock *MockLoyaltyStorage) UserCreate(ctx context.Context, user *model.User) (*model.User, error) {
 	ret := _mock.Called(ctx, user)

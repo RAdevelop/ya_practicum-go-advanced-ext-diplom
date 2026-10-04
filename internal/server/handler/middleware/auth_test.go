@@ -21,7 +21,7 @@ var testUserDTO = &dto.User{
 	Login: "TestLogin",
 }
 
-const testJWTSecret = "Накопительная система лояльности Гофермарт первый выпускной проект"
+const testJWTSecret = "lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE="
 
 func setupMockLogger(t *testing.T) *logger.MockLogger {
 	t.Helper()

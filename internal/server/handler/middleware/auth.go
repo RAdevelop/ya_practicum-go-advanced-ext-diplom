@@ -39,10 +39,13 @@ func Auth(appContext *appcontext.AppContext, next http.Handler) http.Handler {
 	})
 }
 
+// UserDTOGetFromCtx - получили данные пользователя из контекста
 func UserDTOGetFromCtx(ctx context.Context) (*dto.User, bool) {
 	user, ok := ctx.Value(keyUserDTO).(*dto.User)
 	return user, ok
 }
+
+// UserDTOPutToCtx - записали данные пользователя в контекст
 func UserDTOPutToCtx(ctx context.Context, user *dto.User) context.Context {
 	return context.WithValue(ctx, keyUserDTO, user)
 }

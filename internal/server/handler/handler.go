@@ -10,6 +10,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 )
 
+//go:generate mockery
 type LoyaltyManageable interface {
 	OrderUpload(ctx context.Context, userDTO *dto.User, number string) error
 	Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error)
@@ -17,6 +18,7 @@ type LoyaltyManageable interface {
 	BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error
 	UserRegister(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error)
+	UserLogin(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error)
 }
 
 type Handlers struct {

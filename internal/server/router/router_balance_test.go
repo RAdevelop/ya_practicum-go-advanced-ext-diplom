@@ -9,7 +9,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,14 +21,14 @@ func Test_GetBalance(t *testing.T) {
 		inputUserDTO       *dto.User
 		outBalance         *model.Balance
 		outBalanceErr      error
-		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage
+		makeLoyaltyManager func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
-	makeLoyaltyStorageBalanceOnce := func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
-		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().Balance(mock.Anything, inputUserDTO).Return(outBalance, outBalanceErr).Once()
-		return loyaltyStorage
+	makeLoyaltyManagerBalanceOnce := func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable {
+		loyaltyManager := handler.NewMockLoyaltyManageable(t)
+		loyaltyManager.EXPECT().Balance(mock.Anything, inputUserDTO).Return(outBalance, outBalanceErr).Once()
+		return loyaltyManager
 	}
 
 	tests := []struct {
@@ -47,7 +47,7 @@ func Test_GetBalance(t *testing.T) {
 					Withdrawn: 2019.05,
 				},
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -60,8 +60,8 @@ func Test_GetBalance(t *testing.T) {
 			name: "StatusUnauthorized",
 			given: given{
 				inputUserDTO: nil, // причина StatusUnauthorized
-				makeLoyaltyStorage: func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) service.LoyaltyStorage {
-					return service.NewMockLoyaltyStorage(t)
+				makeLoyaltyManager: func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable {
+					return handler.NewMockLoyaltyManageable(t)
 				},
 				authHeaderSet: authHeaderSetCorrect,
 			},
@@ -77,7 +77,7 @@ func Test_GetBalance(t *testing.T) {
 				inputUserDTO:       testUserDTO,
 				outBalance:         nil,
 				outBalanceErr:      errors.New("some error"),
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -91,7 +91,7 @@ func Test_GetBalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outBalance, tt.given.outBalanceErr))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserDTO, tt.given.outBalance, tt.given.outBalanceErr))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
@@ -115,18 +115,18 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 		inputOrderNumber   string
 		inputSum           float64
 		outBalanceErr      error
-		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage
+		makeLoyaltyManager func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
-	makeLoyaltyStorageBalanceWithdrawOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
-		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().BalanceWithdraw(mock.Anything, inputUserDTO, inputOrderNumber, inputSum).Return(outBalanceErr)
-		return loyaltyStorage
+	makeLoyaltyManagerBalanceWithdrawOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) handler.LoyaltyManageable {
+		loyaltyManager := handler.NewMockLoyaltyManageable(t)
+		loyaltyManager.EXPECT().BalanceWithdraw(mock.Anything, inputUserDTO, inputOrderNumber, inputSum).Return(outBalanceErr)
+		return loyaltyManager
 	}
 
-	makeLoyaltyStorageBalanceWithdrawNever := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) service.LoyaltyStorage {
-		return service.NewMockLoyaltyStorage(t)
+	makeLoyaltyManagerBalanceWithdrawNever := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outBalanceErr error) handler.LoyaltyManageable {
+		return handler.NewMockLoyaltyManageable(t)
 	}
 
 	tests := []struct {
@@ -141,7 +141,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -157,7 +157,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawNever,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -173,7 +173,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrOrderNotFound,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -189,7 +189,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           19.05,
 				outBalanceErr:      perror.ErrBalanceInsufficient,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -205,7 +205,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "234",
 				inputSum:           19.05,
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawNever,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -221,7 +221,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           0,
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawNever,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -237,7 +237,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           -100.25,
 				outBalanceErr:      nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawNever,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawNever,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -253,7 +253,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				inputOrderNumber:   "4532015112830366",
 				inputSum:           100.25,
 				outBalanceErr:      errors.New("some error"),
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -266,7 +266,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.given.outBalanceErr))
 
 			balanceWithdraw := dto.BalanceWithdraw{
 				OrderNumber: tt.given.inputOrderNumber,
@@ -294,18 +294,18 @@ func Test_GetWithdrawals(t *testing.T) {
 		inputUserDTO       *dto.User
 		outWithdrawals     []model.Withdrawal
 		outWithdrawalsErr  error
-		makeLoyaltyStorage func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage
+		makeLoyaltyManager func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
 	}
 
-	makeLoyaltyStorageBalanceWithdrawalsOnce := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
-		loyaltyStorage := service.NewMockLoyaltyStorage(t)
-		loyaltyStorage.EXPECT().BalanceWithdrawals(mock.Anything, inputUserDTO).Return(outWithdrawals, outWithdrawalsErr).Once()
-		return loyaltyStorage
+	makeLoyaltyManagerBalanceWithdrawalsOnce := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
+		loyaltyManager := handler.NewMockLoyaltyManageable(t)
+		loyaltyManager.EXPECT().BalanceWithdrawals(mock.Anything, inputUserDTO).Return(outWithdrawals, outWithdrawalsErr).Once()
+		return loyaltyManager
 	}
 
-	makeLoyaltyStorageBalanceWithdrawalsNever := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) service.LoyaltyStorage {
-		return service.NewMockLoyaltyStorage(t)
+	makeLoyaltyManagerBalanceWithdrawalsNever := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
+		return handler.NewMockLoyaltyManageable(t)
 	}
 
 	tests := []struct {
@@ -327,7 +327,7 @@ func Test_GetWithdrawals(t *testing.T) {
 					},
 				},
 				outWithdrawalsErr:  nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -342,7 +342,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				inputUserDTO:       testUserDTO,
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  nil,
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -355,7 +355,7 @@ func Test_GetWithdrawals(t *testing.T) {
 			name: "StatusUnauthorized",
 			given: given{
 				inputUserDTO:       nil, // причина StatusUnauthorized
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsNever,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsNever,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -370,7 +370,7 @@ func Test_GetWithdrawals(t *testing.T) {
 				inputUserDTO:       testUserDTO,
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  errors.New("some error"),
-				makeLoyaltyStorage: makeLoyaltyStorageBalanceWithdrawalsOnce,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
@@ -384,7 +384,7 @@ func Test_GetWithdrawals(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyStorage(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.given.outWithdrawalsErr))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.given.outWithdrawalsErr))
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true)

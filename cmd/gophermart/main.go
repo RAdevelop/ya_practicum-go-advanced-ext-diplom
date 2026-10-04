@@ -25,8 +25,8 @@ func main() {
 	}
 	cfgServer := config.New(envSrv)
 
-	cfgServer.AddressSet("localhost:8080")                                                       //TODO get from flag or env
-	cfgServer.JWTSecretSet("Накопительная система лояльности Гофермарт первый выпускной проект") //TODO get from flag or env
+	cfgServer.AddressSet("localhost:8080")                                 //TODO get from flag or env
+	cfgServer.JWTSecretSet("lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE=") //TODO get from flag or env
 	appContext := appcontext.New(logApp, cfgServer)
 
 	var wg sync.WaitGroup

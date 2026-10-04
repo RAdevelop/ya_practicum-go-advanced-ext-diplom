@@ -2,7 +2,6 @@
 package dto
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -24,13 +23,6 @@ type UserCredentials struct {
 // String - скрыть пароль на случай где-либо его вывести как строку через структуру
 func (uc UserCredentials) String() string {
 	return fmt.Sprintf("Credentials{Login: %q, Password: ***}", uc.Login)
-}
-
-func (uc UserCredentials) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]string{
-		"login":    uc.Login,
-		"password": "***",
-	})
 }
 
 /*

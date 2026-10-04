@@ -37,6 +37,7 @@ type LoyaltyStorage interface {
 	BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error
 	UserCreate(ctx context.Context, user *model.User) (*model.User, error)
+	UserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
 // LoyaltyManager - сервис для работы с программой лояльности
@@ -97,6 +98,31 @@ func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userDTO *dto.User
 	return err
 }
 
+func (lm *LoyaltyManager) UserLogin(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error) {
+
+	userModel, err := lm.storage.UserByLogin(ctx, userCredentials.Login)
+
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", perror.ErrUserNotFound, err)
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(userModel.PasswordHash), []byte(userCredentials.Password)); err != nil {
+		return "", fmt.Errorf("%w: %w", perror.ErrInvalidUserCredentials, err)
+	}
+
+	userDTO := dto.User{
+		ID:    userModel.ID,
+		Login: userModel.Login,
+	}
+	token, err := jwtoken.Generate(userDTO, []byte(jwtSecret))
+
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
+	}
+
+	return token, nil
+}
+
 func (lm *LoyaltyManager) UserRegister(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error) {
 
 	// 1. Хешируем пароль.
@@ -128,7 +154,7 @@ func (lm *LoyaltyManager) UserRegister(ctx context.Context, userCredentials dto.
 	// 3. выдаём JWT.
 	token, err := jwtoken.Generate(userDTO, []byte(jwtSecret))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
 	}
 
 	return token, nil

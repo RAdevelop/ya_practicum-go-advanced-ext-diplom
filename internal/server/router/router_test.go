@@ -12,7 +12,6 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -30,7 +29,7 @@ var testUserDTO = &dto.User{
 	Login: "TestLogin",
 }
 
-const testJWTSecret = "Накопительная система лояльности Гофермарт первый выпускной проект"
+const testJWTSecret = "lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE="
 
 func setupMockLogger(t *testing.T) *logger.MockLogger {
 	t.Helper()
@@ -65,13 +64,13 @@ func setupAppContext(t *testing.T) *appcontext.AppContext {
 
 /*
 setupServer - создание сервера для фича-тестов
-loyaltyStorage - будем создавать моки в зависимости от того, какой кейс будем тестировать
+loyaltyManager - будем создавать моки в зависимости от того, какой кейс будем тестировать
 */
-func setupServer(t *testing.T, loyaltyStorage service.LoyaltyStorage) *resty.Client {
+func setupServer(t *testing.T, loyaltyManager handler.LoyaltyManageable) *resty.Client {
 	t.Helper()
 
 	appContext := setupAppContext(t)
-	handlers := handler.New(appContext, service.NewLoyaltyManager(loyaltyStorage))
+	handlers := handler.New(appContext, loyaltyManager)
 	router := New(handlers)
 
 	srv := httptest.NewServer(router)
