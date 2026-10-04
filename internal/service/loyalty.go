@@ -31,11 +31,11 @@ import (
 //
 //go:generate mockery
 type LoyaltyStorage interface {
-	OrderUpload(ctx context.Context, userDTO *dto.User, number string) error
-	Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error)
-	Balance(ctx context.Context, userDTO *dto.User) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error
+	OrderUpload(ctx context.Context, userID uint64, number string) error
+	Orders(ctx context.Context, userID uint64) ([]model.Order, error)
+	Balance(ctx context.Context, userID uint64) (*model.Balance, error)
+	BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error)
+	BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error
 	UserCreate(ctx context.Context, user *model.User) (*model.User, error)
 	UserByLogin(ctx context.Context, login string) (*model.User, error)
 }
@@ -58,7 +58,7 @@ const retryLinearAttempts uint = 3
 func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userDTO *dto.User, number string) error {
 	var err error
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.OrderUpload(ctx, userDTO, number)
+		err = lm.storage.OrderUpload(ctx, userDTO.ID, number)
 		return struct{}{}, err
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
@@ -68,21 +68,21 @@ func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userDTO *dto.User, nu
 // Orders - Получение списка загруженных номеров заказов
 func (lm *LoyaltyManager) Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Order, error) {
-		return lm.storage.Orders(ctx, userDTO)
+		return lm.storage.Orders(ctx, userDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // Balance - Получение текущего баланса пользователя
 func (lm *LoyaltyManager) Balance(ctx context.Context, userDTO *dto.User) (*model.Balance, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Balance, error) {
-		return lm.storage.Balance(ctx, userDTO)
+		return lm.storage.Balance(ctx, userDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Withdrawal, error) {
-		return lm.storage.BalanceWithdrawals(ctx, userDTO)
+		return lm.storage.BalanceWithdrawals(ctx, userDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
@@ -91,7 +91,7 @@ func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userDTO *dto.User
 
 	var err error
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.BalanceWithdraw(ctx, userDTO, orderNumber, sum)
+		err = lm.storage.BalanceWithdraw(ctx, userDTO.ID, orderNumber, sum)
 		return struct{}{}, err
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
