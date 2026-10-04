@@ -10,7 +10,10 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 )
 
-const keyUserDTO = "userDTO"
+type contextKey struct{}
+
+var keyUserDTO = contextKey{}
+
 const prefix = "Bearer "
 
 func Auth(appContext *appcontext.AppContext, next http.Handler) http.Handler {
