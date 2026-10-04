@@ -100,7 +100,9 @@ func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userDTO *dto.User
 
 func (lm *LoyaltyManager) UserLogin(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error) {
 
-	userModel, err := lm.storage.UserByLogin(ctx, userCredentials.Login)
+	userModel, err := retryer.RetryLinear(ctx, func(ctx context.Context) (*model.User, error) {
+		return lm.storage.UserByLogin(ctx, userCredentials.Login)
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrUserNotFound, err)
@@ -136,7 +138,11 @@ func (lm *LoyaltyManager) UserRegister(ctx context.Context, userCredentials dto.
 		Login:        userCredentials.Login,
 		PasswordHash: string(hash),
 	}
-	userModel, err = lm.storage.UserCreate(ctx, userModel)
+
+	userModel, err = retryer.RetryLinear(ctx, func(ctx context.Context) (*model.User, error) {
+		return lm.storage.UserCreate(ctx, userModel)
+	}, retryLinearStepSeconds, new(retryLinearAttempts))
+
 	if err != nil {
 		return "", err
 	}
