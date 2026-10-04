@@ -47,9 +47,8 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// тут стоит добавить проверку логина и пароля по определенным правилам (длинна, допустимые символы, регистр)
-	if userCredentials.Login == "" || userCredentials.Password == "" {
-		ls.appContext.Logger.Info("UserRegister", "error", "invalid credentials", userCredentials)
+	if err := validator.IsValidUserCredentials(userCredentials); err != nil {
+		ls.appContext.Logger.Warn("UserRegister", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}

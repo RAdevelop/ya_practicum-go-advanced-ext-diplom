@@ -4,6 +4,7 @@ package perror
 import "errors"
 
 var (
+	ErrInvalidUserCredentials          = errors.New("invalid user credentials")
 	ErrOrderNotFound                   = errors.New("order not found")
 	ErrOrderAlreadyUploadedByUser      = errors.New("order already uploaded by this user")
 	ErrOrderAlreadyUploadedByOther     = errors.New("order already uploaded by another user")
