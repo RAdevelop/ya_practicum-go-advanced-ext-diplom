@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
@@ -27,19 +26,6 @@ func hashPassword(t *testing.T, password string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	assert.NoError(t, err)
 	return string(hash)
-}
-
-// tokenGenerate - генерируем токен, если customerDTO задан
-func tokenGenerate(t *testing.T, customerDTO *dto.Customer) string {
-	t.Helper()
-
-	if customerDTO != nil {
-		token, err := jwtoken.Generate(*customerDTO, []byte(testJWTSecret))
-		assert.NoErrorf(t, err, "customerDTO: %+v", customerDTO)
-		return token
-	}
-
-	return ""
 }
 
 func Test_OrderUpload(t *testing.T) {

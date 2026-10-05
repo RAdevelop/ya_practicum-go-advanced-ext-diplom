@@ -23,7 +23,6 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/retryer"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -51,58 +50,34 @@ func NewLoyaltyManager(storage LoyaltyStorage) *LoyaltyManager {
 	}
 }
 
-const retryLinearStepSeconds uint = 2
-const retryLinearAttempts uint = 3
-
 // OrderUpload - Загрузка заказа
 func (lm *LoyaltyManager) OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error {
-	var err error
-	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.OrderUpload(ctx, customerDTO.ID, number)
-		return struct{}{}, err
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
-
-	return err
+	return lm.storage.OrderUpload(ctx, customerDTO.ID, number)
 }
 
 // Orders - Получение списка загруженных номеров заказов
 func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error) {
-	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Order, error) {
-		return lm.storage.Orders(ctx, customerDTO.ID)
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
+	return lm.storage.Orders(ctx, customerDTO.ID)
 }
 
 // Balance - Получение текущего баланса пользователя
 func (lm *LoyaltyManager) Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error) {
-	return retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Balance, error) {
-		return lm.storage.Balance(ctx, customerDTO.ID)
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
+	return lm.storage.Balance(ctx, customerDTO.ID)
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error) {
-	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Withdrawal, error) {
-		return lm.storage.BalanceWithdrawals(ctx, customerDTO.ID)
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
+	return lm.storage.BalanceWithdrawals(ctx, customerDTO.ID)
 }
 
 // BalanceWithdraw - списание средств
 func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
-
-	var err error
-	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.BalanceWithdraw(ctx, customerDTO.ID, orderNumber, sum)
-		return struct{}{}, err
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
-
-	return err
+	return lm.storage.BalanceWithdraw(ctx, customerDTO.ID, orderNumber, sum)
 }
 
 func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
-	customerModel, err := retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Customer, error) {
-		return lm.storage.CustomerByLogin(ctx, customerCredentials.Login)
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
+	customerModel, err := lm.storage.CustomerByLogin(ctx, customerCredentials.Login)
 
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrCustomerNotFound, err)
@@ -139,9 +114,7 @@ func (lm *LoyaltyManager) UserRegister(ctx context.Context, customerCredentials 
 		PasswordHash: string(hash),
 	}
 
-	customerModel, err = retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Customer, error) {
-		return lm.storage.CustomerCreate(ctx, customerModel)
-	}, retryLinearStepSeconds, new(retryLinearAttempts))
+	customerModel, err = lm.storage.CustomerCreate(ctx, customerModel)
 
 	if err != nil {
 		return "", err
