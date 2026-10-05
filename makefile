@@ -3,10 +3,10 @@
 export POSTGRES_USER := postgres
 export POSTGRES_PASSWORD := postgres
 export POSTGRES_HOST := postgres
-export POSTGRES_PORT := 5432
-export POSTGRES_DB := praktikum
+export POSTGRES_PORT := 5433
+export POSTGRES_DB := praktikum_diploma
 
-export POSTGRES_DB_TEST := praktikum_test
+export POSTGRES_DB_TEST := praktikum_diploma_test
 
 export DB_DSN_TEST=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB_TEST}?sslmode=disable
 DB_DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
@@ -121,7 +121,6 @@ build:  ## Собрать кластер
 	@sleep 5
 	@make migrate-up
 	@make migrate-upt
-	@make unset-env
 
 .PHONY: rebuild
 rebuild:  ## пересобрать кластер
