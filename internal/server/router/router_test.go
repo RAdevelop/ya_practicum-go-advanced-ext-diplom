@@ -24,8 +24,8 @@ type want struct {
 	contentType  string
 }
 
-// testUserDTO - эмуляция пользователя
-var testUserDTO = &dto.User{
+// testCustomerDTO - эмуляция пользователя
+var testCustomerDTO = &dto.Customer{
 	ID:    1,
 	Login: "TestLogin",
 }
@@ -110,22 +110,22 @@ func assertResult(t *testing.T, result *resty.Response, want want, given any) {
 	assert.NoErrorf(t, result.RawResponse.Body.Close(), "given: %+v", given)
 }
 
-// tokenGenerate - генерируем токен, если userDTO задан
-func tokenGenerate(t *testing.T, userDTO *dto.User) string {
+// tokenGenerate - генерируем токен, если customerDTO задан
+func tokenGenerate(t *testing.T, customerDTO *dto.Customer) string {
 	t.Helper()
 
-	if userDTO != nil {
-		token, err := jwtoken.Generate(*userDTO, []byte(testJWTSecret))
-		assert.NoErrorf(t, err, "userDTO: %+v", userDTO)
+	if customerDTO != nil {
+		token, err := jwtoken.Generate(*customerDTO, []byte(testJWTSecret))
+		assert.NoErrorf(t, err, "customerDTO: %+v", customerDTO)
 		return token
 	}
 
 	return ""
 }
 
-func authHeaderSetCorrect(t *testing.T, req *resty.Request, userDTO *dto.User) {
+func authHeaderSetCorrect(t *testing.T, req *resty.Request, customerDTO *dto.Customer) {
 	t.Helper()
 
-	token := tokenGenerate(t, userDTO)
+	token := tokenGenerate(t, customerDTO)
 	req.SetHeader("Authorization", "Bearer "+token)
 }

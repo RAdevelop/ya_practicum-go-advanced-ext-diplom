@@ -19,16 +19,16 @@ import (
 func Test_GetOrders(t *testing.T) {
 
 	type given struct {
-		inputUserDTO       *dto.User
+		inputCustomerDTO   *dto.Customer
 		outOrderList       []model.Order
 		outOrderError      error
-		makeLoyaltyManager func(t *testing.T, inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable
-		authHeaderSet      func(t *testing.T, req *resty.Request, userDTO *dto.User)
+		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable
+		authHeaderSet      func(t *testing.T, req *resty.Request, customerDTO *dto.Customer)
 	}
 
-	makeLoyaltyManagerOrdersOnce := func(t *testing.T, inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
+	makeLoyaltyManagerOrdersOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
 		loyaltyManager := handler.NewMockLoyaltyManageable(t)
-		loyaltyManager.EXPECT().Orders(mock.Anything, inputUserDTO).Return(outOrderList, outOrderError).Once()
+		loyaltyManager.EXPECT().Orders(mock.Anything, inputCustomerDTO).Return(outOrderList, outOrderError).Once()
 
 		return loyaltyManager
 	}
@@ -41,11 +41,11 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserDTO: testUserDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outOrderList: []model.Order{
 					{
 						Number:     "12345",
-						UserID:     1,
+						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
@@ -56,14 +56,14 @@ func Test_GetOrders(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `[{"number":"12345","user_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
+				responseBody: `[{"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
 				contentType:  "application/json",
 			},
 		},
 		{
 			name: "StatusNoContent",
 			given: given{
-				inputUserDTO:       testUserDTO,
+				inputCustomerDTO:   testCustomerDTO,
 				outOrderList:       nil,
 				outOrderError:      nil,
 				makeLoyaltyManager: makeLoyaltyManagerOrdersOnce,
@@ -78,7 +78,7 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserDTO:       testUserDTO,
+				inputCustomerDTO:   testCustomerDTO,
 				outOrderList:       nil,
 				outOrderError:      errors.New("some error"),
 				makeLoyaltyManager: makeLoyaltyManagerOrdersOnce,
@@ -93,8 +93,8 @@ func Test_GetOrders(t *testing.T) {
 		{
 			name: "StatusUnauthorized",
 			given: given{
-				inputUserDTO: nil, // причина StatusUnauthorized
-				makeLoyaltyManager: func(t *testing.T, inputUserDTO *dto.User, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
+				inputCustomerDTO: nil, // причина StatusUnauthorized
+				makeLoyaltyManager: func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
 					return handler.NewMockLoyaltyManageable(t)
 				},
 				authHeaderSet: authHeaderSetCorrect,
@@ -110,12 +110,12 @@ func Test_GetOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserDTO, tt.given.outOrderList, tt.given.outOrderError))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputCustomerDTO, tt.given.outOrderList, tt.given.outOrderError))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").SetDoNotParseResponse(true)
 
-			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
+			tt.given.authHeaderSet(t, req, tt.given.inputCustomerDTO)
 
 			var result *resty.Response
 			var err error
@@ -130,20 +130,20 @@ func Test_GetOrders(t *testing.T) {
 func Test_PostOrders(t *testing.T) {
 
 	type given struct {
-		inputUserDTO        *dto.User
+		inputCustomerDTO    *dto.Customer
 		inputOrderNumber    string
 		outOrderUploadError error
-		makeLoyaltyManager  func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable
-		authHeaderSet       func(t *testing.T, req *resty.Request, userDTO *dto.User)
+		makeLoyaltyManager  func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable
+		authHeaderSet       func(t *testing.T, req *resty.Request, customerDTO *dto.Customer)
 	}
 
-	makeLoyaltyManagerOrderUploadOnce := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable {
+	makeLoyaltyManagerOrderUploadOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable {
 		loyaltyManager := handler.NewMockLoyaltyManageable(t)
-		loyaltyManager.EXPECT().OrderUpload(mock.Anything, inputUserDTO, inputOrderNumber).Return(outOrderUploadError).Once()
+		loyaltyManager.EXPECT().OrderUpload(mock.Anything, inputCustomerDTO, inputOrderNumber).Return(outOrderUploadError).Once()
 		return loyaltyManager
 	}
 
-	makeLoyaltyManagerOrderUploadNever := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable {
+	makeLoyaltyManagerOrderUploadNever := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outOrderUploadError error) handler.LoyaltyManageable {
 		return handler.NewMockLoyaltyManageable(t)
 	}
 
@@ -155,9 +155,9 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "79927398713",
-				outOrderUploadError: perror.ErrOrderAlreadyUploadedByUser,
+				outOrderUploadError: perror.ErrOrderAlreadyUploadedByCustomer,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadOnce,
 				authHeaderSet:       authHeaderSetCorrect,
 			},
@@ -170,7 +170,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusAccepted",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: nil,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadOnce,
@@ -185,7 +185,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusBadRequest",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "",
 				outOrderUploadError: nil,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadNever,
@@ -200,7 +200,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusConflict",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: perror.ErrOrderAlreadyUploadedByOther,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadOnce,
@@ -215,7 +215,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusUnprocessableEntity",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "12345string",
 				outOrderUploadError: nil,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadNever,
@@ -230,7 +230,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserDTO:        testUserDTO,
+				inputCustomerDTO:    testCustomerDTO,
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: errors.New("some error"),
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadOnce,
@@ -245,7 +245,7 @@ func Test_PostOrders(t *testing.T) {
 		{
 			name: "StatusUnauthorized",
 			given: given{
-				inputUserDTO:        nil, // причина StatusUnauthorized
+				inputCustomerDTO:    nil, // причина StatusUnauthorized
 				inputOrderNumber:    "4532015112830366",
 				outOrderUploadError: nil,
 				makeLoyaltyManager:  makeLoyaltyManagerOrderUploadNever,
@@ -261,14 +261,14 @@ func Test_PostOrders(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.outOrderUploadError))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.outOrderUploadError))
 
 			req := client.R().
 				SetHeader("Content-Type", "text/plain").
 				SetDoNotParseResponse(true).
 				SetBody(tt.given.inputOrderNumber)
 
-			tt.given.authHeaderSet(t, req, tt.given.inputUserDTO)
+			tt.given.authHeaderSet(t, req, tt.given.inputCustomerDTO)
 
 			var result *resty.Response
 			var err error

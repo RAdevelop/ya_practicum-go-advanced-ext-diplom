@@ -17,35 +17,35 @@ func NewDBStorage(db *database.DB) *DBStorage {
 	}
 }
 
-func (s *DBStorage) OrderUpload(ctx context.Context, userID uint64, number string) error {
+func (s *DBStorage) OrderUpload(ctx context.Context, customerID uint64, number string) error {
 
 	//TODO implement
 	return nil
 }
 
-func (s *DBStorage) Orders(ctx context.Context, userID uint64) ([]model.Order, error) {
+func (s *DBStorage) Orders(ctx context.Context, customerID uint64) ([]model.Order, error) {
 	//TODO implement
 	return nil, nil
 }
 
-func (s *DBStorage) Balance(ctx context.Context, userID uint64) (*model.Balance, error) {
+func (s *DBStorage) Balance(ctx context.Context, customerID uint64) (*model.Balance, error) {
 	//TODO implement
 	return nil, nil
 }
 
-func (s *DBStorage) BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error) {
+func (s *DBStorage) BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
 	//TODO implement
 	return nil, nil
 }
-func (s *DBStorage) BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error {
+func (s *DBStorage) BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error {
 	//TODO implement
 	return nil
 }
-func (s *DBStorage) UserCreate(ctx context.Context, user *model.User) (*model.User, error) {
+func (s *DBStorage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
 	//TODO implement
 	return nil, nil
 }
-func (s *DBStorage) UserByLogin(ctx context.Context, login string) (*model.User, error) {
+func (s *DBStorage) CustomerByLogin(ctx context.Context, login string) (*model.Customer, error) {
 	//TODO implement
 	return nil, nil
 }

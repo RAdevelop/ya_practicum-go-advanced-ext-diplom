@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsValidUserCredentials(t *testing.T) {
+func TestIsValidCustomerCredentials(t *testing.T) {
 	type given struct {
-		credentials dto.UserCredentials
+		credentials dto.CustomerCredentials
 	}
 	tests := []struct {
 		name    string
@@ -20,7 +20,7 @@ func TestIsValidUserCredentials(t *testing.T) {
 		{
 			name: "valid",
 			given: given{
-				credentials: dto.UserCredentials{
+				credentials: dto.CustomerCredentials{
 					Password: "Password",
 					Login:    "test",
 				},
@@ -30,37 +30,37 @@ func TestIsValidUserCredentials(t *testing.T) {
 		{
 			name: "not valid - empty password",
 			given: given{
-				credentials: dto.UserCredentials{
+				credentials: dto.CustomerCredentials{
 					Password: "",
 					Login:    "test",
 				},
 			},
-			wantErr: perror.ErrInvalidUserCredentials,
+			wantErr: perror.ErrInvalidCustomerCredentials,
 		},
 		{
 			name: "not valid - empty login",
 			given: given{
-				credentials: dto.UserCredentials{
+				credentials: dto.CustomerCredentials{
 					Password: "Password",
 					Login:    "",
 				},
 			},
-			wantErr: perror.ErrInvalidUserCredentials,
+			wantErr: perror.ErrInvalidCustomerCredentials,
 		},
 		{
 			name: "not valid - empty login",
 			given: given{
-				credentials: dto.UserCredentials{
+				credentials: dto.CustomerCredentials{
 					Password: "Password",
 					Login:    "   ",
 				},
 			},
-			wantErr: perror.ErrInvalidUserCredentials,
+			wantErr: perror.ErrInvalidCustomerCredentials,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.wantErr, IsValidUserCredentials(tt.given.credentials), "IsValidUserCredentials(%v)", tt.given.credentials)
+			assert.Equalf(t, tt.wantErr, IsValidCustomerCredentials(tt.given.credentials), "IsValidCustomerCredentials(%v)", tt.given.credentials)
 		})
 	}
 }

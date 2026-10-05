@@ -12,13 +12,13 @@ import (
 
 //go:generate mockery
 type LoyaltyManageable interface {
-	OrderUpload(ctx context.Context, userDTO *dto.User, number string) error
-	Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error)
-	Balance(ctx context.Context, userDTO *dto.User) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error
-	UserRegister(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error)
-	UserLogin(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error)
+	OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error
+	Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error)
+	Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error)
+	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error)
+	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error
+	UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
+	UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 }
 
 type Handlers struct {

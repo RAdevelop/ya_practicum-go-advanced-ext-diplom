@@ -9,7 +9,7 @@ import (
 // Order - Заказ
 type Order struct {
 	Number     string              `json:"number"`
-	UserID     uint64              `json:"user_id"`
+	CustomerID uint64              `json:"customer_id"`
 	Status     statusInner.Accrual `json:"status"`
 	Accrual    float64             `json:"accrual,omitempty"` // Начисленные баллы за этот конкретный заказ
 	UploadedAt time.Time           `json:"uploaded_at"`

@@ -22,17 +22,17 @@ const (
 /*
 Generate - создаёт подписанный JWT для пользователя.
 
-- userID попадает в Subject, login — в кастомный клейм.
+- CustomerID попадает в Subject, login — в кастомный клейм.
 - Секрет должен быть криптостойким (>= 32 байта для HS256).
 */
-func Generate(user dto.User, secret []byte) (string, error) {
+func Generate(customer dto.Customer, secret []byte) (string, error) {
 	now := time.Now()
 
-	claims := dto.UserJWT{
-		UserLogin: user.Login,
+	claims := dto.CustomerJWT{
+		CustomerLogin: customer.Login,
 		RegisteredClaims: jwt.RegisteredClaims{
 			// Идентификатор субъекта, к которому относится токен. Обычно — ID пользователя
-			Subject: strconv.FormatUint(user.ID, 10),
+			Subject: strconv.FormatUint(customer.ID, 10),
 			// Когда выдан
 			IssuedAt: jwt.NewNumericDate(now),
 			// Когда истекает
@@ -58,8 +58,8 @@ Parse проверяет подпись и срок действия токен�
   - exp (автоматически библиотекой),
   - nbf (автоматически библиотекой, если задан).
 */
-func Parse(tokenString string, secret []byte) (*dto.User, error) {
-	claims := &dto.UserJWT{}
+func Parse(tokenString string, secret []byte) (*dto.Customer, error) {
+	claims := &dto.CustomerJWT{}
 
 	token, err := jwt.ParseWithClaims(
 		tokenString,
@@ -83,13 +83,13 @@ func Parse(tokenString string, secret []byte) (*dto.User, error) {
 		return nil, perror.ErrInvalidToken
 	}
 
-	userID, err := claims.UserID()
+	customerID, err := claims.CustomerID()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", perror.ErrInvalidToken, err)
 	}
 
-	return &dto.User{
-		ID:    userID,
-		Login: claims.UserLogin,
+	return &dto.Customer{
+		ID:    customerID,
+		Login: claims.CustomerLogin,
 	}, nil
 }

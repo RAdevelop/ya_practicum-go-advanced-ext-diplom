@@ -12,7 +12,7 @@ import (
 
 type contextKey struct{}
 
-var keyUserDTO = contextKey{}
+var keyCustomerDTO = contextKey{}
 
 const prefix = "Bearer "
 
@@ -30,7 +30,7 @@ func Auth(appContext *appcontext.AppContext, next http.Handler) http.Handler {
 		}
 
 		token := strings.TrimPrefix(header, prefix)
-		userDTO, err := jwtoken.Parse(token, []byte(appContext.ServerConfig.JWTSecret()))
+		customer, err := jwtoken.Parse(token, []byte(appContext.ServerConfig.JWTSecret()))
 
 		if err != nil {
 			appContext.Logger.Error("jwtoken.Parse", "error", err)
@@ -38,17 +38,17 @@ func Auth(appContext *appcontext.AppContext, next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(UserDTOPutToCtx(r.Context(), userDTO)))
+		next.ServeHTTP(w, r.WithContext(CustomerPutToCtx(r.Context(), customer)))
 	})
 }
 
-// UserDTOGetFromCtx - получили данные пользователя из контекста
-func UserDTOGetFromCtx(ctx context.Context) (*dto.User, bool) {
-	user, ok := ctx.Value(keyUserDTO).(*dto.User)
-	return user, ok
+// CustomerGetFromCtx - получили данные пользователя из контекста
+func CustomerGetFromCtx(ctx context.Context) (*dto.Customer, bool) {
+	customer, ok := ctx.Value(keyCustomerDTO).(*dto.Customer)
+	return customer, ok
 }
 
-// UserDTOPutToCtx - записали данные пользователя в контекст
-func UserDTOPutToCtx(ctx context.Context, user *dto.User) context.Context {
-	return context.WithValue(ctx, keyUserDTO, user)
+// CustomerPutToCtx - записали данные пользователя в контекст
+func CustomerPutToCtx(ctx context.Context, customer *dto.Customer) context.Context {
+	return context.WithValue(ctx, keyCustomerDTO, customer)
 }

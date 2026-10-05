@@ -8,18 +8,18 @@ import (
 )
 
 /*
-IsValidUserCredentials - пока простая проверка логина и пароля.
+IsValidCustomerCredentials - пока простая проверка логина и пароля.
 При этом, можно реализовать расширенные требования, не затрагивая работы хендлеров.
 */
-func IsValidUserCredentials(credentials dto.UserCredentials) error {
-	if !isValidUserCredentialsLogin(credentials.Login) || !isValidUserCredentialsPassword(credentials.Password) {
-		return perror.ErrInvalidUserCredentials
+func IsValidCustomerCredentials(credentials dto.CustomerCredentials) error {
+	if !isValidCredentialsLogin(credentials.Login) || !isValidCredentialsPassword(credentials.Password) {
+		return perror.ErrInvalidCustomerCredentials
 	}
 	return nil
 }
-func isValidUserCredentialsLogin(login string) bool {
+func isValidCredentialsLogin(login string) bool {
 	return strings.Trim(login, " ") != ""
 }
-func isValidUserCredentialsPassword(password string) bool {
+func isValidCredentialsPassword(password string) bool {
 	return password != ""
 }

@@ -40,20 +40,20 @@ func NewLoyaltySystem(appContext *appcontext.AppContext, loyaltyManager LoyaltyM
 func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	var userCredentials dto.UserCredentials
-	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
+	var customerCredentials dto.CustomerCredentials
+	if err := json.NewDecoder(r.Body).Decode(&customerCredentials); err != nil {
 		ls.appContext.Logger.Error("UserRegister", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	if err := validator.IsValidUserCredentials(userCredentials); err != nil {
+	if err := validator.IsValidCustomerCredentials(customerCredentials); err != nil {
 		ls.appContext.Logger.Warn("UserRegister", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	token, err := ls.loyaltyManager.UserRegister(r.Context(), userCredentials, ls.appContext.ServerConfig.JWTSecret())
+	token, err := ls.loyaltyManager.UserRegister(r.Context(), customerCredentials, ls.appContext.ServerConfig.JWTSecret())
 
 	switch {
 	case err == nil:
@@ -61,7 +61,7 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Authorization", "Bearer "+token)
 		w.WriteHeader(http.StatusOK)
 
-	case errors.Is(err, perror.ErrUserAlreadyExists):
+	case errors.Is(err, perror.ErrCustomerAlreadyExists):
 		http.Error(w, "", http.StatusConflict)
 
 	default:
@@ -74,20 +74,20 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 	defer ls.requestBodyClose(r)
 
-	var userCredentials dto.UserCredentials
-	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
+	var customerCredentials dto.CustomerCredentials
+	if err := json.NewDecoder(r.Body).Decode(&customerCredentials); err != nil {
 		ls.appContext.Logger.Error("UserLogin", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	if err := validator.IsValidUserCredentials(userCredentials); err != nil {
+	if err := validator.IsValidCustomerCredentials(customerCredentials); err != nil {
 		ls.appContext.Logger.Warn("UserLogin", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	token, err := ls.loyaltyManager.UserLogin(r.Context(), userCredentials, ls.appContext.ServerConfig.JWTSecret())
+	token, err := ls.loyaltyManager.UserLogin(r.Context(), customerCredentials, ls.appContext.ServerConfig.JWTSecret())
 
 	switch {
 	case err == nil:
@@ -95,7 +95,7 @@ func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Authorization", "Bearer "+token)
 		w.WriteHeader(http.StatusOK)
 
-	case errors.Is(err, perror.ErrUserNotFound):
+	case errors.Is(err, perror.ErrCustomerNotFound):
 		http.Error(w, "", http.StatusUnauthorized)
 
 	default:
@@ -121,24 +121,24 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	customerDTO, ok := middleware.CustomerGetFromCtx(r.Context())
 	if !ok {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	err := ls.loyaltyManager.OrderUpload(r.Context(), userDTO, orderNumber)
+	err := ls.loyaltyManager.OrderUpload(r.Context(), customerDTO, orderNumber)
 
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:
 		w.WriteHeader(http.StatusAccepted)
 
-	case errors.Is(err, perror.ErrOrderAlreadyUploadedByUser):
+	case errors.Is(err, perror.ErrOrderAlreadyUploadedByCustomer):
 		w.WriteHeader(http.StatusOK)
 
 	case errors.Is(err, perror.ErrOrderAlreadyUploadedByOther):
-		ls.appContext.Logger.Error("OrderUpload", "order already uploaded by other user", err)
+		ls.appContext.Logger.Error("OrderUpload", "order already uploaded by other customer", err)
 		http.Error(w, "", http.StatusConflict)
 
 	default:
@@ -152,14 +152,14 @@ func (ls LoyaltySystem) Orders(w http.ResponseWriter, r *http.Request) {
 
 	defer ls.requestBodyClose(r)
 
-	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	customerDTO, ok := middleware.CustomerGetFromCtx(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	orders, err := ls.loyaltyManager.Orders(r.Context(), userDTO)
+	orders, err := ls.loyaltyManager.Orders(r.Context(), customerDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Orders", "err", err)
 	}
@@ -172,14 +172,14 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 
 	defer ls.requestBodyClose(r)
 
-	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	customerDTO, ok := middleware.CustomerGetFromCtx(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	balance, err := ls.loyaltyManager.Balance(r.Context(), userDTO)
+	balance, err := ls.loyaltyManager.Balance(r.Context(), customerDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Balance", "err", err)
 	}
@@ -216,14 +216,14 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	customerDTO, ok := middleware.CustomerGetFromCtx(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), userDTO, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
+	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), customerDTO, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:
@@ -245,13 +245,13 @@ func (ls LoyaltySystem) BalanceWithdrawals(w http.ResponseWriter, r *http.Reques
 
 	defer ls.requestBodyClose(r)
 
-	userDTO, ok := middleware.UserDTOGetFromCtx(r.Context())
+	customerDTO, ok := middleware.CustomerGetFromCtx(r.Context())
 
 	if !ok {
 		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
-	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(r.Context(), userDTO)
+	withdrawals, err := ls.loyaltyManager.BalanceWithdrawals(r.Context(), customerDTO)
 
 	if err != nil {
 		ls.appContext.Logger.Error("BalanceWithdrawals", "err", err)

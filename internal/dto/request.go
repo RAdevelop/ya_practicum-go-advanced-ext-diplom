@@ -14,39 +14,39 @@ type BalanceWithdraw struct {
 	Sum         float64 `json:"sum"`
 }
 
-// UserCredentials - для запроса регистрации, авторизации
-type UserCredentials struct {
+// CustomerCredentials - для запроса регистрации, авторизации
+type CustomerCredentials struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
 // String - скрыть пароль на случай где-либо его вывести как строку через структуру
-func (uc UserCredentials) String() string {
-	return fmt.Sprintf("Credentials{Login: %q, Password: ***}", uc.Login)
+func (cc CustomerCredentials) String() string {
+	return fmt.Sprintf("Credentials{Login: %q, Password: ***}", cc.Login)
 }
 
 /*
-UserJWT - DTO для работы с JWT токеном
+CustomerJWT - DTO для работы с JWT токеном
 
-Для JSON полей префикс user_* на случай расширения полей, которые можно будет
+Для JSON полей префикс customer_* на случай расширения полей, которые можно будет
 хранить в токене (чтобы было четкое отличие какое поле к чему относится)
 */
-type UserJWT struct {
-	UserLogin string `json:"user_login,omitempty"`
+type CustomerJWT struct {
+	CustomerLogin string `json:"customer_login,omitempty"`
 	jwt.RegisteredClaims
 }
 
-// UserID - парсит Subject в userID
-func (jwt *UserJWT) UserID() (uint64, error) {
-	userID, err := strconv.ParseUint(jwt.Subject, 10, 64)
+// CustomerID - парсит Subject в customerID
+func (jwt *CustomerJWT) CustomerID() (uint64, error) {
+	customerID, err := strconv.ParseUint(jwt.Subject, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid subject %q: %w", jwt.Subject, err)
 	}
-	return userID, nil
+	return customerID, nil
 }
 
-// User - DTO для передачи данных пользователя между слоями приложения
-type User struct {
+// Customer - DTO для передачи данных пользователя между слоями приложения
+type Customer struct {
 	ID    uint64 `json:"id"`
 	Login string `json:"login"`
 }

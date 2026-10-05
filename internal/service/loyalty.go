@@ -31,13 +31,13 @@ import (
 //
 //go:generate mockery
 type LoyaltyStorage interface {
-	OrderUpload(ctx context.Context, userID uint64, number string) error
-	Orders(ctx context.Context, userID uint64) ([]model.Order, error)
-	Balance(ctx context.Context, userID uint64) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, userID uint64) ([]model.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, userID uint64, orderNumber string, sum float64) error
-	UserCreate(ctx context.Context, user *model.User) (*model.User, error)
-	UserByLogin(ctx context.Context, login string) (*model.User, error)
+	OrderUpload(ctx context.Context, customerID uint64, number string) error
+	Orders(ctx context.Context, customerID uint64) ([]model.Order, error)
+	Balance(ctx context.Context, customerID uint64) (*model.Balance, error)
+	BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
+	BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error
+	CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error)
+	CustomerByLogin(ctx context.Context, login string) (*model.Customer, error)
 }
 
 // LoyaltyManager - сервис для работы с программой лояльности
@@ -55,10 +55,10 @@ const retryLinearStepSeconds uint = 2
 const retryLinearAttempts uint = 3
 
 // OrderUpload - Загрузка заказа
-func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userDTO *dto.User, number string) error {
+func (lm *LoyaltyManager) OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error {
 	var err error
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.OrderUpload(ctx, userDTO.ID, number)
+		err = lm.storage.OrderUpload(ctx, customerDTO.ID, number)
 		return struct{}{}, err
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
@@ -66,57 +66,57 @@ func (lm *LoyaltyManager) OrderUpload(ctx context.Context, userDTO *dto.User, nu
 }
 
 // Orders - Получение списка загруженных номеров заказов
-func (lm *LoyaltyManager) Orders(ctx context.Context, userDTO *dto.User) ([]model.Order, error) {
+func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Order, error) {
-		return lm.storage.Orders(ctx, userDTO.ID)
+		return lm.storage.Orders(ctx, customerDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // Balance - Получение текущего баланса пользователя
-func (lm *LoyaltyManager) Balance(ctx context.Context, userDTO *dto.User) (*model.Balance, error) {
+func (lm *LoyaltyManager) Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Balance, error) {
-		return lm.storage.Balance(ctx, userDTO.ID)
+		return lm.storage.Balance(ctx, customerDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
-func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, userDTO *dto.User) ([]model.Withdrawal, error) {
+func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error) {
 	return retryer.RetryLinear(ctx, func(ctx context.Context) ([]model.Withdrawal, error) {
-		return lm.storage.BalanceWithdrawals(ctx, userDTO.ID)
+		return lm.storage.BalanceWithdrawals(ctx, customerDTO.ID)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 }
 
 // BalanceWithdraw - списание средств
-func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, userDTO *dto.User, orderNumber string, sum float64) error {
+func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
 
 	var err error
 	_, err = retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
-		err = lm.storage.BalanceWithdraw(ctx, userDTO.ID, orderNumber, sum)
+		err = lm.storage.BalanceWithdraw(ctx, customerDTO.ID, orderNumber, sum)
 		return struct{}{}, err
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	return err
 }
 
-func (lm *LoyaltyManager) UserLogin(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error) {
+func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
-	userModel, err := retryer.RetryLinear(ctx, func(ctx context.Context) (*model.User, error) {
-		return lm.storage.UserByLogin(ctx, userCredentials.Login)
+	customerModel, err := retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Customer, error) {
+		return lm.storage.CustomerByLogin(ctx, customerCredentials.Login)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrUserNotFound, err)
+		return "", fmt.Errorf("%w: %w", perror.ErrCustomerNotFound, err)
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(userModel.PasswordHash), []byte(userCredentials.Password)); err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrInvalidUserCredentials, err)
+	if err = bcrypt.CompareHashAndPassword([]byte(customerModel.PasswordHash), []byte(customerCredentials.Password)); err != nil {
+		return "", fmt.Errorf("%w: %w", perror.ErrInvalidCustomerCredentials, err)
 	}
 
-	userDTO := dto.User{
-		ID:    userModel.ID,
-		Login: userModel.Login,
+	customerDTO := dto.Customer{
+		ID:    customerModel.ID,
+		Login: customerModel.Login,
 	}
-	token, err := jwtoken.Generate(userDTO, []byte(jwtSecret))
+	token, err := jwtoken.Generate(customerDTO, []byte(jwtSecret))
 
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
@@ -125,22 +125,22 @@ func (lm *LoyaltyManager) UserLogin(ctx context.Context, userCredentials dto.Use
 	return token, nil
 }
 
-func (lm *LoyaltyManager) UserRegister(ctx context.Context, userCredentials dto.UserCredentials, jwtSecret string) (string, error) {
+func (lm *LoyaltyManager) UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
 	// 1. Хешируем пароль.
-	hash, err := bcrypt.GenerateFromPassword([]byte(userCredentials.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(customerCredentials.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrHashGenerateFromPassword, err)
 	}
 
 	// 2. Создаём пользователя.
-	userModel := &model.User{
-		Login:        userCredentials.Login,
+	customerModel := &model.Customer{
+		Login:        customerCredentials.Login,
 		PasswordHash: string(hash),
 	}
 
-	userModel, err = retryer.RetryLinear(ctx, func(ctx context.Context) (*model.User, error) {
-		return lm.storage.UserCreate(ctx, userModel)
+	customerModel, err = retryer.RetryLinear(ctx, func(ctx context.Context) (*model.Customer, error) {
+		return lm.storage.CustomerCreate(ctx, customerModel)
 	}, retryLinearStepSeconds, new(retryLinearAttempts))
 
 	if err != nil {
@@ -152,13 +152,13 @@ func (lm *LoyaltyManager) UserRegister(ctx context.Context, userCredentials dto.
 		Зато слой сервиса генерации токена ничего не знает именно о модели пользователя.
 		И в этом случае необходимый рефакторинг слоев можно будет делать независимо.
 	*/
-	userDTO := dto.User{
-		Login: userModel.Login,
-		ID:    userModel.ID,
+	customerDTO := dto.Customer{
+		Login: customerModel.Login,
+		ID:    customerModel.ID,
 	}
 
 	// 3. выдаём JWT.
-	token, err := jwtoken.Generate(userDTO, []byte(jwtSecret))
+	token, err := jwtoken.Generate(customerDTO, []byte(jwtSecret))
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
 	}

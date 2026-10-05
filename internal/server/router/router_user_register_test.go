@@ -17,12 +17,12 @@ import (
 func Test_UserRegister(t *testing.T) {
 
 	type given struct {
-		inputUserCredentials any
-		outRegisterError     error
-		makeLoyaltyManager   func(t *testing.T, inputUserCredentials any, outRegisterError error) handler.LoyaltyManageable
+		inputCustomerCredentials any
+		outRegisterError         error
+		makeLoyaltyManager       func(t *testing.T, inputCustomerCredentials any, outRegisterError error) handler.LoyaltyManageable
 	}
 
-	makeLoyaltyManagerUserRegisterNever := func(t *testing.T, inputUserCredentials any, outRegisterError error) handler.LoyaltyManageable {
+	makeLoyaltyManagerUserRegisterNever := func(t *testing.T, inputCustomerCredentials any, outRegisterError error) handler.LoyaltyManageable {
 		return handler.NewMockLoyaltyManageable(t)
 	}
 
@@ -34,20 +34,20 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "StatusOK",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
-					Login:    testUserDTO.Login,
-					Password: testUserDTO.Login,
+				inputCustomerCredentials: dto.CustomerCredentials{
+					Login:    testCustomerDTO.Login,
+					Password: testCustomerDTO.Login,
 				},
 				outRegisterError: nil,
-				makeLoyaltyManager: func(t *testing.T, inputUserCredentials any, outRegisterError error) handler.LoyaltyManageable {
+				makeLoyaltyManager: func(t *testing.T, inputCustomerCredentials any, outRegisterError error) handler.LoyaltyManageable {
 					loyaltyManager := handler.NewMockLoyaltyManageable(t)
 
 					appContext := setupAppContext(t)
-					token, err := jwtoken.Generate(*testUserDTO, []byte(appContext.ServerConfig.JWTSecret()))
+					token, err := jwtoken.Generate(*testCustomerDTO, []byte(appContext.ServerConfig.JWTSecret()))
 					assert.NoError(t, err)
 
-					userCredentials, _ := inputUserCredentials.(dto.UserCredentials)
-					loyaltyManager.EXPECT().UserRegister(mock.Anything, userCredentials, appContext.ServerConfig.JWTSecret()).Return(token, outRegisterError).Once()
+					customerCredentials, _ := inputCustomerCredentials.(dto.CustomerCredentials)
+					loyaltyManager.EXPECT().UserRegister(mock.Anything, customerCredentials, appContext.ServerConfig.JWTSecret()).Return(token, outRegisterError).Once()
 
 					return loyaltyManager
 				},
@@ -59,9 +59,9 @@ func Test_UserRegister(t *testing.T) {
 			},
 		},
 		{
-			name: "StatusBadRequest not UserCredentials struct",
+			name: "StatusBadRequest not CustomerCredentials struct",
 			given: given{
-				inputUserCredentials: struct {
+				inputCustomerCredentials: struct {
 					WrongField string
 				}{
 					WrongField: "",
@@ -76,9 +76,9 @@ func Test_UserRegister(t *testing.T) {
 			},
 		},
 		{
-			name: "StatusBadRequest UserCredentials",
+			name: "StatusBadRequest CustomerCredentials",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    "",
 					Password: "",
 				},
@@ -94,9 +94,9 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "StatusBadRequest Empty Login",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    "",
-					Password: testUserDTO.Login,
+					Password: testCustomerDTO.Login,
 				},
 				outRegisterError:   nil,
 				makeLoyaltyManager: makeLoyaltyManagerUserRegisterNever,
@@ -110,8 +110,8 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "StatusBadRequest Empty Password",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
-					Login:    testUserDTO.Login,
+				inputCustomerCredentials: dto.CustomerCredentials{
+					Login:    testCustomerDTO.Login,
 					Password: "",
 				},
 				outRegisterError:   nil,
@@ -126,18 +126,18 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "StatusConflict",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
-					Login:    testUserDTO.Login,
-					Password: testUserDTO.Login,
+				inputCustomerCredentials: dto.CustomerCredentials{
+					Login:    testCustomerDTO.Login,
+					Password: testCustomerDTO.Login,
 				},
-				outRegisterError: perror.ErrUserAlreadyExists,
-				makeLoyaltyManager: func(t *testing.T, inputUserCredentials any, outRegisterError error) handler.LoyaltyManageable {
+				outRegisterError: perror.ErrCustomerAlreadyExists,
+				makeLoyaltyManager: func(t *testing.T, inputCustomerCredentials any, outRegisterError error) handler.LoyaltyManageable {
 					loyaltyManager := handler.NewMockLoyaltyManageable(t)
 
 					appContext := setupAppContext(t)
 
-					userCredentials, _ := inputUserCredentials.(dto.UserCredentials)
-					loyaltyManager.EXPECT().UserRegister(mock.Anything, userCredentials, appContext.ServerConfig.JWTSecret()).Return("", outRegisterError).Once()
+					customerCredentials, _ := inputCustomerCredentials.(dto.CustomerCredentials)
+					loyaltyManager.EXPECT().UserRegister(mock.Anything, customerCredentials, appContext.ServerConfig.JWTSecret()).Return("", outRegisterError).Once()
 
 					return loyaltyManager
 				},
@@ -151,17 +151,17 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "StatusInternalServerError",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
-					Login:    testUserDTO.Login,
-					Password: testUserDTO.Login,
+				inputCustomerCredentials: dto.CustomerCredentials{
+					Login:    testCustomerDTO.Login,
+					Password: testCustomerDTO.Login,
 				},
 				outRegisterError: errors.New("error"),
-				makeLoyaltyManager: func(t *testing.T, inputUserCredentials any, outRegisterError error) handler.LoyaltyManageable {
+				makeLoyaltyManager: func(t *testing.T, inputCustomerCredentials any, outRegisterError error) handler.LoyaltyManageable {
 					loyaltyStorage := handler.NewMockLoyaltyManageable(t)
 
 					appContext := setupAppContext(t)
-					userCredentials, _ := inputUserCredentials.(dto.UserCredentials)
-					loyaltyStorage.EXPECT().UserRegister(mock.Anything, userCredentials, appContext.ServerConfig.JWTSecret()).Return("", outRegisterError).Once()
+					customerCredentials, _ := inputCustomerCredentials.(dto.CustomerCredentials)
+					loyaltyStorage.EXPECT().UserRegister(mock.Anything, customerCredentials, appContext.ServerConfig.JWTSecret()).Return("", outRegisterError).Once()
 					return loyaltyStorage
 				},
 			},
@@ -175,12 +175,12 @@ func Test_UserRegister(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputUserCredentials, tt.given.outRegisterError))
+			client := setupServer(t, tt.given.makeLoyaltyManager(t, tt.given.inputCustomerCredentials, tt.given.outRegisterError))
 
 			req := client.R().
 				SetHeader("Content-Type", "application/json").
 				SetDoNotParseResponse(true).
-				SetBody(tt.given.inputUserCredentials)
+				SetBody(tt.given.inputCustomerCredentials)
 
 			var result *resty.Response
 			var err error

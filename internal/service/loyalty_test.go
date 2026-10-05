@@ -17,7 +17,7 @@ import (
 
 const testJWTSecret = "lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE="
 
-var testUserDTO = &dto.User{
+var testCustomerIDDTO = &dto.Customer{
 	ID:    1,
 	Login: "TestLogin",
 }
@@ -29,13 +29,13 @@ func hashPassword(t *testing.T, password string) string {
 	return string(hash)
 }
 
-// tokenGenerate - генерируем токен, если userDTO задан
-func tokenGenerate(t *testing.T, userDTO *dto.User) string {
+// tokenGenerate - генерируем токен, если customerDTO задан
+func tokenGenerate(t *testing.T, customerDTO *dto.Customer) string {
 	t.Helper()
 
-	if userDTO != nil {
-		token, err := jwtoken.Generate(*userDTO, []byte(testJWTSecret))
-		assert.NoErrorf(t, err, "userDTO: %+v", userDTO)
+	if customerDTO != nil {
+		token, err := jwtoken.Generate(*customerDTO, []byte(testJWTSecret))
+		assert.NoErrorf(t, err, "customerDTO: %+v", customerDTO)
 		return token
 	}
 
@@ -45,19 +45,19 @@ func tokenGenerate(t *testing.T, userDTO *dto.User) string {
 func Test_OrderUpload(t *testing.T) {
 
 	type given struct {
-		inputUserDTO     *dto.User
+		inputCustomerDTO *dto.Customer
 		inputOrderNumber string
 
-		makeStorage func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outErr error) LoyaltyStorage
+		makeStorage func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outErr error) LoyaltyStorage
 	}
 	type want struct {
 		outErr error
 	}
 
-	makeStorage := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outErr error) LoyaltyStorage {
 
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().OrderUpload(t.Context(), inputUserDTO.ID, inputOrderNumber).Return(outErr)
+		storage.EXPECT().OrderUpload(t.Context(), inputCustomerDTO.ID, inputOrderNumber).Return(outErr)
 		return storage
 	}
 
@@ -69,7 +69,7 @@ func Test_OrderUpload(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputUserDTO:     testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				inputOrderNumber: "1",
 				makeStorage:      makeStorage,
 			},
@@ -80,7 +80,7 @@ func Test_OrderUpload(t *testing.T) {
 		{
 			name: "error",
 			given: given{
-				inputUserDTO:     testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				inputOrderNumber: "1",
 				makeStorage:      makeStorage,
 			},
@@ -91,9 +91,9 @@ func Test_OrderUpload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.want.outErr))
 
-			err := loyaltyManager.OrderUpload(t.Context(), tt.given.inputUserDTO, tt.given.inputOrderNumber)
+			err := loyaltyManager.OrderUpload(t.Context(), tt.given.inputCustomerDTO, tt.given.inputOrderNumber)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 		})
@@ -103,19 +103,19 @@ func Test_OrderUpload(t *testing.T) {
 func Test_Orders(t *testing.T) {
 
 	type given struct {
-		inputUserDTO *dto.User
-		outOrders    []model.Order
-		outErr       error
-		makeStorage  func(t *testing.T, inputUserDTO *dto.User, outOrders []model.Order, outErr error) LoyaltyStorage
+		inputCustomerDTO *dto.Customer
+		outOrders        []model.Order
+		outErr           error
+		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, outOrders []model.Order, outErr error) LoyaltyStorage
 	}
 
 	type want struct {
 		orders []model.Order
 	}
 
-	makeStorage := func(t *testing.T, inputUserDTO *dto.User, outOrders []model.Order, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrders []model.Order, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().Orders(t.Context(), inputUserDTO.ID).Return(outOrders, outErr)
+		storage.EXPECT().Orders(t.Context(), inputCustomerDTO.ID).Return(outOrders, outErr)
 		return storage
 	}
 
@@ -127,10 +127,10 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "success and empty list",
 			given: given{
-				inputUserDTO: testUserDTO,
-				outOrders:    []model.Order{},
-				outErr:       nil,
-				makeStorage:  makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outOrders:        []model.Order{},
+				outErr:           nil,
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				orders: []model.Order{},
@@ -139,11 +139,11 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "success and not empty list",
 			given: given{
-				inputUserDTO: testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				outOrders: []model.Order{
 					{
 						Number:     "4532015112830366",
-						UserID:     1,
+						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
@@ -155,7 +155,7 @@ func Test_Orders(t *testing.T) {
 				orders: []model.Order{
 					{
 						Number:     "4532015112830366",
-						UserID:     1,
+						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
@@ -165,10 +165,10 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "error and nil list",
 			given: given{
-				inputUserDTO: testUserDTO,
-				outOrders:    nil,
-				outErr:       errors.New("test error"),
-				makeStorage:  makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outOrders:        nil,
+				outErr:           errors.New("test error"),
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				orders: nil,
@@ -178,9 +178,9 @@ func Test_Orders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserDTO, tt.given.outOrders, tt.given.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outOrders, tt.given.outErr))
 
-			orders, err := loyaltyManager.Orders(t.Context(), tt.given.inputUserDTO)
+			orders, err := loyaltyManager.Orders(t.Context(), tt.given.inputCustomerDTO)
 
 			assert.ErrorIsf(t, err, tt.given.outErr, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.orders, orders, "given: %+v", tt.given)
@@ -190,19 +190,19 @@ func Test_Orders(t *testing.T) {
 
 func Test_Balance(t *testing.T) {
 	type given struct {
-		inputUserDTO *dto.User
-		outBalance   *model.Balance
-		outErr       error
-		makeStorage  func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outErr error) LoyaltyStorage
+		inputCustomerDTO *dto.Customer
+		outBalance       *model.Balance
+		outErr           error
+		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outErr error) LoyaltyStorage
 	}
 	type want struct {
 		balance *model.Balance
 		outErr  error
 	}
 
-	makeStorage := func(t *testing.T, inputUserDTO *dto.User, outBalance *model.Balance, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().Balance(t.Context(), inputUserDTO.ID).Return(outBalance, outErr)
+		storage.EXPECT().Balance(t.Context(), inputCustomerDTO.ID).Return(outBalance, outErr)
 		return storage
 	}
 
@@ -214,9 +214,9 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and empty balance",
 			given: given{
-				inputUserDTO: testUserDTO,
-				outBalance:   &model.Balance{},
-				makeStorage:  makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outBalance:       &model.Balance{},
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				balance: &model.Balance{},
@@ -226,9 +226,9 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and nil balance",
 			given: given{
-				inputUserDTO: testUserDTO,
-				outBalance:   nil,
-				makeStorage:  makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outBalance:       nil,
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				balance: nil,
@@ -238,21 +238,21 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and not empty balance",
 			given: given{
-				inputUserDTO: testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				outBalance: &model.Balance{
-					ID:        1,
-					UserID:    1,
-					Current:   19.05,
-					Withdrawn: 2019.05,
+					ID:         1,
+					CustomerID: 1,
+					Current:    19.05,
+					Withdrawn:  2019.05,
 				},
 				makeStorage: makeStorage,
 			},
 			want: want{
 				balance: &model.Balance{
-					ID:        1,
-					UserID:    1,
-					Current:   19.05,
-					Withdrawn: 2019.05,
+					ID:         1,
+					CustomerID: 1,
+					Current:    19.05,
+					Withdrawn:  2019.05,
 				},
 				outErr: nil,
 			},
@@ -260,9 +260,9 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "error and empty balance",
 			given: given{
-				inputUserDTO: testUserDTO,
-				outBalance:   nil,
-				makeStorage:  makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outBalance:       nil,
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				balance: nil,
@@ -274,9 +274,9 @@ func Test_Balance(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserDTO, tt.given.outBalance, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outBalance, tt.want.outErr))
 
-			balance, err := loyaltyManager.Balance(t.Context(), tt.given.inputUserDTO)
+			balance, err := loyaltyManager.Balance(t.Context(), tt.given.inputCustomerDTO)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.balance, balance, "given: %+v", tt.given)
@@ -286,19 +286,19 @@ func Test_Balance(t *testing.T) {
 
 func Test_BalanceWithdrawals(t *testing.T) {
 	type given struct {
-		inputUserDTO   *dto.User
-		outWithdrawals []model.Withdrawal
-		outErr         error
-		makeStorage    func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage
+		inputCustomerDTO *dto.Customer
+		outWithdrawals   []model.Withdrawal
+		outErr           error
+		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage
 	}
 	type want struct {
 		withdrawals []model.Withdrawal
 		outErr      error
 	}
 
-	makeStorage := func(t *testing.T, inputUserDTO *dto.User, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().BalanceWithdrawals(t.Context(), inputUserDTO.ID).Return(outWithdrawals, outErr)
+		storage.EXPECT().BalanceWithdrawals(t.Context(), inputCustomerDTO.ID).Return(outWithdrawals, outErr)
 		return storage
 	}
 
@@ -310,10 +310,10 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		{
 			name: "success and empty list",
 			given: given{
-				inputUserDTO:   testUserDTO,
-				outWithdrawals: nil,
-				outErr:         nil,
-				makeStorage:    makeStorage,
+				inputCustomerDTO: testCustomerIDDTO,
+				outWithdrawals:   nil,
+				outErr:           nil,
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				withdrawals: nil,
@@ -322,8 +322,8 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		{
 			name: "error and empty list",
 			given: given{
-				inputUserDTO:   testUserDTO,
-				outWithdrawals: nil,
+				inputCustomerDTO: testCustomerIDDTO,
+				outWithdrawals:   nil,
 
 				makeStorage: makeStorage,
 			},
@@ -336,9 +336,9 @@ func Test_BalanceWithdrawals(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserDTO, tt.given.outWithdrawals, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outWithdrawals, tt.want.outErr))
 
-			withdrawals, err := loyaltyManager.BalanceWithdrawals(t.Context(), tt.given.inputUserDTO)
+			withdrawals, err := loyaltyManager.BalanceWithdrawals(t.Context(), tt.given.inputCustomerDTO)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.withdrawals, withdrawals, "given: %+v", tt.given)
@@ -348,19 +348,19 @@ func Test_BalanceWithdrawals(t *testing.T) {
 
 func Test_BalanceWithdraw(t *testing.T) {
 	type given struct {
-		inputUserDTO     *dto.User
+		inputCustomerDTO *dto.Customer
 		inputOrderNumber string
 		inputSum         float64
-		makeStorage      func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage
+		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage
 	}
 
 	type want struct {
 		outErr error
 	}
 
-	makeStorage := func(t *testing.T, inputUserDTO *dto.User, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().BalanceWithdraw(t.Context(), inputUserDTO.ID, inputOrderNumber, inputSum).Return(outErr)
+		storage.EXPECT().BalanceWithdraw(t.Context(), inputCustomerDTO.ID, inputOrderNumber, inputSum).Return(outErr)
 
 		return storage
 	}
@@ -373,7 +373,7 @@ func Test_BalanceWithdraw(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputUserDTO:     testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				inputOrderNumber: "4532015112830366",
 				inputSum:         19.0,
 				makeStorage:      makeStorage,
@@ -385,7 +385,7 @@ func Test_BalanceWithdraw(t *testing.T) {
 		{
 			name: "error",
 			given: given{
-				inputUserDTO:     testUserDTO,
+				inputCustomerDTO: testCustomerIDDTO,
 				inputOrderNumber: "4532015112830366",
 				inputSum:         19.0,
 				makeStorage:      makeStorage,
@@ -398,9 +398,9 @@ func Test_BalanceWithdraw(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.want.outErr))
 
-			err := loyaltyManager.BalanceWithdraw(t.Context(), tt.given.inputUserDTO, tt.given.inputOrderNumber, tt.given.inputSum)
+			err := loyaltyManager.BalanceWithdraw(t.Context(), tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 		})
@@ -410,19 +410,19 @@ func Test_BalanceWithdraw(t *testing.T) {
 func Test_UserLogin(t *testing.T) {
 
 	type given struct {
-		inputUserCredentials dto.UserCredentials
-		inputJWTSecret       string
-		makeStorage          func(t *testing.T, inputUserCredentials dto.UserCredentials, inputJWTSecret string, outUserModel *model.User, outErr error) LoyaltyStorage
+		inputCustomerCredentials dto.CustomerCredentials
+		inputJWTSecret           string
+		makeStorage              func(t *testing.T, inputCustomerCredentials dto.CustomerCredentials, inputJWTSecret string, outCustomerModel *model.Customer, outErr error) LoyaltyStorage
 	}
 	type want struct {
-		outUserModel *model.User
-		isTokenEmpty bool
-		outErr       error
+		outCustomerModel *model.Customer
+		isTokenEmpty     bool
+		outErr           error
 	}
 
-	makeStorage := func(t *testing.T, inputUserCredentials dto.UserCredentials, inputJWTSecret string, outUserModel *model.User, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerCredentials dto.CustomerCredentials, inputJWTSecret string, outCustomerModel *model.Customer, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().UserByLogin(t.Context(), inputUserCredentials.Login).Return(outUserModel, outErr)
+		storage.EXPECT().CustomerByLogin(t.Context(), inputCustomerCredentials.Login).Return(outCustomerModel, outErr)
 		return storage
 	}
 
@@ -438,7 +438,7 @@ func Test_UserLogin(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    login,
 					Password: password,
 				},
@@ -446,7 +446,7 @@ func Test_UserLogin(t *testing.T) {
 				makeStorage:    makeStorage,
 			},
 			want: want{
-				outUserModel: &model.User{
+				outCustomerModel: &model.Customer{
 					ID:           1,
 					Login:        login,
 					PasswordHash: passwordHash,
@@ -456,9 +456,9 @@ func Test_UserLogin(t *testing.T) {
 			},
 		},
 		{
-			name: "error ErrUserNotFound",
+			name: "error ErrCustomerNotFound",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    login,
 					Password: password,
 				},
@@ -466,15 +466,15 @@ func Test_UserLogin(t *testing.T) {
 				makeStorage:    makeStorage,
 			},
 			want: want{
-				outUserModel: nil,
-				isTokenEmpty: true,
-				outErr:       perror.ErrUserNotFound,
+				outCustomerModel: nil,
+				isTokenEmpty:     true,
+				outErr:           perror.ErrCustomerNotFound,
 			},
 		},
 		{
 			name: "password Compare error",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    login,
 					Password: "password Compare error",
 				},
@@ -482,22 +482,22 @@ func Test_UserLogin(t *testing.T) {
 				makeStorage:    makeStorage,
 			},
 			want: want{
-				outUserModel: &model.User{
+				outCustomerModel: &model.Customer{
 					ID:           1,
 					Login:        login,
 					PasswordHash: passwordHash,
 				},
 				isTokenEmpty: true,
-				outErr:       perror.ErrInvalidUserCredentials,
+				outErr:       perror.ErrInvalidCustomerCredentials,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserCredentials, tt.given.inputJWTSecret, tt.want.outUserModel, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
 
-			token, err := loyaltyManager.UserLogin(t.Context(), tt.given.inputUserCredentials, tt.given.inputJWTSecret)
+			token, err := loyaltyManager.UserLogin(t.Context(), tt.given.inputCustomerCredentials, tt.given.inputJWTSecret)
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 
 			if tt.want.isTokenEmpty {
@@ -512,31 +512,31 @@ func Test_UserLogin(t *testing.T) {
 func Test_UserRegister(t *testing.T) {
 
 	type given struct {
-		inputUserCredentials dto.UserCredentials
-		inputJWTSecret       string
-		makeStorage          func(t *testing.T, inputUserCredentials dto.UserCredentials, inputJWTSecret string, outUserModel *model.User, outErr error) LoyaltyStorage
+		inputCustomerCredentials dto.CustomerCredentials
+		inputJWTSecret           string
+		makeStorage              func(t *testing.T, inputCustomerCredentials dto.CustomerCredentials, inputJWTSecret string, outCustomerModel *model.Customer, outErr error) LoyaltyStorage
 	}
 	type want struct {
-		outUserModel *model.User
-		isTokenEmpty bool
-		outErr       error
+		outCustomerModel *model.Customer
+		isTokenEmpty     bool
+		outErr           error
 	}
 
-	makeStorage := func(t *testing.T, inputUserCredentials dto.UserCredentials, inputJWTSecret string, outUserModel *model.User, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerCredentials dto.CustomerCredentials, inputJWTSecret string, outCustomerModel *model.Customer, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
 		storage.EXPECT().
-			UserCreate(
+			CustomerCreate(
 				t.Context(),
-				mock.MatchedBy(func(u *model.User) bool {
-					if u.Login != inputUserCredentials.Login {
+				mock.MatchedBy(func(u *model.Customer) bool {
+					if u.Login != inputCustomerCredentials.Login {
 						return false
 					}
 					return bcrypt.CompareHashAndPassword(
 						[]byte(u.PasswordHash),
-						[]byte(inputUserCredentials.Password),
+						[]byte(inputCustomerCredentials.Password),
 					) == nil
 				})).
-			Return(outUserModel, outErr).
+			Return(outCustomerModel, outErr).
 			Once()
 		return storage
 	}
@@ -553,7 +553,7 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    login,
 					Password: password,
 				},
@@ -561,7 +561,7 @@ func Test_UserRegister(t *testing.T) {
 				makeStorage:    makeStorage,
 			},
 			want: want{
-				outUserModel: &model.User{
+				outCustomerModel: &model.Customer{
 					ID:           1,
 					Login:        login,
 					PasswordHash: passwordHash,
@@ -573,7 +573,7 @@ func Test_UserRegister(t *testing.T) {
 		{
 			name: "error",
 			given: given{
-				inputUserCredentials: dto.UserCredentials{
+				inputCustomerCredentials: dto.CustomerCredentials{
 					Login:    login,
 					Password: password,
 				},
@@ -581,18 +581,18 @@ func Test_UserRegister(t *testing.T) {
 				makeStorage:    makeStorage,
 			},
 			want: want{
-				outUserModel: nil,
-				isTokenEmpty: true,
-				outErr:       errors.New("some error"),
+				outCustomerModel: nil,
+				isTokenEmpty:     true,
+				outErr:           errors.New("some error"),
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputUserCredentials, tt.given.inputJWTSecret, tt.want.outUserModel, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
 
-			token, err := loyaltyManager.UserRegister(t.Context(), tt.given.inputUserCredentials, tt.given.inputJWTSecret)
+			token, err := loyaltyManager.UserRegister(t.Context(), tt.given.inputCustomerCredentials, tt.given.inputJWTSecret)
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 
 			if tt.want.isTokenEmpty {
