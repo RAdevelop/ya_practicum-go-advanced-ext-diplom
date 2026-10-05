@@ -131,7 +131,6 @@ rebuild:  ## пересобрать кластер
 	@sleep 5
 	@make migrate-up
 	@make migrate-upt
-	@make unset-env
 
 
 ######## migrate db schema

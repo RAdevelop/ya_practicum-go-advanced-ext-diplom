@@ -5,6 +5,7 @@ import "errors"
 
 var (
 	ErrInvalidCustomerCredentials      = errors.New("invalid customer credentials")
+	ErrInvalidCustomerModel            = errors.New("invalid customer model")
 	ErrOrderNotFound                   = errors.New("order not found")
 	ErrOrderAlreadyUploadedByCustomer  = errors.New("order already uploaded by this customer")
 	ErrOrderAlreadyUploadedByOther     = errors.New("order already uploaded by another customer")

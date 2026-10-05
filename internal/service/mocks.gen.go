@@ -243,74 +243,6 @@ func (_c *MockLoyaltyStorage_BalanceWithdrawals_Call) RunAndReturn(run func(ctx 
 	return _c
 }
 
-// CustomerByLogin provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) CustomerByLogin(ctx context.Context, login string) (*model.Customer, error) {
-	ret := _mock.Called(ctx, login)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CustomerByLogin")
-	}
-
-	var r0 *model.Customer
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.Customer, error)); ok {
-		return returnFunc(ctx, login)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.Customer); ok {
-		r0 = returnFunc(ctx, login)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Customer)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, login)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockLoyaltyStorage_CustomerByLogin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CustomerByLogin'
-type MockLoyaltyStorage_CustomerByLogin_Call struct {
-	*mock.Call
-}
-
-// CustomerByLogin is a helper method to define mock.On call
-//   - ctx context.Context
-//   - login string
-func (_e *MockLoyaltyStorage_Expecter) CustomerByLogin(ctx any, login any) *MockLoyaltyStorage_CustomerByLogin_Call {
-	return &MockLoyaltyStorage_CustomerByLogin_Call{Call: _e.mock.On("CustomerByLogin", ctx, login)}
-}
-
-func (_c *MockLoyaltyStorage_CustomerByLogin_Call) Run(run func(ctx context.Context, login string)) *MockLoyaltyStorage_CustomerByLogin_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockLoyaltyStorage_CustomerByLogin_Call) Return(customer *model.Customer, err error) *MockLoyaltyStorage_CustomerByLogin_Call {
-	_c.Call.Return(customer, err)
-	return _c
-}
-
-func (_c *MockLoyaltyStorage_CustomerByLogin_Call) RunAndReturn(run func(ctx context.Context, login string) (*model.Customer, error)) *MockLoyaltyStorage_CustomerByLogin_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // CustomerCreate provides a mock function for the type MockLoyaltyStorage
 func (_mock *MockLoyaltyStorage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
 	ret := _mock.Called(ctx, customer)
@@ -375,6 +307,74 @@ func (_c *MockLoyaltyStorage_CustomerCreate_Call) Return(customer1 *model.Custom
 }
 
 func (_c *MockLoyaltyStorage_CustomerCreate_Call) RunAndReturn(run func(ctx context.Context, customer *model.Customer) (*model.Customer, error)) *MockLoyaltyStorage_CustomerCreate_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CustomerFindByLogin provides a mock function for the type MockLoyaltyStorage
+func (_mock *MockLoyaltyStorage) CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error) {
+	ret := _mock.Called(ctx, login)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CustomerFindByLogin")
+	}
+
+	var r0 *model.Customer
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.Customer, error)); ok {
+		return returnFunc(ctx, login)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.Customer); ok {
+		r0 = returnFunc(ctx, login)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Customer)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, login)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockLoyaltyStorage_CustomerFindByLogin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CustomerFindByLogin'
+type MockLoyaltyStorage_CustomerFindByLogin_Call struct {
+	*mock.Call
+}
+
+// CustomerFindByLogin is a helper method to define mock.On call
+//   - ctx context.Context
+//   - login string
+func (_e *MockLoyaltyStorage_Expecter) CustomerFindByLogin(ctx any, login any) *MockLoyaltyStorage_CustomerFindByLogin_Call {
+	return &MockLoyaltyStorage_CustomerFindByLogin_Call{Call: _e.mock.On("CustomerFindByLogin", ctx, login)}
+}
+
+func (_c *MockLoyaltyStorage_CustomerFindByLogin_Call) Run(run func(ctx context.Context, login string)) *MockLoyaltyStorage_CustomerFindByLogin_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_CustomerFindByLogin_Call) Return(customer *model.Customer, err error) *MockLoyaltyStorage_CustomerFindByLogin_Call {
+	_c.Call.Return(customer, err)
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_CustomerFindByLogin_Call) RunAndReturn(run func(ctx context.Context, login string) (*model.Customer, error)) *MockLoyaltyStorage_CustomerFindByLogin_Call {
 	_c.Call.Return(run)
 	return _c
 }

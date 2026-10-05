@@ -408,7 +408,7 @@ func Test_UserLogin(t *testing.T) {
 
 	makeStorage := func(t *testing.T, inputCustomerCredentials dto.CustomerCredentials, inputJWTSecret string, outCustomerModel *model.Customer, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().CustomerByLogin(t.Context(), inputCustomerCredentials.Login).Return(outCustomerModel, outErr)
+		storage.EXPECT().CustomerFindByLogin(t.Context(), inputCustomerCredentials.Login).Return(outCustomerModel, outErr)
 		return storage
 	}
 

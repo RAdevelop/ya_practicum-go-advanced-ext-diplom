@@ -18,7 +18,7 @@ func IsValidCustomerCredentials(credentials dto.CustomerCredentials) error {
 	return nil
 }
 func isValidCredentialsLogin(login string) bool {
-	return strings.Trim(login, " ") != ""
+	return strings.TrimSpace(login) != ""
 }
 func isValidCredentialsPassword(password string) bool {
 	return password != ""

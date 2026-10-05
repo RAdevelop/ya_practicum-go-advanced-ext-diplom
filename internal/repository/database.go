@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"context"
+	"errors"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type DBStorage struct {
@@ -17,35 +17,13 @@ func NewDBStorage(db *database.DB) *DBStorage {
 	}
 }
 
-func (s *DBStorage) OrderUpload(ctx context.Context, customerID uint64, number string) error {
+const (
+	// pgErrUniqueViolationCode - запись уже существует
+	pgErrUniqueViolationCode = "23505"
+)
 
-	//TODO implement
-	return nil
-}
-
-func (s *DBStorage) Orders(ctx context.Context, customerID uint64) ([]model.Order, error) {
-	//TODO implement
-	return nil, nil
-}
-
-func (s *DBStorage) Balance(ctx context.Context, customerID uint64) (*model.Balance, error) {
-	//TODO implement
-	return nil, nil
-}
-
-func (s *DBStorage) BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
-	//TODO implement
-	return nil, nil
-}
-func (s *DBStorage) BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error {
-	//TODO implement
-	return nil
-}
-func (s *DBStorage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
-	//TODO implement
-	return nil, nil
-}
-func (s *DBStorage) CustomerByLogin(ctx context.Context, login string) (*model.Customer, error) {
-	//TODO implement
-	return nil, nil
+// isPgErrorCode проверяет, что ошибка — PgError с заданным кодом.
+func isPgErrorCode(err error, code string) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == code
 }

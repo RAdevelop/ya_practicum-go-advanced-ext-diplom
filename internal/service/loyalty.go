@@ -36,7 +36,7 @@ type LoyaltyStorage interface {
 	BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error
 	CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error)
-	CustomerByLogin(ctx context.Context, login string) (*model.Customer, error)
+	CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error)
 }
 
 // LoyaltyManager - сервис для работы с программой лояльности
@@ -77,7 +77,7 @@ func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, customerDTO *dto.
 
 func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
-	customerModel, err := lm.storage.CustomerByLogin(ctx, customerCredentials.Login)
+	customerModel, err := lm.storage.CustomerFindByLogin(ctx, customerCredentials.Login)
 
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", perror.ErrCustomerNotFound, err)
