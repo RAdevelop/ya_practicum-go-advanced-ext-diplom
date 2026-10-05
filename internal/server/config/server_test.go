@@ -9,13 +9,15 @@ import (
 func TestConfig_Address(t *testing.T) {
 
 	type given struct {
-		addr      string
-		jwtSecret string
+		addr                 string
+		accrualSystemAddress string
+		jwtSecret            string
 	}
 
 	type want struct {
-		addr      string
-		jwtSecret string
+		addr                 string
+		accrualSystemAddress string
+		jwtSecret            string
 	}
 
 	tests := []struct {
@@ -26,11 +28,14 @@ func TestConfig_Address(t *testing.T) {
 		{
 			name: "empty value",
 			given: given{
-				addr:      "",
-				jwtSecret: "",
+				addr:                 "",
+				accrualSystemAddress: "",
+				jwtSecret:            "",
 			},
 			want: want{
-				addr: "",
+				addr:                 "",
+				accrualSystemAddress: "",
+				jwtSecret:            "",
 			},
 		},
 		{
@@ -45,10 +50,14 @@ func TestConfig_Address(t *testing.T) {
 		{
 			name: "string address",
 			given: given{
-				addr: "localhost:8080",
+				addr:                 "localhost:8080",
+				accrualSystemAddress: "localhost:8081",
+				jwtSecret:            "jwtSecret",
 			},
 			want: want{
-				addr: "localhost:8080",
+				addr:                 "localhost:8080",
+				accrualSystemAddress: "localhost:8081",
+				jwtSecret:            "jwtSecret",
 			},
 		},
 		{
@@ -65,10 +74,12 @@ func TestConfig_Address(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfgProvider := NewMockProvider(t)
 			cfgProvider.EXPECT().Address().Return(tt.want.addr)
+			cfgProvider.EXPECT().AccrualSystemAddress().Return(tt.want.accrualSystemAddress)
 			cfgProvider.EXPECT().JWTSecret().Return(tt.want.jwtSecret)
 
 			cfg := New(cfgProvider)
 			assert.Equal(t, tt.want.addr, cfg.Address())
+			assert.Equal(t, tt.want.accrualSystemAddress, cfg.AccrualSystemAddress())
 			assert.Equal(t, tt.want.jwtSecret, cfg.JWTSecret())
 		})
 	}

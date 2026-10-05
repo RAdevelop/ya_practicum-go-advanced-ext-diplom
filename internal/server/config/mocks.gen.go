@@ -35,6 +35,50 @@ func (_m *MockProvider) EXPECT() *MockProvider_Expecter {
 	return &MockProvider_Expecter{mock: &_m.Mock}
 }
 
+// AccrualSystemAddress provides a mock function for the type MockProvider
+func (_mock *MockProvider) AccrualSystemAddress() string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for AccrualSystemAddress")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// MockProvider_AccrualSystemAddress_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AccrualSystemAddress'
+type MockProvider_AccrualSystemAddress_Call struct {
+	*mock.Call
+}
+
+// AccrualSystemAddress is a helper method to define mock.On call
+func (_e *MockProvider_Expecter) AccrualSystemAddress() *MockProvider_AccrualSystemAddress_Call {
+	return &MockProvider_AccrualSystemAddress_Call{Call: _e.mock.On("AccrualSystemAddress")}
+}
+
+func (_c *MockProvider_AccrualSystemAddress_Call) Run(run func()) *MockProvider_AccrualSystemAddress_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *MockProvider_AccrualSystemAddress_Call) Return(s string) *MockProvider_AccrualSystemAddress_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *MockProvider_AccrualSystemAddress_Call) RunAndReturn(run func() string) *MockProvider_AccrualSystemAddress_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Address provides a mock function for the type MockProvider
 func (_mock *MockProvider) Address() string {
 	ret := _mock.Called()

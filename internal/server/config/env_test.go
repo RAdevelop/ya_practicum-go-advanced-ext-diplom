@@ -9,9 +9,10 @@ import (
 
 func TestEnv_Address(t *testing.T) {
 	type want struct {
-		address   string
-		jwtSecret string
-		hasErr    bool
+		address              string
+		accrualSystemAddress string
+		jwtSecret            string
+		hasErr               bool
 	}
 
 	tests := []struct {
@@ -23,13 +24,30 @@ func TestEnv_Address(t *testing.T) {
 			name: "empty value",
 			env: &env.Options{
 				Environment: map[string]string{
-					"RUN_ADDRESS": "",
-					"JWT_SECRET":  "",
+					"RUN_ADDRESS":            "",
+					"ACCRUAL_SYSTEM_ADDRESS": "",
+					"JWT_SECRET":             "",
 				},
 			},
 			want: want{
-				address:   "",
-				jwtSecret: "",
+				address:              "",
+				accrualSystemAddress: "",
+				jwtSecret:            "",
+			},
+		},
+		{
+			name: "not empty value",
+			env: &env.Options{
+				Environment: map[string]string{
+					"RUN_ADDRESS":            "RUN_ADDRESS",
+					"ACCRUAL_SYSTEM_ADDRESS": "ACCRUAL_SYSTEM_ADDRESS",
+					"JWT_SECRET":             "JWT_SECRET",
+				},
+			},
+			want: want{
+				address:              "RUN_ADDRESS",
+				accrualSystemAddress: "ACCRUAL_SYSTEM_ADDRESS",
+				jwtSecret:            "JWT_SECRET",
 			},
 		},
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"sync"
@@ -12,6 +13,12 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 )
+
+type applicationFlags struct {
+	runAddress           *string
+	databaseURI          *string
+	accrualSystemAddress *string
+}
 
 func main() {
 
@@ -25,8 +32,19 @@ func main() {
 	}
 	cfgServer := config.New(envSrv)
 
-	cfgServer.AddressSet("localhost:8080")                                 //TODO get from flag or env
-	cfgServer.JWTSecretSet("lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE=") //TODO get from flag or env
+	/*
+		- адрес и порт запуска сервиса: переменная окружения ОС `RUN_ADDRESS` или флаг `-a`
+		- адрес подключения к базе данных: переменная окружения ОС `DATABASE_URI` или флаг `-d`
+		- адрес системы расчёта начислений: переменная окружения ОС `ACCRUAL_SYSTEM_ADDRESS` или флаг `-r`
+	*/
+	appFlags := &applicationFlags{}
+	appFlags.runAddress = flag.String("a", "localhost:8080", `адрес и порт запуска сервиса`)
+	appFlags.databaseURI = flag.String("d", "", `адрес подключения к базе данных`)
+	appFlags.accrualSystemAddress = flag.String("r", "", `адрес системы расчёта начислений`)
+
+	serverConfigUpdateByFlags(cfgServer, appFlags)
+
+	cfgServer.JWTSecretSet("lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE=")
 	appContext := appcontext.New(logApp, cfgServer)
 
 	var wg sync.WaitGroup
@@ -55,4 +73,19 @@ func main() {
 	}()
 
 	wg.Wait()
+}
+
+func serverConfigUpdateByFlags(serverConfig *config.Config, appFlags *applicationFlags) {
+
+	if serverConfig == nil || appFlags == nil {
+		return
+	}
+
+	if serverConfig.Address() == "" && appFlags.runAddress != nil {
+		serverConfig.AddressSet(*appFlags.runAddress)
+	}
+
+	if serverConfig.AccrualSystemAddress() == "" && appFlags.accrualSystemAddress != nil {
+		serverConfig.AccrualSystemAddressSet(*appFlags.accrualSystemAddress)
+	}
 }

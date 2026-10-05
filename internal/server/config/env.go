@@ -7,8 +7,9 @@ type Env struct {
 }
 
 type envCfg struct {
-	Addr      string `env:"RUN_ADDRESS"`
-	JWTSecret string `env:"JWT_SECRET"`
+	Addr                 string `env:"RUN_ADDRESS"`
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	JWTSecret            string `env:"JWT_SECRET"`
 }
 
 func NewEnv() (*Env, error) {
@@ -38,6 +39,11 @@ func NewEnvWithOptions(opts *env.Options) (*Env, error) {
 func (env *Env) Address() string {
 	return env.cfg.Addr
 }
+
+func (env *Env) AccrualSystemAddress() string {
+	return env.cfg.AccrualSystemAddress
+}
+
 func (env *Env) JWTSecret() string {
 	return env.cfg.JWTSecret
 }
