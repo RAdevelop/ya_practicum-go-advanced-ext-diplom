@@ -42,4 +42,9 @@ packages:
       all: false
     interfaces:
       LoyaltyManageable:
+  github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config:
+    config:
+      all: false
+    interfaces:
+      Provider:
 

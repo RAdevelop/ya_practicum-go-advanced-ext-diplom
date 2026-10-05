@@ -10,6 +10,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
+	dbConfig "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/go-resty/resty/v2"
@@ -51,7 +52,22 @@ func setupMockConfigServer(t *testing.T) *config.MockProvider {
 	cfg := config.NewMockProvider(t)
 
 	cfg.EXPECT().Address().Maybe().Return("localhost:8080")
+	cfg.EXPECT().AccrualSystemAddress().Maybe().Return("localhost:8081")
 	cfg.EXPECT().JWTSecret().Maybe().Return(testJWTSecret)
+
+	return cfg
+}
+
+func setupMockConfigDB(t *testing.T) *dbConfig.MockProvider {
+	t.Helper()
+
+	cfg := dbConfig.NewMockProvider(t)
+
+	cfg.EXPECT().DSN().Maybe().Return("db_address")
+	cfg.EXPECT().MaxConns().Maybe().Return(25)
+	cfg.EXPECT().MinConns().Maybe().Return(5)
+	cfg.EXPECT().MaxConnLifetime().Maybe().Return("1h")
+	cfg.EXPECT().MaxConnIdleTime().Maybe().Return("4m")
 
 	return cfg
 }
@@ -59,7 +75,7 @@ func setupMockConfigServer(t *testing.T) *config.MockProvider {
 func setupAppContext(t *testing.T) *appcontext.AppContext {
 	t.Helper()
 
-	return appcontext.New(setupMockLogger(t), setupMockConfigServer(t))
+	return appcontext.New(setupMockLogger(t), setupMockConfigServer(t), setupMockConfigDB(t))
 }
 
 /*

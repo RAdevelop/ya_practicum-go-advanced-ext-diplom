@@ -10,6 +10,7 @@ import (
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
+	configDb "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 )
@@ -30,7 +31,12 @@ func main() {
 		logApp.Error("Error initializing environment service", "error", err)
 		return
 	}
-	cfgServer := config.New(envSrv)
+
+	envDB, err := configDb.NewEnv()
+	if err != nil {
+		logApp.Error("Error initializing environment db", "error", err)
+		return
+	}
 
 	/*
 		- адрес и порт запуска сервиса: переменная окружения ОС `RUN_ADDRESS` или флаг `-a`
@@ -42,10 +48,17 @@ func main() {
 	appFlags.databaseURI = flag.String("d", "", `адрес подключения к базе данных`)
 	appFlags.accrualSystemAddress = flag.String("r", "", `адрес системы расчёта начислений`)
 
-	serverConfigUpdateByFlags(cfgServer, appFlags)
+	cfgServer := config.New(envSrv)
+	cfgDB := configDb.New(envDB)
 
+	serverConfigUpdateByFlags(cfgServer, appFlags)
 	cfgServer.JWTSecretSet("lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE=")
-	appContext := appcontext.New(logApp, cfgServer)
+
+	if cfgDB.DSN() == "" && appFlags.databaseURI != nil {
+		cfgDB.DSNSet(*appFlags.databaseURI)
+	}
+
+	appContext := appcontext.New(logApp, cfgServer, cfgDB)
 
 	var wg sync.WaitGroup
 
