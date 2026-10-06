@@ -44,7 +44,7 @@ func Generate(customer dto.Customer, secret []byte) (string, error) {
 
 	signed, err := token.SignedString(secret)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrSignToken, err)
+		return "", fmt.Errorf("%w: %w", perror.ErrTokenSign, err)
 	}
 
 	return signed, nil
@@ -68,7 +68,7 @@ func Parse(tokenString string, secret []byte) (*dto.Customer, error) {
 			// Проверяем, что алгоритм — HMAC.
 			// Защита от подмены alg на "none" или асимметричный.
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("%w: %v", perror.ErrUnexpectedSigningMethodForToken, t.Header["alg"])
+				return nil, fmt.Errorf("%w: %v", perror.ErrTokenUnexpectedSigningMethod, t.Header["alg"])
 			}
 			return secret, nil
 		},
@@ -76,16 +76,16 @@ func Parse(tokenString string, secret []byte) (*dto.Customer, error) {
 		jwt.WithValidMethods([]string{signingAlg}),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", perror.ErrInvalidToken, err)
+		return nil, fmt.Errorf("%w: %v", perror.ErrTokenInvalid, err)
 	}
 
 	if !token.Valid {
-		return nil, perror.ErrInvalidToken
+		return nil, perror.ErrTokenInvalid
 	}
 
 	customerID, err := claims.CustomerID()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", perror.ErrInvalidToken, err)
+		return nil, fmt.Errorf("%w: %v", perror.ErrTokenInvalid, err)
 	}
 
 	return &dto.Customer{

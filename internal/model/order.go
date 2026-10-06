@@ -14,4 +14,12 @@ type Order struct {
 	Status     statusInner.Accrual `json:"status" db:"status"`
 	Accrual    float64             `json:"accrual,omitempty" db:"accrual"` // Начисленные баллы за этот конкретный заказ
 	UploadedAt time.Time           `json:"uploaded_at" db:"uploaded_at"`
+	UpdatedAt  time.Time           `json:"updated_at" db:"updated_at"`
+}
+
+func (o *Order) IsCorrect() bool {
+	if o == nil || o.Number == "" || o.CustomerID == 0 || !o.Status.Valid() {
+		return false
+	}
+	return true
 }

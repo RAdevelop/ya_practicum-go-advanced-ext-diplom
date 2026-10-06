@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-func (s *DBStorage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
+func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
 
 	if !customer.IsCorrect() {
-		return nil, perror.ErrInvalidCustomerModel
+		return nil, perror.ErrCustomerInvalidModel
 	}
 
 	sql := `
@@ -52,7 +52,7 @@ func (s *DBStorage) CustomerCreate(ctx context.Context, customer *model.Customer
 	return customer, nil
 }
 
-func (s *DBStorage) CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error) {
+func (s *Storage) CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error) {
 
 	if strings.TrimSpace(login) == "" {
 		return nil, perror.ErrCustomerNotFound
@@ -61,6 +61,7 @@ func (s *DBStorage) CustomerFindByLogin(ctx context.Context, login string) (*mod
 	sql := `SELECT id, login, password_hash, created_at FROM customers WHERE login = $1`
 
 	row, err := s.DB.Executor(ctx).Query(ctx, sql, login)
+
 	if err != nil {
 		return nil, fmt.Errorf("%w, %w", perror.ErrCustomerNotFound, err)
 	}

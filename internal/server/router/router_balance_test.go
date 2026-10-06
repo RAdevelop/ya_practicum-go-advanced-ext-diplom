@@ -167,7 +167,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 			},
 		},
 		{
-			name: "StatusNotFound",
+			name: "StatusUnprocessableEntity order not found by order number",
 			given: given{
 				inputCustomerDTO:   testCustomerDTO,
 				inputOrderNumber:   "4532015112830366",
@@ -177,7 +177,7 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 				authHeaderSet:      authHeaderSetCorrect,
 			},
 			want: want{
-				httpStatus:   http.StatusNotFound,
+				httpStatus:   http.StatusUnprocessableEntity,
 				responseBody: ``,
 				contentType:  "text/plain; charset=utf-8",
 			},

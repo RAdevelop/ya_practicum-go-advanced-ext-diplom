@@ -23,6 +23,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/jwtoken"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,7 +31,7 @@ import (
 //
 //go:generate mockery
 type LoyaltyStorage interface {
-	OrderUpload(ctx context.Context, customerID uint64, number string) error
+	OrderUpload(ctx context.Context, order model.Order) error
 	Orders(ctx context.Context, customerID uint64) ([]model.Order, error)
 	Balance(ctx context.Context, customerID uint64) (*model.Balance, error)
 	BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
@@ -52,7 +53,13 @@ func NewLoyaltyManager(storage LoyaltyStorage) *LoyaltyManager {
 
 // OrderUpload - Загрузка заказа
 func (lm *LoyaltyManager) OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error {
-	return lm.storage.OrderUpload(ctx, customerDTO.ID, number)
+
+	order := model.Order{
+		CustomerID: customerDTO.ID,
+		Number:     number,
+		Status:     statusInner.AccrualNew,
+	}
+	return lm.storage.OrderUpload(ctx, order)
 }
 
 // Orders - Получение списка загруженных номеров заказов
@@ -84,7 +91,7 @@ func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(customerModel.PasswordHash), []byte(customerCredentials.Password)); err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrInvalidCustomerCredentials, err)
+		return "", fmt.Errorf("%w: %w", perror.ErrCustomerInvalidCredentials, err)
 	}
 
 	customerDTO := dto.Customer{
@@ -94,7 +101,7 @@ func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto
 	token, err := jwtoken.Generate(customerDTO, []byte(jwtSecret))
 
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
+		return "", fmt.Errorf("%w: %w", perror.ErrTokenInvalid, err)
 	}
 
 	return token, nil
@@ -133,7 +140,7 @@ func (lm *LoyaltyManager) UserRegister(ctx context.Context, customerCredentials 
 	// 3. выдаём JWT.
 	token, err := jwtoken.Generate(customerDTO, []byte(jwtSecret))
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", perror.ErrInvalidToken, err)
+		return "", fmt.Errorf("%w: %w", perror.ErrTokenInvalid, err)
 	}
 
 	return token, nil

@@ -35,7 +35,7 @@ func TestIsValidCustomerCredentials(t *testing.T) {
 					Login:    "test",
 				},
 			},
-			wantErr: perror.ErrInvalidCustomerCredentials,
+			wantErr: perror.ErrCustomerInvalidCredentials,
 		},
 		{
 			name: "not valid - empty login",
@@ -45,7 +45,7 @@ func TestIsValidCustomerCredentials(t *testing.T) {
 					Login:    "",
 				},
 			},
-			wantErr: perror.ErrInvalidCustomerCredentials,
+			wantErr: perror.ErrCustomerInvalidCredentials,
 		},
 		{
 			name: "not valid - empty login",
@@ -55,7 +55,7 @@ func TestIsValidCustomerCredentials(t *testing.T) {
 					Login:    "   ",
 				},
 			},
-			wantErr: perror.ErrInvalidCustomerCredentials,
+			wantErr: perror.ErrCustomerInvalidCredentials,
 		},
 	}
 	for _, tt := range tests {

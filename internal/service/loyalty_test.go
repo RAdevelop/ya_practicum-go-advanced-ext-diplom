@@ -16,7 +16,7 @@ import (
 
 const testJWTSecret = "lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE="
 
-var testCustomerIDDTO = &dto.Customer{
+var testCustomerDTO = &dto.Customer{
 	ID:    1,
 	Login: "TestLogin",
 }
@@ -43,7 +43,12 @@ func Test_OrderUpload(t *testing.T) {
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, outErr error) LoyaltyStorage {
 
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().OrderUpload(t.Context(), inputCustomerDTO.ID, inputOrderNumber).Return(outErr)
+		order := model.Order{
+			CustomerID: testCustomerDTO.ID,
+			Number:     inputOrderNumber,
+			Status:     statusInner.AccrualNew,
+		}
+		storage.EXPECT().OrderUpload(t.Context(), order).Return(outErr)
 		return storage
 	}
 
@@ -55,7 +60,7 @@ func Test_OrderUpload(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				inputOrderNumber: "1",
 				makeStorage:      makeStorage,
 			},
@@ -66,7 +71,7 @@ func Test_OrderUpload(t *testing.T) {
 		{
 			name: "error",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				inputOrderNumber: "1",
 				makeStorage:      makeStorage,
 			},
@@ -113,7 +118,7 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "success and empty list",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outOrders:        []model.Order{},
 				outErr:           nil,
 				makeStorage:      makeStorage,
@@ -125,11 +130,11 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "success and not empty list",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outOrders: []model.Order{
 					{
 						Number:     "4532015112830366",
-						CustomerID: 1,
+						CustomerID: uint64(1),
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
@@ -151,7 +156,7 @@ func Test_Orders(t *testing.T) {
 		{
 			name: "error and nil list",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outOrders:        nil,
 				outErr:           errors.New("test error"),
 				makeStorage:      makeStorage,
@@ -200,7 +205,7 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and empty balance",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outBalance:       &model.Balance{},
 				makeStorage:      makeStorage,
 			},
@@ -212,7 +217,7 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and nil balance",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outBalance:       nil,
 				makeStorage:      makeStorage,
 			},
@@ -224,7 +229,7 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "success and not empty balance",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outBalance: &model.Balance{
 					ID:         1,
 					CustomerID: 1,
@@ -246,7 +251,7 @@ func Test_Balance(t *testing.T) {
 		{
 			name: "error and empty balance",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outBalance:       nil,
 				makeStorage:      makeStorage,
 			},
@@ -296,7 +301,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		{
 			name: "success and empty list",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outWithdrawals:   nil,
 				outErr:           nil,
 				makeStorage:      makeStorage,
@@ -308,7 +313,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		{
 			name: "error and empty list",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				outWithdrawals:   nil,
 
 				makeStorage: makeStorage,
@@ -359,7 +364,7 @@ func Test_BalanceWithdraw(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				inputOrderNumber: "4532015112830366",
 				inputSum:         19.0,
 				makeStorage:      makeStorage,
@@ -371,7 +376,7 @@ func Test_BalanceWithdraw(t *testing.T) {
 		{
 			name: "error",
 			given: given{
-				inputCustomerDTO: testCustomerIDDTO,
+				inputCustomerDTO: testCustomerDTO,
 				inputOrderNumber: "4532015112830366",
 				inputSum:         19.0,
 				makeStorage:      makeStorage,
@@ -474,7 +479,7 @@ func Test_UserLogin(t *testing.T) {
 					PasswordHash: passwordHash,
 				},
 				isTokenEmpty: true,
-				outErr:       perror.ErrInvalidCustomerCredentials,
+				outErr:       perror.ErrCustomerInvalidCredentials,
 			},
 		},
 	}

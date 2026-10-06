@@ -64,7 +64,7 @@ func main() {
 		logApp.Error("Error initializing database", "error", err)
 		return
 	}
-	loyaltyStorage := database.NewDBStorage(db)
+	loyaltyStorage := database.NewStorage(db)
 
 	var wg sync.WaitGroup
 

@@ -6,12 +6,12 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type DBStorage struct {
+type Storage struct {
 	DB *DB
 }
 
-func NewDBStorage(db *DB) *DBStorage {
-	return &DBStorage{
+func NewStorage(db *DB) *Storage {
+	return &Storage{
 		DB: db,
 	}
 }

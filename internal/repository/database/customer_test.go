@@ -19,7 +19,7 @@ func assertCustomer(t *testing.T, expectedCustomer *model.Customer, actualCustom
 	assert.GreaterOrEqualf(t, time.Now(), actualCustomer.CreatedAt, "expectedCustomer: %+v", expectedCustomer)
 }
 
-func TestDBStorage_CustomerCreateErrCustomerAlreadyExists(t *testing.T) {
+func TestStorage_CustomerCreateErrCustomerAlreadyExists(t *testing.T) {
 
 	storage := setUpStorage(t)
 
@@ -49,7 +49,7 @@ func TestDBStorage_CustomerCreateErrCustomerAlreadyExists(t *testing.T) {
 	})
 }
 
-func TestDBStorage_CustomerCreate(t *testing.T) {
+func TestStorage_CustomerCreate(t *testing.T) {
 
 	type given struct {
 		customer *model.Customer
@@ -82,7 +82,7 @@ func TestDBStorage_CustomerCreate(t *testing.T) {
 				customer: &model.Customer{},
 			},
 			want: want{
-				err: perror.ErrInvalidCustomerModel,
+				err: perror.ErrCustomerInvalidModel,
 			},
 		},
 		{
@@ -91,7 +91,7 @@ func TestDBStorage_CustomerCreate(t *testing.T) {
 				customer: nil,
 			},
 			want: want{
-				err: perror.ErrInvalidCustomerModel,
+				err: perror.ErrCustomerInvalidModel,
 			},
 		},
 	}
@@ -120,7 +120,7 @@ func TestDBStorage_CustomerCreate(t *testing.T) {
 	}
 }
 
-func TestDBStorage_CustomerFindByLogin(t *testing.T) {
+func TestStorage_CustomerFindByLogin(t *testing.T) {
 
 	type given struct {
 		customer *model.Customer

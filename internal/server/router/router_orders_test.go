@@ -49,6 +49,7 @@ func Test_GetOrders(t *testing.T) {
 						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
+						UpdatedAt:  time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
 				},
 				outOrderError:      nil,
@@ -57,7 +58,7 @@ func Test_GetOrders(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `[{"id":1,"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
+				responseBody: `[{"id":1,"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z","updated_at":"2026-09-25T13:12:16Z"}]`,
 				contentType:  "application/json",
 			},
 		},

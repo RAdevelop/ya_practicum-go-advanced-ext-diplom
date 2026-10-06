@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 )
 
 // Accrual — статус начисления баллов для заказа.
@@ -36,9 +38,9 @@ func (s *Accrual) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	normalized := Accrual{value: strings.ToUpper(strings.TrimSpace(raw))}
-	if !normalized.valid() {
-		return fmt.Errorf("invalid status: %q", raw)
+	normalized := normalize(raw)
+	if !normalized.Valid() {
+		return fmt.Errorf("%w: %q", perror.ErrAccrualStatusInvalid, raw)
 	}
 
 	*s = normalized
@@ -50,8 +52,8 @@ func (s *Accrual) IsFinal() bool {
 	return *s == AccrualInvalid || *s == AccrualProcessed
 }
 
-// valid - проверяет, что статус — одно из известных значений.
-func (s *Accrual) valid() bool {
+// Valid - проверяет, что статус — одно из известных значений.
+func (s *Accrual) Valid() bool {
 	switch s.value {
 	case AccrualNew.value,
 		AccrualProcessing.value,
@@ -61,4 +63,33 @@ func (s *Accrual) valid() bool {
 	default:
 		return false
 	}
+}
+
+// Scan - реализует sql.Scanner — читает строку из БД.
+func (s *Accrual) Scan(src any) error {
+	if src == nil {
+		return fmt.Errorf("%w: %T", perror.ErrAccrualStatusInvalid, src)
+	}
+
+	var raw string
+	switch v := src.(type) {
+	case string:
+		raw = v
+	case []byte:
+		raw = string(v)
+	default:
+		return fmt.Errorf("%w: %T", perror.ErrAccrualStatusInvalid, src)
+	}
+
+	normalized := normalize(raw)
+	if !normalized.Valid() {
+		return fmt.Errorf("%w: %q", perror.ErrAccrualStatusInvalid, raw)
+	}
+
+	*s = normalized
+	return nil
+}
+
+func normalize(raw string) Accrual {
+	return Accrual{value: strings.ToUpper(strings.TrimSpace(raw))}
 }

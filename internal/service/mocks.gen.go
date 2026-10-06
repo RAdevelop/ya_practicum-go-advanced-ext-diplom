@@ -380,16 +380,16 @@ func (_c *MockLoyaltyStorage_CustomerFindByLogin_Call) RunAndReturn(run func(ctx
 }
 
 // OrderUpload provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrderUpload(ctx context.Context, customerID uint64, number string) error {
-	ret := _mock.Called(ctx, customerID, number)
+func (_mock *MockLoyaltyStorage) OrderUpload(ctx context.Context, order model.Order) error {
+	ret := _mock.Called(ctx, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrderUpload")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
-		r0 = returnFunc(ctx, customerID, number)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.Order) error); ok {
+		r0 = returnFunc(ctx, order)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -403,30 +403,24 @@ type MockLoyaltyStorage_OrderUpload_Call struct {
 
 // OrderUpload is a helper method to define mock.On call
 //   - ctx context.Context
-//   - customerID uint64
-//   - number string
-func (_e *MockLoyaltyStorage_Expecter) OrderUpload(ctx any, customerID any, number any) *MockLoyaltyStorage_OrderUpload_Call {
-	return &MockLoyaltyStorage_OrderUpload_Call{Call: _e.mock.On("OrderUpload", ctx, customerID, number)}
+//   - order model.Order
+func (_e *MockLoyaltyStorage_Expecter) OrderUpload(ctx any, order any) *MockLoyaltyStorage_OrderUpload_Call {
+	return &MockLoyaltyStorage_OrderUpload_Call{Call: _e.mock.On("OrderUpload", ctx, order)}
 }
 
-func (_c *MockLoyaltyStorage_OrderUpload_Call) Run(run func(ctx context.Context, customerID uint64, number string)) *MockLoyaltyStorage_OrderUpload_Call {
+func (_c *MockLoyaltyStorage_OrderUpload_Call) Run(run func(ctx context.Context, order model.Order)) *MockLoyaltyStorage_OrderUpload_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 uint64
+		var arg1 model.Order
 		if args[1] != nil {
-			arg1 = args[1].(uint64)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
+			arg1 = args[1].(model.Order)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -437,7 +431,7 @@ func (_c *MockLoyaltyStorage_OrderUpload_Call) Return(err error) *MockLoyaltySto
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_OrderUpload_Call) RunAndReturn(run func(ctx context.Context, customerID uint64, number string) error) *MockLoyaltyStorage_OrderUpload_Call {
+func (_c *MockLoyaltyStorage_OrderUpload_Call) RunAndReturn(run func(ctx context.Context, order model.Order) error) *MockLoyaltyStorage_OrderUpload_Call {
 	_c.Call.Return(run)
 	return _c
 }

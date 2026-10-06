@@ -4,16 +4,23 @@ package perror
 import "errors"
 
 var (
-	ErrInvalidCustomerCredentials      = errors.New("invalid customer credentials")
-	ErrInvalidCustomerModel            = errors.New("invalid customer model")
-	ErrOrderNotFound                   = errors.New("order not found")
-	ErrOrderAlreadyUploadedByCustomer  = errors.New("order already uploaded by this customer")
-	ErrOrderAlreadyUploadedByOther     = errors.New("order already uploaded by another customer")
-	ErrBalanceInsufficient             = errors.New("balance insufficient")
-	ErrCustomerAlreadyExists           = errors.New("customer already exists")
-	ErrCustomerNotFound                = errors.New("customer not found")
-	ErrInvalidToken                    = errors.New("invalid token")
-	ErrUnexpectedSigningMethodForToken = errors.New("unexpected signing method for token")
-	ErrSignToken                       = errors.New("error signing token")
-	ErrHashGenerateFromPassword        = errors.New("error generating from password")
+	ErrCustomerInvalidCredentials = errors.New("invalid customer credentials")
+	ErrCustomerInvalidModel       = errors.New("invalid customer model")
+	ErrCustomerAlreadyExists      = errors.New("customer already exists")
+	ErrCustomerNotFound           = errors.New("customer not found")
+
+	ErrOrderInvalidModel              = errors.New("invalid order")
+	ErrOrderNotFound                  = errors.New("order not found")
+	ErrOrderAlreadyUploadedByCustomer = errors.New("order already uploaded by this customer")
+	ErrOrderAlreadyUploadedByOther    = errors.New("order already uploaded by another customer")
+
+	ErrBalanceInsufficient = errors.New("balance insufficient")
+
+	ErrTokenInvalid                 = errors.New("invalid token")
+	ErrTokenUnexpectedSigningMethod = errors.New("unexpected signing method for token")
+	ErrTokenSign                    = errors.New("error signing token")
+
+	ErrHashGenerateFromPassword = errors.New("error generating from password")
+
+	ErrAccrualStatusInvalid = errors.New("invalid accrual status")
 )

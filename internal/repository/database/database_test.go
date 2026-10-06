@@ -19,7 +19,7 @@ var envOpts = &env.Options{
 
 var errForTransactionRollback = errors.New("return for transaction rollback")
 
-func setUpStorage(t *testing.T) *DBStorage {
+func setUpStorage(t *testing.T) *Storage {
 
 	envDB, err := configDB.NewEnvWithOptions(envOpts)
 	assert.NoError(t, err)
@@ -32,5 +32,5 @@ func setUpStorage(t *testing.T) *DBStorage {
 		db.Close()
 	})
 
-	return NewDBStorage(db)
+	return NewStorage(db)
 }

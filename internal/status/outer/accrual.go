@@ -33,14 +33,14 @@ func (s *Accrual) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	normalized := Accrual{strings.ToUpper(strings.TrimSpace(raw))}
-	if !normalized.valid() {
+	if !normalized.Valid() {
 		return fmt.Errorf("invalid status: %s", raw)
 	}
 	*s = normalized
 	return nil
 }
 
-func (s *Accrual) valid() bool {
+func (s *Accrual) Valid() bool {
 	switch s.value {
 	case AccrualRegistered.value, AccrualInvalid.value, AccrualProcessing.value, AccrualProcessed.value:
 		return true

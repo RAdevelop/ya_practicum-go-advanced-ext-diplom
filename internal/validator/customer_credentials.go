@@ -13,7 +13,7 @@ IsValidCustomerCredentials - пока простая проверка логин
 */
 func IsValidCustomerCredentials(credentials dto.CustomerCredentials) error {
 	if !isValidCredentialsLogin(credentials.Login) || !isValidCredentialsPassword(credentials.Password) {
-		return perror.ErrInvalidCustomerCredentials
+		return perror.ErrCustomerInvalidCredentials
 	}
 	return nil
 }
