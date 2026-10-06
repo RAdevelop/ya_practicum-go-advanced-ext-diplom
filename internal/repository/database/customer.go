@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
@@ -27,22 +25,10 @@ func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) 
 
 	row, err := s.DB.Executor(ctx).Query(ctx, sql, customer.Login, customer.PasswordHash)
 
-	//TODO del
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
-		log.Printf("pg error1: code=%s, message=%s, detail=%s, hint=%s",
-			pgErr.Code, pgErr.Message, pgErr.Detail, pgErr.Hint)
-	}
-
 	customer, err = pgx.CollectOneRow(row, pgx.RowToAddrOfStructByName[model.Customer])
 
 	if isPgErrorCode(err, pgErrUniqueViolationCode) {
 		return nil, errors.Join(perror.ErrCustomerAlreadyExists, err)
-	}
-
-	//TODO del
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
-		log.Printf("pg error2: code=%s, message=%s, detail=%s, hint=%s",
-			pgErr.Code, pgErr.Message, pgErr.Detail, pgErr.Hint)
 	}
 
 	if err != nil {

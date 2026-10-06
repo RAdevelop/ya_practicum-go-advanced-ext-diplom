@@ -106,7 +106,7 @@ func Test_Orders(t *testing.T) {
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrders []model.Order, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().Orders(t.Context(), inputCustomerDTO.ID).Return(outOrders, outErr)
+		storage.EXPECT().OrdersByCustomerID(t.Context(), inputCustomerDTO.ID).Return(outOrders, outErr)
 		return storage
 	}
 
@@ -193,7 +193,7 @@ func Test_Balance(t *testing.T) {
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().Balance(t.Context(), inputCustomerDTO.ID).Return(outBalance, outErr)
+		storage.EXPECT().BalanceByCustomerID(t.Context(), inputCustomerDTO.ID).Return(outBalance, outErr)
 		return storage
 	}
 
@@ -289,7 +289,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().BalanceWithdrawals(t.Context(), inputCustomerDTO.ID).Return(outWithdrawals, outErr)
+		storage.EXPECT().BalanceWithdrawalsByCustomerID(t.Context(), inputCustomerDTO.ID).Return(outWithdrawals, outErr)
 		return storage
 	}
 

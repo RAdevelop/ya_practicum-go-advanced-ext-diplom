@@ -6,12 +6,17 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 )
 
-func (s *Storage) Balance(ctx context.Context, customerID uint64) (*model.Balance, error) {
+/*
+TODO учитывать:
+ - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
+*/
+
+func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error) {
 	//TODO implement
 	return nil, nil
 }
 
-func (s *Storage) BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
+func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
 	//TODO implement
 	return nil, nil
 }

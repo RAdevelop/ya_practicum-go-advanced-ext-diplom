@@ -35,6 +35,10 @@ func New(appContext *appcontext.AppContext, loyaltyManager LoyaltyManageable) *H
 
 	ls := NewLoyaltySystem(appContext, loyaltyManager)
 
+	/*
+		TODO настоятельно рекомендуют добавить сжатие запросов
+	*/
+
 	return &Handlers{
 		UserRegister:       http.HandlerFunc(ls.UserRegister),
 		UserLogin:          http.HandlerFunc(ls.UserLogin),

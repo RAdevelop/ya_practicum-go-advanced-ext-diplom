@@ -167,7 +167,7 @@ func TestStorage_Orders(t *testing.T) {
 					assert.NoErrorf(t, err, "given: %+v", tt.given)
 				}
 
-				orders, err := storage.Orders(ctx, tt.given.customerID)
+				orders, err := storage.OrdersByCustomerID(ctx, tt.given.customerID)
 
 				assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 

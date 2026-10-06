@@ -32,9 +32,9 @@ import (
 //go:generate mockery
 type LoyaltyStorage interface {
 	OrderUpload(ctx context.Context, order model.Order) error
-	Orders(ctx context.Context, customerID uint64) ([]model.Order, error)
-	Balance(ctx context.Context, customerID uint64) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
+	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
+	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
+	BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error
 	CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error)
 	CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error)
@@ -64,17 +64,17 @@ func (lm *LoyaltyManager) OrderUpload(ctx context.Context, customerDTO *dto.Cust
 
 // Orders - Получение списка загруженных номеров заказов
 func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error) {
-	return lm.storage.Orders(ctx, customerDTO.ID)
+	return lm.storage.OrdersByCustomerID(ctx, customerDTO.ID)
 }
 
 // Balance - Получение текущего баланса пользователя
 func (lm *LoyaltyManager) Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error) {
-	return lm.storage.Balance(ctx, customerDTO.ID)
+	return lm.storage.BalanceByCustomerID(ctx, customerDTO.ID)
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
 func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error) {
-	return lm.storage.BalanceWithdrawals(ctx, customerDTO.ID)
+	return lm.storage.BalanceWithdrawalsByCustomerID(ctx, customerDTO.ID)
 }
 
 // BalanceWithdraw - списание средств
