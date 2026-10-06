@@ -1,4 +1,4 @@
-package repository
+package database
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database"
 	configDB "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
 	"github.com/caarlos0/env/v11"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func setUpStorage(t *testing.T) *DBStorage {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	db, err := database.NewDB(ctx, envDB, nil)
+	db, err := NewDB(ctx, envDB, nil)
 	assert.NoError(t, err)
 
 	t.Cleanup(func() {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database"
 	configDb "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
@@ -46,19 +47,24 @@ func main() {
 	appFlags := &applicationFlags{}
 	appFlags.runAddress = flag.String("a", "localhost:8080", `адрес и порт запуска сервиса`)
 	appFlags.databaseURI = flag.String("d", "", `адрес подключения к базе данных`)
-	appFlags.accrualSystemAddress = flag.String("r", "", `адрес системы расчёта начислений`)
+	appFlags.accrualSystemAddress = flag.String("r", "localhost:8081", `адрес системы расчёта начислений`)
 
 	cfgServer := config.New(envSrv)
 	cfgDB := configDb.New(envDB)
 
 	serverConfigUpdateByFlags(cfgServer, appFlags)
-	cfgServer.JWTSecretSet("lPD7WBZ/MCBKK0aEqgzSqfIQSqAGB7VhIfjsZwuXLJE=")
 
 	if cfgDB.DSN() == "" && appFlags.databaseURI != nil {
 		cfgDB.DSNSet(*appFlags.databaseURI)
 	}
 
 	appContext := appcontext.New(logApp, cfgServer, cfgDB)
+	db, err := database.NewDB(ctx, cfgDB, logApp)
+	if err != nil {
+		logApp.Error("Error initializing database", "error", err)
+		return
+	}
+	loyaltyStorage := database.NewDBStorage(db)
 
 	var wg sync.WaitGroup
 
@@ -67,7 +73,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		serverApp := server.New(appContext)
+		serverApp := server.New(appContext, loyaltyStorage)
 
 		err := serverApp.Run(ctx)
 		if err != nil {

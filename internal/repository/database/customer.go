@@ -1,4 +1,4 @@
-package repository
+package database
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
@@ -20,15 +19,13 @@ func (s *DBStorage) CustomerCreate(ctx context.Context, customer *model.Customer
 		return nil, perror.ErrInvalidCustomerModel
 	}
 
-	customer.CreatedAt = time.Now()
-
 	sql := `
-		INSERT INTO customers (login, password_hash, created_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO customers (login, password_hash)
+		VALUES ($1, $2)
 		RETURNING id, login, password_hash, created_at
 		`
 
-	row, err := s.DB.Executor(ctx).Query(ctx, sql, customer.Login, customer.PasswordHash, customer.CreatedAt)
+	row, err := s.DB.Executor(ctx).Query(ctx, sql, customer.Login, customer.PasswordHash)
 
 	//TODO del
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {

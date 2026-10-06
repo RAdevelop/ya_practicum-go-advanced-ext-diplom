@@ -8,9 +8,10 @@ import (
 
 // Order - Заказ
 type Order struct {
-	Number     string              `json:"number"`
-	CustomerID uint64              `json:"customer_id"`
-	Status     statusInner.Accrual `json:"status"`
-	Accrual    float64             `json:"accrual,omitempty"` // Начисленные баллы за этот конкретный заказ
-	UploadedAt time.Time           `json:"uploaded_at"`
+	ID         uint64              `json:"id" db:"id"`
+	Number     string              `json:"number" db:"number"`
+	CustomerID uint64              `json:"customer_id" db:"customer_id"`
+	Status     statusInner.Accrual `json:"status" db:"status"`
+	Accrual    float64             `json:"accrual,omitempty" db:"accrual"` // Начисленные баллы за этот конкретный заказ
+	UploadedAt time.Time           `json:"uploaded_at" db:"uploaded_at"`
 }

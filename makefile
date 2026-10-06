@@ -124,6 +124,7 @@ build:  ## Собрать кластер
 
 .PHONY: rebuild
 rebuild:  ## пересобрать кластер
+	@echo "$(GREEN)=== Cluster rebuilding ===$(NC)"
 	@make down
 	@make clean
 	@$(DOCKER_COMPOSE) up -d --no-deps --build
@@ -131,6 +132,7 @@ rebuild:  ## пересобрать кластер
 	@sleep 5
 	@make migrate-up
 	@make migrate-upt
+	@echo "$(GREEN)=== Cluster rebuilding finished ===$(NC)"
 
 
 ######## migrate db schema
@@ -142,7 +144,9 @@ migrate-c: ## Создать миграцию (make migrate-c name=[назван
 
 .PHONY: migrate-up
 migrate-up: ## Применить все миграции
+	@echo "$(GREEN)=== Migration up to main DB ===$(NC)"
 	@migrate -path=$(MIGRATIONS_DIR) -database=$(DB_DSN) up
+	@echo "$(GREEN)=== Migration up to main DB finished ===$(NC)"
 
 .PHONY: migrate-down
 migrate-down: ## Откатить одну миграцию
@@ -151,7 +155,9 @@ migrate-down: ## Откатить одну миграцию
 
 .PHONY: migrate-upt
 migrate-upt: ## Применить все миграции на тестовой БД
+	@echo "$(GREEN)=== Migration up to test DB ===$(NC)"
 	@migrate -path=$(MIGRATIONS_DIR) -database=$(DB_DSN_TEST) up
+	@echo "$(GREEN)=== Migration up to test DB finished ===$(NC)"
 
 .PHONY: migrate-downt
 migrate-downt: ## Откатить одну миграцию на тестовой БД

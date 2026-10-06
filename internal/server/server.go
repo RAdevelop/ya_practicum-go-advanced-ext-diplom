@@ -15,13 +15,10 @@ import (
 type Server struct {
 	httpServer *http.Server
 	appContext *appcontext.AppContext
+	ctx        context.Context
 }
 
-func New(appContext *appcontext.AppContext) *Server {
-
-	var loyaltyStorage service.LoyaltyStorage
-
-	//TODO create real loyaltyStorage
+func New(appContext *appcontext.AppContext, loyaltyStorage service.LoyaltyStorage) *Server {
 
 	loyaltyManager := service.NewLoyaltyManager(loyaltyStorage)
 	handlers := handler.New(appContext, loyaltyManager)

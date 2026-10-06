@@ -1,17 +1,16 @@
-package repository
+package database
 
 import (
 	"errors"
 
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type DBStorage struct {
-	DB *database.DB
+	DB *DB
 }
 
-func NewDBStorage(db *database.DB) *DBStorage {
+func NewDBStorage(db *DB) *DBStorage {
 	return &DBStorage{
 		DB: db,
 	}

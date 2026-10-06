@@ -19,11 +19,11 @@ var (
 	AccrualProcessed  = Accrual{"PROCESSED"}  // Расчёт начисления окончен
 )
 
-func (s Accrual) String() string {
+func (s *Accrual) String() string {
 	return s.value
 }
 
-func (s Accrual) MarshalJSON() ([]byte, error) {
+func (s *Accrual) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.value)
 }
 
@@ -36,10 +36,11 @@ func (s *Accrual) UnmarshalJSON(data []byte) error {
 	if !normalized.valid() {
 		return fmt.Errorf("invalid status: %s", raw)
 	}
+	*s = normalized
 	return nil
 }
 
-func (s Accrual) valid() bool {
+func (s *Accrual) valid() bool {
 	switch s.value {
 	case AccrualRegistered.value, AccrualInvalid.value, AccrualProcessing.value, AccrualProcessed.value:
 		return true
@@ -48,6 +49,6 @@ func (s Accrual) valid() bool {
 	}
 }
 
-func (s Accrual) IsFinal() bool {
-	return s == AccrualInvalid || s == AccrualProcessed
+func (s *Accrual) IsFinal() bool {
+	return *s == AccrualInvalid || *s == AccrualProcessed
 }

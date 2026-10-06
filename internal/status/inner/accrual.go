@@ -20,12 +20,12 @@ var (
 )
 
 // String возвращает строковое представление статуса.
-func (s Accrual) String() string {
+func (s *Accrual) String() string {
 	return s.value
 }
 
 // MarshalJSON сериализует статус как JSON-строку.
-func (s Accrual) MarshalJSON() ([]byte, error) {
+func (s *Accrual) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.value)
 }
 
@@ -46,12 +46,12 @@ func (s *Accrual) UnmarshalJSON(data []byte) error {
 }
 
 // IsFinal - сообщает, является ли статус окончательным.
-func (s Accrual) IsFinal() bool {
-	return s == AccrualInvalid || s == AccrualProcessed
+func (s *Accrual) IsFinal() bool {
+	return *s == AccrualInvalid || *s == AccrualProcessed
 }
 
 // valid - проверяет, что статус — одно из известных значений.
-func (s Accrual) valid() bool {
+func (s *Accrual) valid() bool {
 	switch s.value {
 	case AccrualNew.value,
 		AccrualProcessing.value,

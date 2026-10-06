@@ -44,6 +44,7 @@ func Test_GetOrders(t *testing.T) {
 				inputCustomerDTO: testCustomerDTO,
 				outOrderList: []model.Order{
 					{
+						ID:         1,
 						Number:     "12345",
 						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
@@ -56,7 +57,7 @@ func Test_GetOrders(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `[{"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
+				responseBody: `[{"id":1,"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
 				contentType:  "application/json",
 			},
 		},
