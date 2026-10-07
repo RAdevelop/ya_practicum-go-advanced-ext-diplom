@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/go-resty/resty/v2"
@@ -19,13 +18,13 @@ func Test_GetBalance(t *testing.T) {
 
 	type given struct {
 		inputCustomerDTO   *dto.Customer
-		outBalance         *model.Balance
+		outBalance         dto.Balance
 		outBalanceErr      error
-		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable
+		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance dto.Balance, outBalanceErr error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, customerDTO *dto.Customer)
 	}
 
-	makeLoyaltyManagerBalanceOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable {
+	makeLoyaltyManagerBalanceOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance dto.Balance, outBalanceErr error) handler.LoyaltyManageable {
 		loyaltyManager := handler.NewMockLoyaltyManageable(t)
 		loyaltyManager.EXPECT().Balance(mock.Anything, inputCustomerDTO).Return(outBalance, outBalanceErr).Once()
 		return loyaltyManager
@@ -40,11 +39,9 @@ func Test_GetBalance(t *testing.T) {
 			name: "StatusOK",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				outBalance: &model.Balance{
-					ID:         1,
-					CustomerID: 1,
-					Current:    19.05,
-					Withdrawn:  2019.05,
+				outBalance: dto.Balance{
+					Current:   19.05,
+					Withdrawn: 2019.05,
 				},
 				outBalanceErr:      nil,
 				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
@@ -52,7 +49,7 @@ func Test_GetBalance(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `{"id":1,"customer_id":1,"current":19.05,"withdrawn":2019.05}`,
+				responseBody: `{"current":19.05,"withdrawn":2019.05}`,
 				contentType:  "application/json",
 			},
 		},
@@ -60,7 +57,7 @@ func Test_GetBalance(t *testing.T) {
 			name: "StatusUnauthorized",
 			given: given{
 				inputCustomerDTO: nil, // причина StatusUnauthorized
-				makeLoyaltyManager: func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outBalanceErr error) handler.LoyaltyManageable {
+				makeLoyaltyManager: func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance dto.Balance, outBalanceErr error) handler.LoyaltyManageable {
 					return handler.NewMockLoyaltyManageable(t)
 				},
 				authHeaderSet: authHeaderSetCorrect,
@@ -75,7 +72,7 @@ func Test_GetBalance(t *testing.T) {
 			name: "StatusInternalServerError",
 			given: given{
 				inputCustomerDTO:   testCustomerDTO,
-				outBalance:         nil,
+				outBalance:         dto.Balance{},
 				outBalanceErr:      errors.New("some error"),
 				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
 				authHeaderSet:      authHeaderSetCorrect,
@@ -292,19 +289,19 @@ func Test_GetWithdrawals(t *testing.T) {
 
 	type given struct {
 		inputCustomerDTO   *dto.Customer
-		outWithdrawals     []model.Withdrawal
+		outWithdrawals     []dto.Withdrawal
 		outWithdrawalsErr  error
-		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable
+		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []dto.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, customerDTO *dto.Customer)
 	}
 
-	makeLoyaltyManagerBalanceWithdrawalsOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
+	makeLoyaltyManagerBalanceWithdrawalsOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []dto.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
 		loyaltyManager := handler.NewMockLoyaltyManageable(t)
 		loyaltyManager.EXPECT().BalanceWithdrawals(mock.Anything, inputCustomerDTO).Return(outWithdrawals, outWithdrawalsErr).Once()
 		return loyaltyManager
 	}
 
-	makeLoyaltyManagerBalanceWithdrawalsNever := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
+	makeLoyaltyManagerBalanceWithdrawalsNever := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []dto.Withdrawal, outWithdrawalsErr error) handler.LoyaltyManageable {
 		return handler.NewMockLoyaltyManageable(t)
 	}
 
@@ -317,10 +314,8 @@ func Test_GetWithdrawals(t *testing.T) {
 			name: "StatusOK",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				outWithdrawals: []model.Withdrawal{
+				outWithdrawals: []dto.Withdrawal{
 					{
-						ID:          123,
-						CustomerID:  1,
 						Order:       "12345",
 						Sum:         123.45,
 						ProcessedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
@@ -332,7 +327,7 @@ func Test_GetWithdrawals(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `[{"id":123,"customer_id":1,"order":"12345","sum":123.45,"processed_at":"2026-09-25T13:12:16Z"}]`,
+				responseBody: `[{"order":"12345","sum":123.45,"processed_at":"2026-09-25T13:12:16Z"}]`,
 				contentType:  "application/json",
 			},
 		},

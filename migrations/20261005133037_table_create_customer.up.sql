@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS customers (
     password_hash VARCHAR(60) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CONSTRAINT unique_login UNIQUE (login)
-    );
+);
 
 COMMENT ON TABLE  customers IS 'покупатели системы лояльности';
 COMMENT ON COLUMN customers.id IS 'уникальный идентификатор покупателя, автоинкремент';

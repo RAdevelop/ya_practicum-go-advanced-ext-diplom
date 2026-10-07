@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -40,24 +39,22 @@ func (_m *MockLoyaltyManageable) EXPECT() *MockLoyaltyManageable_Expecter {
 }
 
 // Balance provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error) {
+func (_mock *MockLoyaltyManageable) Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error) {
 	ret := _mock.Called(ctx, customerDTO)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Balance")
 	}
 
-	var r0 *model.Balance
+	var r0 dto.Balance
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) (*model.Balance, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) (dto.Balance, error)); ok {
 		return returnFunc(ctx, customerDTO)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) *model.Balance); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) dto.Balance); ok {
 		r0 = returnFunc(ctx, customerDTO)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Balance)
-		}
+		r0 = ret.Get(0).(dto.Balance)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, *dto.Customer) error); ok {
 		r1 = returnFunc(ctx, customerDTO)
@@ -97,12 +94,12 @@ func (_c *MockLoyaltyManageable_Balance_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_Balance_Call) Return(balance *model.Balance, err error) *MockLoyaltyManageable_Balance_Call {
+func (_c *MockLoyaltyManageable_Balance_Call) Return(balance dto.Balance, err error) *MockLoyaltyManageable_Balance_Call {
 	_c.Call.Return(balance, err)
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_Balance_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error)) *MockLoyaltyManageable_Balance_Call {
+func (_c *MockLoyaltyManageable_Balance_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)) *MockLoyaltyManageable_Balance_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -177,23 +174,23 @@ func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) RunAndReturn(run func(ctx 
 }
 
 // BalanceWithdrawals provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error) {
+func (_mock *MockLoyaltyManageable) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error) {
 	ret := _mock.Called(ctx, customerDTO)
 
 	if len(ret) == 0 {
 		panic("no return value specified for BalanceWithdrawals")
 	}
 
-	var r0 []model.Withdrawal
+	var r0 []dto.Withdrawal
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) ([]model.Withdrawal, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) ([]dto.Withdrawal, error)); ok {
 		return returnFunc(ctx, customerDTO)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) []model.Withdrawal); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) []dto.Withdrawal); ok {
 		r0 = returnFunc(ctx, customerDTO)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Withdrawal)
+			r0 = ret.Get(0).([]dto.Withdrawal)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, *dto.Customer) error); ok {
@@ -234,12 +231,12 @@ func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) Run(run func(ctx contex
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) Return(withdrawals []model.Withdrawal, err error) *MockLoyaltyManageable_BalanceWithdrawals_Call {
+func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) Return(withdrawals []dto.Withdrawal, err error) *MockLoyaltyManageable_BalanceWithdrawals_Call {
 	_c.Call.Return(withdrawals, err)
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error)) *MockLoyaltyManageable_BalanceWithdrawals_Call {
+func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)) *MockLoyaltyManageable_BalanceWithdrawals_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -308,23 +305,23 @@ func (_c *MockLoyaltyManageable_OrderUpload_Call) RunAndReturn(run func(ctx cont
 }
 
 // Orders provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error) {
+func (_mock *MockLoyaltyManageable) Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error) {
 	ret := _mock.Called(ctx, customerDTO)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Orders")
 	}
 
-	var r0 []model.Order
+	var r0 []dto.Order
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) ([]model.Order, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) ([]dto.Order, error)); ok {
 		return returnFunc(ctx, customerDTO)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) []model.Order); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer) []dto.Order); ok {
 		r0 = returnFunc(ctx, customerDTO)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Order)
+			r0 = ret.Get(0).([]dto.Order)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, *dto.Customer) error); ok {
@@ -365,12 +362,12 @@ func (_c *MockLoyaltyManageable_Orders_Call) Run(run func(ctx context.Context, c
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_Orders_Call) Return(orders []model.Order, err error) *MockLoyaltyManageable_Orders_Call {
+func (_c *MockLoyaltyManageable_Orders_Call) Return(orders []dto.Order, err error) *MockLoyaltyManageable_Orders_Call {
 	_c.Call.Return(orders, err)
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_Orders_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error)) *MockLoyaltyManageable_Orders_Call {
+func (_c *MockLoyaltyManageable_Orders_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)) *MockLoyaltyManageable_Orders_Call {
 	_c.Call.Return(run)
 	return _c
 }

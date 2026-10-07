@@ -101,7 +101,7 @@ func Test_Orders(t *testing.T) {
 	}
 
 	type want struct {
-		orders []model.Order
+		orders []dto.Order
 	}
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrders []model.Order, outErr error) LoyaltyStorage {
@@ -116,37 +116,27 @@ func Test_Orders(t *testing.T) {
 		want  want
 	}{
 		{
-			name: "success and empty list",
-			given: given{
-				inputCustomerDTO: testCustomerDTO,
-				outOrders:        []model.Order{},
-				outErr:           nil,
-				makeStorage:      makeStorage,
-			},
-			want: want{
-				orders: []model.Order{},
-			},
-		},
-		{
-			name: "success and not empty list",
+			name: "success",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
 				outOrders: []model.Order{
 					{
+						ID:         uint64(1),
 						Number:     "4532015112830366",
 						CustomerID: uint64(1),
+						Accrual:    0,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
+						UpdatedAt:  time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
 				},
 				outErr:      nil,
 				makeStorage: makeStorage,
 			},
 			want: want{
-				orders: []model.Order{
+				orders: []dto.Order{
 					{
 						Number:     "4532015112830366",
-						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
@@ -187,7 +177,7 @@ func Test_Balance(t *testing.T) {
 		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, outBalance *model.Balance, outErr error) LoyaltyStorage
 	}
 	type want struct {
-		balance *model.Balance
+		balance dto.Balance
 		outErr  error
 	}
 
@@ -210,19 +200,7 @@ func Test_Balance(t *testing.T) {
 				makeStorage:      makeStorage,
 			},
 			want: want{
-				balance: &model.Balance{},
-				outErr:  nil,
-			},
-		},
-		{
-			name: "success and nil balance",
-			given: given{
-				inputCustomerDTO: testCustomerDTO,
-				outBalance:       nil,
-				makeStorage:      makeStorage,
-			},
-			want: want{
-				balance: nil,
+				balance: dto.Balance{},
 				outErr:  nil,
 			},
 		},
@@ -239,11 +217,9 @@ func Test_Balance(t *testing.T) {
 				makeStorage: makeStorage,
 			},
 			want: want{
-				balance: &model.Balance{
-					ID:         1,
-					CustomerID: 1,
-					Current:    19.05,
-					Withdrawn:  2019.05,
+				balance: dto.Balance{
+					Current:   19.05,
+					Withdrawn: 2019.05,
 				},
 				outErr: nil,
 			},
@@ -256,7 +232,7 @@ func Test_Balance(t *testing.T) {
 				makeStorage:      makeStorage,
 			},
 			want: want{
-				balance: nil,
+				balance: dto.Balance{},
 				outErr:  errors.New("test error"),
 			},
 		},
@@ -283,8 +259,8 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage
 	}
 	type want struct {
-		withdrawals []model.Withdrawal
-		outErr      error
+		withdrawals []dto.Withdrawal
+		err         error
 	}
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, outWithdrawals []model.Withdrawal, outErr error) LoyaltyStorage {
@@ -299,15 +275,30 @@ func Test_BalanceWithdrawals(t *testing.T) {
 		want  want
 	}{
 		{
-			name: "success and empty list",
+			name: "success",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				outWithdrawals:   nil,
-				outErr:           nil,
-				makeStorage:      makeStorage,
+				outWithdrawals: []model.Withdrawal{
+					{
+						ID:          1,
+						CustomerID:  1,
+						Order:       "4532015112830366",
+						Sum:         19.0,
+						ProcessedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					},
+				},
+				outErr:      nil,
+				makeStorage: makeStorage,
 			},
 			want: want{
-				withdrawals: nil,
+				withdrawals: []dto.Withdrawal{
+					{
+						Order:       "4532015112830366",
+						Sum:         19.0,
+						ProcessedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					},
+				},
+				err: nil,
 			},
 		},
 		{
@@ -315,23 +306,23 @@ func Test_BalanceWithdrawals(t *testing.T) {
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
 				outWithdrawals:   nil,
-
-				makeStorage: makeStorage,
+				outErr:           errors.New("test error"),
+				makeStorage:      makeStorage,
 			},
 			want: want{
 				withdrawals: nil,
-				outErr:      errors.New("test error"),
+				err:         errors.New("test error"),
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outWithdrawals, tt.want.outErr))
+			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outWithdrawals, tt.want.err))
 
 			withdrawals, err := loyaltyManager.BalanceWithdrawals(t.Context(), tt.given.inputCustomerDTO)
 
-			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
+			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.withdrawals, withdrawals, "given: %+v", tt.given)
 		})
 	}
@@ -351,7 +342,12 @@ func Test_BalanceWithdraw(t *testing.T) {
 
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
-		storage.EXPECT().BalanceWithdraw(t.Context(), inputCustomerDTO.ID, inputOrderNumber, inputSum).Return(outErr)
+		withdrawal := model.Withdrawal{
+			CustomerID: inputCustomerDTO.ID,
+			Order:      inputOrderNumber,
+			Sum:        inputSum,
+		}
+		storage.EXPECT().BalanceWithdraw(t.Context(), withdrawal).Return(outErr)
 
 		return storage
 	}

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS orders (
     uploaded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CONSTRAINT unique_number UNIQUE (number)
-    );
+);
 
 CREATE INDEX IF NOT EXISTS idx_orders_customer_uploaded ON orders (customer_id, uploaded_at DESC);
 
@@ -18,3 +18,4 @@ COMMENT ON COLUMN orders.customer_id   IS 'id покупателя, которо
 COMMENT ON COLUMN orders.status        IS 'статус обработки расчёта';
 COMMENT ON COLUMN orders.accrual       IS 'начисленные баллы';
 COMMENT ON COLUMN orders.uploaded_at   IS 'когда заказ был загружен';
+COMMENT ON COLUMN orders.updated_at    IS 'когда заказ был изменен';

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	statusOuter "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/outer"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -49,4 +50,11 @@ func (jwt *CustomerJWT) CustomerID() (uint64, error) {
 type Customer struct {
 	ID    uint64 `json:"id"`
 	Login string `json:"login"`
+}
+
+// Accrual - Начисление от внешней системы
+type Accrual struct {
+	Order   string              `json:"order"`
+	Status  statusOuter.Accrual `json:"status"`            // Статус расчёта начисления
+	Accrual float64             `json:"accrual,omitempty"` // Рассчитанные баллы к начислению
 }

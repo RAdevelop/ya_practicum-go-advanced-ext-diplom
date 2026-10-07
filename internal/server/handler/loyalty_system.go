@@ -310,7 +310,7 @@ func (ls LoyaltySystem) responseJSON(w http.ResponseWriter, respData any, isResp
 	jsonBuf.Reset()
 	defer jsonBufPool.Put(jsonBuf)
 
-	if err := json.NewEncoder(jsonBuf).Encode(respData); err != nil {
+	if err = json.NewEncoder(jsonBuf).Encode(respData); err != nil {
 		ls.appContext.Logger.Error("Can't write response", "err", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return

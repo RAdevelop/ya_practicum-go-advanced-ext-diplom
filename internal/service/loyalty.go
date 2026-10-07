@@ -35,7 +35,7 @@ type LoyaltyStorage interface {
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, customerID uint64, orderNumber string, sum float64) error
+	BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error
 	CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error)
 	CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error)
 }
@@ -63,23 +63,72 @@ func (lm *LoyaltyManager) OrderUpload(ctx context.Context, customerDTO *dto.Cust
 }
 
 // Orders - Получение списка загруженных номеров заказов
-func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error) {
-	return lm.storage.OrdersByCustomerID(ctx, customerDTO.ID)
+func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error) {
+	ordersModel, err := lm.storage.OrdersByCustomerID(ctx, customerDTO.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make([]dto.Order, 0, len(ordersModel))
+	for _, order := range ordersModel {
+		orders = append(orders, dto.Order{
+			Number:     order.Number,
+			Status:     order.Status,
+			Accrual:    order.Accrual,
+			UploadedAt: order.UploadedAt,
+		})
+	}
+	ordersModel = nil
+	return orders, nil
 }
 
 // Balance - Получение текущего баланса пользователя
-func (lm *LoyaltyManager) Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error) {
-	return lm.storage.BalanceByCustomerID(ctx, customerDTO.ID)
+func (lm *LoyaltyManager) Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error) {
+	balanceModel, err := lm.storage.BalanceByCustomerID(ctx, customerDTO.ID)
+	if err != nil {
+		return dto.Balance{}, err
+	}
+
+	balance := dto.Balance{
+		Current:   balanceModel.Current,
+		Withdrawn: balanceModel.Withdrawn,
+	}
+
+	balanceModel = nil
+	return balance, nil
 }
 
 // BalanceWithdrawals - Получение информации о выводе средств
-func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error) {
-	return lm.storage.BalanceWithdrawalsByCustomerID(ctx, customerDTO.ID)
+func (lm *LoyaltyManager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error) {
+
+	withdrawalsModel, err := lm.storage.BalanceWithdrawalsByCustomerID(ctx, customerDTO.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	withdrawals := make([]dto.Withdrawal, 0, len(withdrawalsModel))
+	for _, withdrawal := range withdrawalsModel {
+		withdrawals = append(withdrawals, dto.Withdrawal{
+			Order:       withdrawal.Order,
+			Sum:         withdrawal.Sum,
+			ProcessedAt: withdrawal.ProcessedAt,
+		})
+	}
+
+	withdrawalsModel = nil
+	return withdrawals, nil
 }
 
 // BalanceWithdraw - списание средств
 func (lm *LoyaltyManager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
-	return lm.storage.BalanceWithdraw(ctx, customerDTO.ID, orderNumber, sum)
+
+	withdrawal := model.Withdrawal{
+		CustomerID: customerDTO.ID,
+		Order:      orderNumber,
+		Sum:        sum,
+	}
+
+	return lm.storage.BalanceWithdraw(ctx, withdrawal)
 }
 
 func (lm *LoyaltyManager) UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {

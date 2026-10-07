@@ -6,16 +6,15 @@ import (
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
 )
 
 //go:generate mockery
 type LoyaltyManageable interface {
 	OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error
-	Orders(ctx context.Context, customerDTO *dto.Customer) ([]model.Order, error)
-	Balance(ctx context.Context, customerDTO *dto.Customer) (*model.Balance, error)
-	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]model.Withdrawal, error)
+	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
+	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
+	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error
 	UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 	UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)

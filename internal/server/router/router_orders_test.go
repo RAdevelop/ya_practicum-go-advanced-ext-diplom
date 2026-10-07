@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
@@ -20,13 +19,13 @@ func Test_GetOrders(t *testing.T) {
 
 	type given struct {
 		inputCustomerDTO   *dto.Customer
-		outOrderList       []model.Order
+		outOrderList       []dto.Order
 		outOrderError      error
-		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable
+		makeLoyaltyManager func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []dto.Order, outOrderError error) handler.LoyaltyManageable
 		authHeaderSet      func(t *testing.T, req *resty.Request, customerDTO *dto.Customer)
 	}
 
-	makeLoyaltyManagerOrdersOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
+	makeLoyaltyManagerOrdersOnce := func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []dto.Order, outOrderError error) handler.LoyaltyManageable {
 		loyaltyManager := handler.NewMockLoyaltyManageable(t)
 		loyaltyManager.EXPECT().Orders(mock.Anything, inputCustomerDTO).Return(outOrderList, outOrderError).Once()
 
@@ -42,14 +41,11 @@ func Test_GetOrders(t *testing.T) {
 			name: "StatusOK",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				outOrderList: []model.Order{
+				outOrderList: []dto.Order{
 					{
-						ID:         1,
 						Number:     "12345",
-						CustomerID: 1,
 						Status:     statusInner.AccrualNew,
 						UploadedAt: time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
-						UpdatedAt:  time.Date(2026, 9, 25, 13, 12, 16, 0, time.UTC),
 					},
 				},
 				outOrderError:      nil,
@@ -58,7 +54,7 @@ func Test_GetOrders(t *testing.T) {
 			},
 			want: want{
 				httpStatus:   http.StatusOK,
-				responseBody: `[{"id":1,"number":"12345","customer_id":1,"status":"NEW","uploaded_at":"2026-09-25T13:12:16Z","updated_at":"2026-09-25T13:12:16Z"}]`,
+				responseBody: `[{"number":"12345","status":"NEW","uploaded_at":"2026-09-25T13:12:16Z"}]`,
 				contentType:  "application/json",
 			},
 		},
@@ -96,7 +92,7 @@ func Test_GetOrders(t *testing.T) {
 			name: "StatusUnauthorized",
 			given: given{
 				inputCustomerDTO: nil, // причина StatusUnauthorized
-				makeLoyaltyManager: func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []model.Order, outOrderError error) handler.LoyaltyManageable {
+				makeLoyaltyManager: func(t *testing.T, inputCustomerDTO *dto.Customer, outOrderList []dto.Order, outOrderError error) handler.LoyaltyManageable {
 					return handler.NewMockLoyaltyManageable(t)
 				},
 				authHeaderSet: authHeaderSetCorrect,

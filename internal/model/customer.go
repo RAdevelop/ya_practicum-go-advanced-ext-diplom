@@ -7,10 +7,10 @@ import (
 
 // Customer - Пользователь/покупатель
 type Customer struct {
-	ID           uint64    `json:"id" db:"id"`
-	Login        string    `json:"login" db:"login"`
-	PasswordHash string    `json:"-" db:"password_hash"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	ID           uint64    `db:"id"`
+	Login        string    `db:"login"`
+	PasswordHash string    `db:"password_hash"`
+	CreatedAt    time.Time `db:"created_at"`
 }
 
 func (c *Customer) IsCorrect() bool {
