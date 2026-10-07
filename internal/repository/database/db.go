@@ -25,6 +25,8 @@ type ExecutorAble interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
+var defaultTxOptions pgx.TxOptions
+
 /*
 DB - выполняем запросы к БД
 ВАЖНО! Есть методы (contextWithTx, txFromContext), которые обновляют исходный контекст!
@@ -96,8 +98,14 @@ func (db *DB) txFromContext(ctx context.Context) (pgx.Tx, bool) {
 	return tx, ok
 }
 
-func (db *DB) RunInTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	tx, err := db.pool.Begin(ctx)
+func (db *DB) RunInTransaction(ctx context.Context, fn func(ctx context.Context) error, txOpts ...pgx.TxOptions) error {
+	opts := defaultTxOptions
+	if len(txOpts) > 0 {
+		opts = txOpts[0]
+	}
+
+	tx, err := db.pool.BeginTx(ctx, opts)
+
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}

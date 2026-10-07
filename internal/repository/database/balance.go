@@ -54,6 +54,7 @@ func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*
 	return nil, nil
 }
 
+// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
 func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
 	//TODO implement
 
