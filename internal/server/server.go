@@ -9,7 +9,6 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/router"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 )
 
 type Server struct {
@@ -18,9 +17,8 @@ type Server struct {
 	ctx        context.Context
 }
 
-func New(appContext *appcontext.AppContext, loyaltyStorage service.LoyaltyStorage) *Server {
+func New(appContext *appcontext.AppContext, loyaltyManager handler.LoyaltyManageable) *Server {
 
-	loyaltyManager := service.NewLoyaltyManager(loyaltyStorage)
 	handlers := handler.New(appContext, loyaltyManager)
 	routeHandler := router.New(handlers)
 

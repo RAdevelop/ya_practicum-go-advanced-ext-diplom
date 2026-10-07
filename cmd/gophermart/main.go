@@ -14,6 +14,7 @@ import (
 	configDb "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service"
 )
 
 type applicationFlags struct {
@@ -65,6 +66,7 @@ func main() {
 		return
 	}
 	loyaltyStorage := database.NewStorage(db)
+	loyaltyManager := service.NewLoyaltyManager(loyaltyStorage)
 
 	var wg sync.WaitGroup
 
@@ -73,7 +75,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		serverApp := server.New(appContext, loyaltyStorage)
+		serverApp := server.New(appContext, loyaltyManager)
 
 		err := serverApp.Run(ctx)
 		if err != nil {

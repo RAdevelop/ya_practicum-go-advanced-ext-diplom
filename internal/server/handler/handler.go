@@ -7,12 +7,14 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
+	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 )
 
 //go:generate mockery
 type LoyaltyManageable interface {
 	OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error
 	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
+	OrdersAwaitingAccrual(statuses []statusInner.Accrual) ([]dto.Order, error)
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
 	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error

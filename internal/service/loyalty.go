@@ -33,6 +33,7 @@ import (
 type LoyaltyStorage interface {
 	OrderUpload(ctx context.Context, order model.Order) error
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
+	OrdersAwaitingAccrual([]statusInner.Accrual) ([]model.Order, error)
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error
@@ -79,6 +80,27 @@ func (lm *LoyaltyManager) Orders(ctx context.Context, customerDTO *dto.Customer)
 		})
 	}
 	ordersModel = nil
+	return orders, nil
+}
+
+// OrdersAwaitingAccrual - заказы, ожидающие начисления
+func (lm *LoyaltyManager) OrdersAwaitingAccrual(statuses []statusInner.Accrual) ([]dto.Order, error) {
+
+	ordersModel, err := lm.storage.OrdersAwaitingAccrual(statuses)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make([]dto.Order, 0, len(ordersModel))
+	for _, order := range ordersModel {
+		orders = append(orders, dto.Order{
+			Number:     order.Number,
+			Status:     order.Status,
+			Accrual:    order.Accrual,
+			UploadedAt: order.UploadedAt,
+		})
+	}
+
 	return orders, nil
 }
 

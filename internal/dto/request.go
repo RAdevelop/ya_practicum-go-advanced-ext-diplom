@@ -54,7 +54,7 @@ type Customer struct {
 
 // Accrual - Начисление от внешней системы
 type Accrual struct {
-	Order   string              `json:"order"`
+	Order   string              `json:"order"`             // Номер заказа
 	Status  statusOuter.Accrual `json:"status"`            // Статус расчёта начисления
 	Accrual float64             `json:"accrual,omitempty"` // Рассчитанные баллы к начислению
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -135,4 +136,11 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 	}
 
 	return orders, nil
+}
+
+// OrdersAwaitingAccrual - заказы, ожидающие начисления
+func (s *Storage) OrdersAwaitingAccrual([]statusInner.Accrual) ([]model.Order, error) {
+
+	//TODO implement
+	return nil, nil
 }

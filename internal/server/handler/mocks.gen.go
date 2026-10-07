@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -368,6 +369,68 @@ func (_c *MockLoyaltyManageable_Orders_Call) Return(orders []dto.Order, err erro
 }
 
 func (_c *MockLoyaltyManageable_Orders_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)) *MockLoyaltyManageable_Orders_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OrdersAwaitingAccrual provides a mock function for the type MockLoyaltyManageable
+func (_mock *MockLoyaltyManageable) OrdersAwaitingAccrual(statuses []inner.Accrual) ([]dto.Order, error) {
+	ret := _mock.Called(statuses)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OrdersAwaitingAccrual")
+	}
+
+	var r0 []dto.Order
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func([]inner.Accrual) ([]dto.Order, error)); ok {
+		return returnFunc(statuses)
+	}
+	if returnFunc, ok := ret.Get(0).(func([]inner.Accrual) []dto.Order); ok {
+		r0 = returnFunc(statuses)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.Order)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func([]inner.Accrual) error); ok {
+		r1 = returnFunc(statuses)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockLoyaltyManageable_OrdersAwaitingAccrual_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrdersAwaitingAccrual'
+type MockLoyaltyManageable_OrdersAwaitingAccrual_Call struct {
+	*mock.Call
+}
+
+// OrdersAwaitingAccrual is a helper method to define mock.On call
+//   - statuses []inner.Accrual
+func (_e *MockLoyaltyManageable_Expecter) OrdersAwaitingAccrual(statuses any) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+	return &MockLoyaltyManageable_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", statuses)}
+}
+
+func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Run(run func(statuses []inner.Accrual)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []inner.Accrual
+		if args[0] != nil {
+			arg0 = args[0].([]inner.Accrual)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Return(orders []dto.Order, err error) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+	_c.Call.Return(orders, err)
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) RunAndReturn(run func(statuses []inner.Accrual) ([]dto.Order, error)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
 	_c.Call.Return(run)
 	return _c
 }
