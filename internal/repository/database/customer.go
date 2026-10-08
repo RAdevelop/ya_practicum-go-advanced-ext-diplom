@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// CustomerCreate - создание нового покупателя
 func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
 
 	if !customer.IsCorrect() {
@@ -25,6 +26,10 @@ func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) 
 
 	row, err := s.DB.Executor(ctx).Query(ctx, sql, customer.Login, customer.PasswordHash)
 
+	if err != nil {
+		return nil, err
+	}
+
 	customer, err = pgx.CollectOneRow(row, pgx.RowToAddrOfStructByName[model.Customer])
 
 	if isPgErrorCode(err, pgErrUniqueViolationCode) {
@@ -38,6 +43,7 @@ func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) 
 	return customer, nil
 }
 
+// CustomerFindByLogin - поиск покупателя по логину
 func (s *Storage) CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error) {
 
 	if strings.TrimSpace(login) == "" {
@@ -47,14 +53,16 @@ func (s *Storage) CustomerFindByLogin(ctx context.Context, login string) (*model
 	const sql = `SELECT id, login, password_hash, created_at FROM customers WHERE login = $1`
 
 	row, err := s.DB.Executor(ctx).Query(ctx, sql, login)
-
 	if err != nil {
-		return nil, fmt.Errorf("%w, %w", perror.ErrCustomerNotFound, err)
+		return nil, err
 	}
 
 	customer, err := pgx.CollectOneRow(row, pgx.RowToAddrOfStructByName[model.Customer])
 	if err != nil {
-		return nil, fmt.Errorf("%w, %w", perror.ErrCustomerNotFound, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("%w", perror.ErrCustomerNotFound)
+		}
+		return nil, err
 	}
 	return customer, nil
 }

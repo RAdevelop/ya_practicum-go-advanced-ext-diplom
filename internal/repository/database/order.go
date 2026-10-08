@@ -23,6 +23,7 @@ TODO судя по всему, надо будет делать методы е�
 	  - обновить текущий баланс пользователя
 */
 
+// OrderUpload - создание нового заказа
 func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	if !order.IsCorrect() {
 		return perror.ErrOrderInvalidModel
@@ -62,6 +63,7 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	return perror.ErrOrderAlreadyUploadedByOther
 }
 
+// OrdersByCustomerID - получение списка заказов указанного покупателя
 func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error) {
 
 	if customerID == 0 {
@@ -84,7 +86,6 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 		`
 
 	rows, err := s.DB.Executor(ctx).Query(ctx, sql, customerID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +189,7 @@ func (s *Storage) orderAccrualUpdate(ctx context.Context, accrual model.Accrual)
 
 	tag, err := s.DB.Executor(ctx).Exec(ctx, sql, accrual.Status.String(), accrual.Accrual, accrual.Order, statuses)
 	if err != nil {
-		return fmt.Errorf("%w, %w", perror.ErrAccrualApply, err)
+		return err
 	}
 
 	if tag.RowsAffected() == 0 {

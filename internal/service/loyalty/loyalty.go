@@ -26,14 +26,23 @@ import (
 //
 //go:generate mockery
 type LoyaltyStorage interface {
+	// OrderUpload - создание нового заказа
 	OrderUpload(ctx context.Context, order model.Order) error
+	// OrdersByCustomerID - получение списка заказов указанного покупателя
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
+	// OrdersAwaitingAccrual - заказы, ожидающие начисления
 	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error)
+	// BalanceByCustomerID - Получение текущего баланса пользователя
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
+	// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
 	BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
+	// BalanceWithdraw - списание средств с баланса покупателя
 	BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error
+	// BalanceAccrual - начисление баллов к заказу
 	BalanceAccrual(ctx context.Context, accrual model.Accrual) error
+	//CustomerCreate - создание нового покупателя
 	CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error)
+	// CustomerFindByLogin - поиск покупателя по логину
 	CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error)
 }
 
