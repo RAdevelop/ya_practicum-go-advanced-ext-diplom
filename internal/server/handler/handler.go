@@ -14,7 +14,7 @@ import (
 type LoyaltyManageable interface {
 	OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error
 	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
-	OrdersAwaitingAccrual(statuses []statusInner.Accrual) ([]dto.Order, error)
+	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]dto.Order, error)
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
 	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error
