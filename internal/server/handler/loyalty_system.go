@@ -223,7 +223,7 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), customerDTO, balanceWithdraw.OrderNumber, balanceWithdraw.Sum)
+	err = ls.loyaltyManager.BalanceWithdraw(r.Context(), customerDTO, balanceWithdraw)
 	responseSetHeaderContentTypeTextPlain(w)
 	switch {
 	case err == nil:

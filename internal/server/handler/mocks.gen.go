@@ -163,16 +163,16 @@ func (_c *MockLoyaltyManageable_BalanceAccrual_Call) RunAndReturn(run func(ctx c
 }
 
 // BalanceWithdraw provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
-	ret := _mock.Called(ctx, customerDTO, orderNumber, sum)
+func (_mock *MockLoyaltyManageable) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error {
+	ret := _mock.Called(ctx, customerDTO, withdraw)
 
 	if len(ret) == 0 {
 		panic("no return value specified for BalanceWithdraw")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer, string, float64) error); ok {
-		r0 = returnFunc(ctx, customerDTO, orderNumber, sum)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *dto.Customer, dto.BalanceWithdraw) error); ok {
+		r0 = returnFunc(ctx, customerDTO, withdraw)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -187,13 +187,12 @@ type MockLoyaltyManageable_BalanceWithdraw_Call struct {
 // BalanceWithdraw is a helper method to define mock.On call
 //   - ctx context.Context
 //   - customerDTO *dto.Customer
-//   - orderNumber string
-//   - sum float64
-func (_e *MockLoyaltyManageable_Expecter) BalanceWithdraw(ctx any, customerDTO any, orderNumber any, sum any) *MockLoyaltyManageable_BalanceWithdraw_Call {
-	return &MockLoyaltyManageable_BalanceWithdraw_Call{Call: _e.mock.On("BalanceWithdraw", ctx, customerDTO, orderNumber, sum)}
+//   - withdraw dto.BalanceWithdraw
+func (_e *MockLoyaltyManageable_Expecter) BalanceWithdraw(ctx any, customerDTO any, withdraw any) *MockLoyaltyManageable_BalanceWithdraw_Call {
+	return &MockLoyaltyManageable_BalanceWithdraw_Call{Call: _e.mock.On("BalanceWithdraw", ctx, customerDTO, withdraw)}
 }
 
-func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) Run(run func(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64)) *MockLoyaltyManageable_BalanceWithdraw_Call {
+func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) Run(run func(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw)) *MockLoyaltyManageable_BalanceWithdraw_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -203,19 +202,14 @@ func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) Run(run func(ctx context.C
 		if args[1] != nil {
 			arg1 = args[1].(*dto.Customer)
 		}
-		var arg2 string
+		var arg2 dto.BalanceWithdraw
 		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 float64
-		if args[3] != nil {
-			arg3 = args[3].(float64)
+			arg2 = args[2].(dto.BalanceWithdraw)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -226,7 +220,7 @@ func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) Return(err error) *MockLoy
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error) *MockLoyaltyManageable_BalanceWithdraw_Call {
+func (_c *MockLoyaltyManageable_BalanceWithdraw_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error) *MockLoyaltyManageable_BalanceWithdraw_Call {
 	_c.Call.Return(run)
 	return _c
 }

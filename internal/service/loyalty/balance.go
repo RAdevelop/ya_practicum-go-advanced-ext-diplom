@@ -45,12 +45,12 @@ func (lm *Manager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Cust
 }
 
 // BalanceWithdraw - списание средств
-func (lm *Manager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
+func (lm *Manager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error {
 
 	withdrawal := model.Withdrawal{
 		CustomerID: customerDTO.ID,
-		Order:      orderNumber,
-		Sum:        sum,
+		Order:      withdraw.OrderNumber,
+		Sum:        withdraw.Sum,
 	}
 
 	return lm.storage.BalanceWithdraw(ctx, withdrawal)

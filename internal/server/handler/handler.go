@@ -12,14 +12,23 @@ import (
 
 //go:generate mockery
 type LoyaltyManageable interface {
+	// OrderUpload - загрузка заказа
 	OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error
+	// Orders - получение списка загруженных номеров заказов для покупателя
 	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
+	// OrdersAwaitingAccrual - заказы, ожидающие начисления
 	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]dto.Order, error)
+	// Balance - получение текущего баланса пользователя
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
+	// BalanceWithdrawals - получение информации о выводе средств
 	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)
-	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error
+	// BalanceWithdraw - списание средств
+	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error
+	// BalanceAccrual - начисление баллов к заказу
 	BalanceAccrual(ctx context.Context, accrual dto.Accrual) error
+	// UserRegister - регистрация покупателя
 	UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
+	// UserLogin - авторизация покупателя
 	UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 }
 

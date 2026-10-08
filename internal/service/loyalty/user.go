@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserLogin - авторизация покупателя
 func (lm *Manager) UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
 	customerModel, err := lm.storage.CustomerFindByLogin(ctx, customerCredentials.Login)
@@ -36,6 +37,7 @@ func (lm *Manager) UserLogin(ctx context.Context, customerCredentials dto.Custom
 	return token, nil
 }
 
+// UserRegister - регистрация покупателя
 func (lm *Manager) UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error) {
 
 	// 1. Хешируем пароль.

@@ -19,7 +19,7 @@ func (lm *Manager) OrderUpload(ctx context.Context, customerDTO *dto.Customer, n
 	return lm.storage.OrderUpload(ctx, order)
 }
 
-// Orders - получение списка загруженных номеров заказов
+// Orders - получение списка загруженных номеров заказов для покупателя
 func (lm *Manager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error) {
 	ordersModel, err := lm.storage.OrdersByCustomerID(ctx, customerDTO.ID)
 	if err != nil {

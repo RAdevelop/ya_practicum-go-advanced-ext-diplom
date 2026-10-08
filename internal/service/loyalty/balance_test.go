@@ -174,21 +174,20 @@ func Test_BalanceWithdrawals(t *testing.T) {
 func Test_BalanceWithdraw(t *testing.T) {
 	type given struct {
 		inputCustomerDTO *dto.Customer
-		inputOrderNumber string
-		inputSum         float64
-		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage
+		inputWithdraw    dto.BalanceWithdraw
+		makeStorage      func(t *testing.T, inputCustomerDTO *dto.Customer, inputWithdraw dto.BalanceWithdraw, outErr error) LoyaltyStorage
 	}
 
 	type want struct {
 		outErr error
 	}
 
-	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputOrderNumber string, inputSum float64, outErr error) LoyaltyStorage {
+	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputWithdraw dto.BalanceWithdraw, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
 		withdrawal := model.Withdrawal{
 			CustomerID: inputCustomerDTO.ID,
-			Order:      inputOrderNumber,
-			Sum:        inputSum,
+			Order:      inputWithdraw.OrderNumber,
+			Sum:        inputWithdraw.Sum,
 		}
 		storage.EXPECT().BalanceWithdraw(t.Context(), withdrawal).Return(outErr)
 
@@ -204,9 +203,11 @@ func Test_BalanceWithdraw(t *testing.T) {
 			name: "success",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				inputOrderNumber: "4532015112830366",
-				inputSum:         19.0,
-				makeStorage:      makeStorage,
+				inputWithdraw: dto.BalanceWithdraw{
+					OrderNumber: "4532015112830366",
+					Sum:         19.0,
+				},
+				makeStorage: makeStorage,
 			},
 			want: want{
 				outErr: nil,
@@ -216,9 +217,11 @@ func Test_BalanceWithdraw(t *testing.T) {
 			name: "error",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
-				inputOrderNumber: "4532015112830366",
-				inputSum:         19.0,
-				makeStorage:      makeStorage,
+				inputWithdraw: dto.BalanceWithdraw{
+					OrderNumber: "4532015112830366",
+					Sum:         19.0,
+				},
+				makeStorage: makeStorage,
 			},
 			want: want{
 				outErr: errors.New("test error"),
@@ -228,9 +231,9 @@ func Test_BalanceWithdraw(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputWithdraw, tt.want.outErr))
 
-			err := loyaltyManager.BalanceWithdraw(t.Context(), tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum)
+			err := loyaltyManager.BalanceWithdraw(t.Context(), tt.given.inputCustomerDTO, tt.given.inputWithdraw)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
 		})
