@@ -18,6 +18,7 @@ type LoyaltyManageable interface {
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
 	BalanceWithdrawals(ctx context.Context, customerDTO *dto.Customer) ([]dto.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error
+	BalanceAccrual(ctx context.Context, accrual dto.Accrual) error
 	UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 	UserLogin(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 }

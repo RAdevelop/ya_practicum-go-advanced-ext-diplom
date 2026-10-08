@@ -2,7 +2,7 @@
 // github.com/vektra/mockery
 // template: testify
 
-package service
+package loyalty
 
 import (
 	"context"
@@ -37,6 +37,63 @@ type MockLoyaltyStorage_Expecter struct {
 
 func (_m *MockLoyaltyStorage) EXPECT() *MockLoyaltyStorage_Expecter {
 	return &MockLoyaltyStorage_Expecter{mock: &_m.Mock}
+}
+
+// BalanceAccrual provides a mock function for the type MockLoyaltyStorage
+func (_mock *MockLoyaltyStorage) BalanceAccrual(ctx context.Context, accrual model.Accrual) error {
+	ret := _mock.Called(ctx, accrual)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BalanceAccrual")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.Accrual) error); ok {
+		r0 = returnFunc(ctx, accrual)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLoyaltyStorage_BalanceAccrual_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BalanceAccrual'
+type MockLoyaltyStorage_BalanceAccrual_Call struct {
+	*mock.Call
+}
+
+// BalanceAccrual is a helper method to define mock.On call
+//   - ctx context.Context
+//   - accrual model.Accrual
+func (_e *MockLoyaltyStorage_Expecter) BalanceAccrual(ctx any, accrual any) *MockLoyaltyStorage_BalanceAccrual_Call {
+	return &MockLoyaltyStorage_BalanceAccrual_Call{Call: _e.mock.On("BalanceAccrual", ctx, accrual)}
+}
+
+func (_c *MockLoyaltyStorage_BalanceAccrual_Call) Run(run func(ctx context.Context, accrual model.Accrual)) *MockLoyaltyStorage_BalanceAccrual_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 model.Accrual
+		if args[1] != nil {
+			arg1 = args[1].(model.Accrual)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_BalanceAccrual_Call) Return(err error) *MockLoyaltyStorage_BalanceAccrual_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLoyaltyStorage_BalanceAccrual_Call) RunAndReturn(run func(ctx context.Context, accrual model.Accrual) error) *MockLoyaltyStorage_BalanceAccrual_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // BalanceByCustomerID provides a mock function for the type MockLoyaltyStorage

@@ -1,4 +1,4 @@
-package service
+package loyalty
 
 import (
 	"errors"
@@ -66,7 +66,7 @@ func Test_OrderUpload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.want.outErr))
 
 			err := loyaltyManager.OrderUpload(t.Context(), tt.given.inputCustomerDTO, tt.given.inputOrderNumber)
 
@@ -143,7 +143,7 @@ func Test_Orders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outOrders, tt.given.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outOrders, tt.given.outErr))
 
 			orders, err := loyaltyManager.Orders(t.Context(), tt.given.inputCustomerDTO)
 
@@ -229,7 +229,7 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputStatuses, tt.given.outOrdersModel, tt.want.err))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputStatuses, tt.given.outOrdersModel, tt.want.err))
 
 			orders, err := loyaltyManager.OrdersAwaitingAccrual(tt.given.inputStatuses)
 			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)

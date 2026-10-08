@@ -1,4 +1,4 @@
-package service
+package loyalty
 
 import (
 	"errors"
@@ -100,7 +100,7 @@ func Test_UserLogin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
 
 			token, err := loyaltyManager.UserLogin(t.Context(), tt.given.inputCustomerCredentials, tt.given.inputJWTSecret)
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
@@ -195,7 +195,7 @@ func Test_UserRegister(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerCredentials, tt.given.inputJWTSecret, tt.want.outCustomerModel, tt.want.outErr))
 
 			token, err := loyaltyManager.UserRegister(t.Context(), tt.given.inputCustomerCredentials, tt.given.inputJWTSecret)
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)

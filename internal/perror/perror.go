@@ -13,8 +13,10 @@ var (
 	ErrOrderNotFound                  = errors.New("order not found")
 	ErrOrderAlreadyUploadedByCustomer = errors.New("order already uploaded by this customer")
 	ErrOrderAlreadyUploadedByOther    = errors.New("order already uploaded by another customer")
+	ErrOrderAccrualAlreadyProcessed   = errors.New("accrual already processed")
 
 	ErrBalanceInsufficient = errors.New("balance insufficient")
+	ErrBalanceIncrement    = errors.New("balance increment error")
 
 	ErrTokenInvalid                 = errors.New("invalid token")
 	ErrTokenUnexpectedSigningMethod = errors.New("unexpected signing method for token")
@@ -23,4 +25,5 @@ var (
 	ErrHashGenerateFromPassword = errors.New("error generating from password")
 
 	ErrAccrualStatusInvalid = errors.New("invalid accrual status")
+	ErrAccrualApply         = errors.New("error accrual apply")
 )

@@ -105,6 +105,63 @@ func (_c *MockLoyaltyManageable_Balance_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
+// BalanceAccrual provides a mock function for the type MockLoyaltyManageable
+func (_mock *MockLoyaltyManageable) BalanceAccrual(ctx context.Context, accrual dto.Accrual) error {
+	ret := _mock.Called(ctx, accrual)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BalanceAccrual")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.Accrual) error); ok {
+		r0 = returnFunc(ctx, accrual)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLoyaltyManageable_BalanceAccrual_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BalanceAccrual'
+type MockLoyaltyManageable_BalanceAccrual_Call struct {
+	*mock.Call
+}
+
+// BalanceAccrual is a helper method to define mock.On call
+//   - ctx context.Context
+//   - accrual dto.Accrual
+func (_e *MockLoyaltyManageable_Expecter) BalanceAccrual(ctx any, accrual any) *MockLoyaltyManageable_BalanceAccrual_Call {
+	return &MockLoyaltyManageable_BalanceAccrual_Call{Call: _e.mock.On("BalanceAccrual", ctx, accrual)}
+}
+
+func (_c *MockLoyaltyManageable_BalanceAccrual_Call) Run(run func(ctx context.Context, accrual dto.Accrual)) *MockLoyaltyManageable_BalanceAccrual_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 dto.Accrual
+		if args[1] != nil {
+			arg1 = args[1].(dto.Accrual)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_BalanceAccrual_Call) Return(err error) *MockLoyaltyManageable_BalanceAccrual_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_BalanceAccrual_Call) RunAndReturn(run func(ctx context.Context, accrual dto.Accrual) error) *MockLoyaltyManageable_BalanceAccrual_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // BalanceWithdraw provides a mock function for the type MockLoyaltyManageable
 func (_mock *MockLoyaltyManageable) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, orderNumber string, sum float64) error {
 	ret := _mock.Called(ctx, customerDTO, orderNumber, sum)

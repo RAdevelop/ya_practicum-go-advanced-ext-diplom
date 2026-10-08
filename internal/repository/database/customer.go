@@ -17,7 +17,7 @@ func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) 
 		return nil, perror.ErrCustomerInvalidModel
 	}
 
-	sql := `
+	const sql = `
 		INSERT INTO customers (login, password_hash)
 		VALUES ($1, $2)
 		RETURNING id, login, password_hash, created_at
@@ -44,7 +44,7 @@ func (s *Storage) CustomerFindByLogin(ctx context.Context, login string) (*model
 		return nil, perror.ErrCustomerNotFound
 	}
 
-	sql := `SELECT id, login, password_hash, created_at FROM customers WHERE login = $1`
+	const sql = `SELECT id, login, password_hash, created_at FROM customers WHERE login = $1`
 
 	row, err := s.DB.Executor(ctx).Query(ctx, sql, login)
 

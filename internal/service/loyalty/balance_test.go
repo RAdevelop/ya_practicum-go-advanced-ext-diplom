@@ -1,4 +1,4 @@
-package service
+package loyalty
 
 import (
 	"errors"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	statusOuter "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/outer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -82,7 +84,7 @@ func Test_Balance(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outBalance, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outBalance, tt.want.outErr))
 
 			balance, err := loyaltyManager.Balance(t.Context(), tt.given.inputCustomerDTO)
 
@@ -159,7 +161,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outWithdrawals, tt.want.err))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.outWithdrawals, tt.want.err))
 
 			withdrawals, err := loyaltyManager.BalanceWithdrawals(t.Context(), tt.given.inputCustomerDTO)
 
@@ -226,11 +228,133 @@ func Test_BalanceWithdraw(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loyaltyManager := NewLoyaltyManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.want.outErr))
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum, tt.want.outErr))
 
 			err := loyaltyManager.BalanceWithdraw(t.Context(), tt.given.inputCustomerDTO, tt.given.inputOrderNumber, tt.given.inputSum)
 
 			assert.ErrorIsf(t, err, tt.want.outErr, "given: %+v", tt.given)
+		})
+	}
+}
+
+func Test_BalanceAccrual(t *testing.T) {
+
+	type given struct {
+		inputAccrual dto.Accrual
+		outErr       error
+		makeStorage  func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage
+	}
+	type want struct {
+		err error
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "success",
+			given: given{
+				inputAccrual: dto.Accrual{
+					Order:   "4532015112830366",
+					Status:  statusOuter.AccrualProcessed,
+					Accrual: 111.0,
+				},
+				outErr: nil,
+				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+					storage := NewMockLoyaltyStorage(t)
+
+					accrualModel := model.Accrual{
+						Order:   inputAccrual.Order,
+						Status:  inputAccrual.Status,
+						Accrual: inputAccrual.Accrual,
+					}
+					storage.EXPECT().BalanceAccrual(t.Context(), accrualModel).Return(outErr)
+					return storage
+				},
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "ErrAccrualApply",
+			given: given{
+				inputAccrual: dto.Accrual{
+					Order:  "4532015112830366",
+					Status: statusOuter.AccrualProcessing,
+				},
+				outErr: perror.ErrAccrualApply,
+				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+					storage := NewMockLoyaltyStorage(t)
+
+					accrualModel := model.Accrual{
+						Order:  inputAccrual.Order,
+						Status: inputAccrual.Status,
+					}
+					storage.EXPECT().BalanceAccrual(t.Context(), accrualModel).Return(outErr)
+					return storage
+				},
+			},
+			want: want{
+				err: perror.ErrAccrualApply,
+			},
+		},
+		{
+			name: "ErrAccrualAlreadyProcessed",
+			given: given{
+				inputAccrual: dto.Accrual{
+					Order:  "4532015112830366",
+					Status: statusOuter.AccrualProcessing,
+				},
+				outErr: perror.ErrOrderAccrualAlreadyProcessed,
+				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+					storage := NewMockLoyaltyStorage(t)
+
+					accrualModel := model.Accrual{
+						Order:  inputAccrual.Order,
+						Status: inputAccrual.Status,
+					}
+					storage.EXPECT().BalanceAccrual(t.Context(), accrualModel).Return(outErr)
+					return storage
+				},
+			},
+			want: want{
+				err: perror.ErrOrderAccrualAlreadyProcessed,
+			},
+		},
+		{
+			name: "ErrBalanceIncrement",
+			given: given{
+				inputAccrual: dto.Accrual{
+					Order:  "4532015112830366",
+					Status: statusOuter.AccrualProcessing,
+				},
+				outErr: perror.ErrBalanceIncrement,
+				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+					storage := NewMockLoyaltyStorage(t)
+
+					accrualModel := model.Accrual{
+						Order:  inputAccrual.Order,
+						Status: inputAccrual.Status,
+					}
+					storage.EXPECT().BalanceAccrual(t.Context(), accrualModel).Return(outErr)
+					return storage
+				},
+			},
+			want: want{
+				err: perror.ErrBalanceIncrement,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputAccrual, tt.given.outErr))
+			err := loyaltyManager.BalanceAccrual(t.Context(), tt.given.inputAccrual)
+
+			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 		})
 	}
 }

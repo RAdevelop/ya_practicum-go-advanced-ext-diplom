@@ -58,43 +58,6 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	return perror.ErrOrderAlreadyUploadedByOther
 }
 
-func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
-
-	sql := `INSERT INTO orders ("number", customer_id, status) VALUES ($1, $2, $3)`
-	_, err := s.DB.Executor(ctx).Exec(ctx, sql, order.Number, order.CustomerID, order.Status.String())
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Storage) orderFindByNumber(ctx context.Context, number string) (*model.Order, error) {
-
-	sql := `
-		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
-		FROM orders
-		WHERE "number" = $1
-		`
-
-	row, err := s.DB.Executor(ctx).Query(ctx, sql, number)
-	if err != nil {
-		return nil, err
-	}
-
-	order, err := pgx.CollectOneRow(row, pgx.RowToStructByName[model.Order])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w, %w", perror.ErrOrderNotFound, err)
-		}
-
-		return nil, err
-	}
-
-	return &order, nil
-}
-
 func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error) {
 
 	if customerID == 0 {
@@ -108,7 +71,7 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 			- поставил жесткие OFFSET/LIMIT
 	*/
 
-	sql := `
+	const sql = `
 		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
 		FROM orders
 		WHERE customer_id = $1
@@ -139,8 +102,76 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 }
 
 // OrdersAwaitingAccrual - заказы, ожидающие начисления
-func (s *Storage) OrdersAwaitingAccrual([]statusInner.Accrual) ([]model.Order, error) {
+func (s *Storage) OrdersAwaitingAccrual(statuses []statusInner.Accrual) ([]model.Order, error) {
 
 	//TODO implement
 	return nil, nil
+}
+
+// orderCreate - создание нового заказа
+func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
+
+	const sql = `INSERT INTO orders ("number", customer_id, status) VALUES ($1, $2, $3)`
+	_, err := s.DB.Executor(ctx).Exec(ctx, sql, order.Number, order.CustomerID, order.Status.String())
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// orderFindByNumber - поиск заказа по его номеру
+func (s *Storage) orderFindByNumber(ctx context.Context, number string) (*model.Order, error) {
+
+	const sql = `
+		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
+		FROM orders
+		WHERE "number" = $1
+		`
+
+	row, err := s.DB.Executor(ctx).Query(ctx, sql, number)
+	if err != nil {
+		return nil, err
+	}
+
+	order, err := pgx.CollectOneRow(row, pgx.RowToStructByName[model.Order])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("%w, %w", perror.ErrOrderNotFound, err)
+		}
+
+		return nil, err
+	}
+
+	return &order, nil
+}
+
+// orderAccrualUpdate - сохранить начисленные баллы по заказу
+func (s *Storage) orderAccrualUpdate(ctx context.Context, accrual model.Accrual) error {
+
+	const sql = `
+		UPDATE orders
+		SET
+			status     = $1,
+			accrual    = $2,
+			updated_at = NOW()
+		WHERE "number" = $3 AND status = ANY($4)
+	`
+
+	statuses := []string{
+		statusInner.AccrualNew.String(),
+		statusInner.AccrualProcessing.String(),
+	}
+
+	tag, err := s.DB.Executor(ctx).Exec(ctx, sql, accrual.Status.String(), accrual.Accrual, accrual.Order, statuses)
+	if err != nil {
+		return fmt.Errorf("%w, %w", perror.ErrAccrualApply, err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return perror.ErrOrderAccrualAlreadyProcessed
+	}
+
+	return nil
 }

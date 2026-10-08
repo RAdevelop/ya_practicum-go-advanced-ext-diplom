@@ -2,8 +2,12 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/retryer"
+	"github.com/jackc/pgx/v5"
 )
 
 /*
@@ -138,5 +142,68 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 		 - помнить о транзакции и/или блокировки записей в таблицАХ!
 		 - помнить, что баланс не должен уходить в минус. Если расчет показывает отрицательное значение - возвращать ошибку (не достаточно средств)!
 	*/
+	return nil
+}
+
+// BalanceAccrual - начисление баллов к заказу
+func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) error {
+	/*
+		- найти заказ по номеру
+			- если не нашли, выходим с ошибкой
+			- если нашли, то знаем id покупателя
+		- обновить состояние заказа по номеру заказа
+			- если не смогли, выходим с ошибкой
+		- обновить баланс покупателя по id покупателя
+			- если не смогли, выходим с ошибкой
+	*/
+
+	// на случай dead-lock или аналогичных ситуаций
+	_, err := retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
+		err := s.DB.RunInTransaction(ctx, func(ctx context.Context) error {
+			order, err := s.orderFindByNumber(ctx, accrual.Order)
+			if err != nil {
+				return err
+			}
+
+			if order.Status.IsFinal() {
+				return perror.ErrOrderAccrualAlreadyProcessed
+			}
+
+			err = s.orderAccrualUpdate(ctx, accrual)
+			if err != nil {
+				return err
+			}
+
+			err = s.balanceCustomerIncrement(ctx, order.CustomerID, accrual.Accrual)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}, pgx.TxOptions{IsoLevel: pgx.Serializable})
+
+		return struct{}{}, err
+	}, uint(1), new(uint(3)))
+
+	return err
+}
+
+// balanceCustomerIncrement - увеличиваем баланс покупателя на указанное количество баллов
+func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint64, accrual float64) error {
+
+	const sql = `
+		INSERT INTO balances (customer_id, current, withdrawn, created_at, updated_at)
+		VALUES ($1, $2, 0, NOW(), NOW())
+		ON CONFLICT (customer_id)
+		DO UPDATE SET
+			"current" = "current" + EXCLUDED.current,
+			updated_at = NOW()
+	`
+
+	_, err := s.DB.Executor(ctx).Exec(ctx, sql, customerID, accrual)
+	if err != nil {
+		return fmt.Errorf("%w, %w", perror.ErrBalanceIncrement, err)
+	}
+
 	return nil
 }
