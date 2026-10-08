@@ -139,11 +139,11 @@ func (db *DB) RunInTransaction(ctx context.Context, fn func(ctx context.Context)
 	// Создаём контекст с транзакцией
 	txCtx := db.contextWithTx(ctx, tx)
 
-	if err := fn(txCtx); err != nil {
+	if err = fn(txCtx); err != nil {
 		return err // defer откатит
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err = tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commit transaction: %w", err)
 	}
 	committed = true

@@ -2,8 +2,8 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
@@ -18,92 +18,36 @@ TODO учитывать:
 
 // BalanceByCustomerID - Получение текущего баланса пользователя
 func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error) {
-	//TODO implement
-	/*
-		#### **Получение текущего баланса пользователя**
-
-		Хендлер: `GET /api/user/balance`.
-
-		Хендлер доступен только авторизованному пользователю. В ответе должны содержаться данные о текущей сумме баллов лояльности, а также сумме использованных за весь период регистрации баллов.
-
-		Формат запроса:
-
-		```
-		GET /api/user/balance HTTP/1.1
-		Content-Length: 0
-		```
-
-		Возможные коды ответа:
-
-		- `200` — успешная обработка запроса.
-
-		  Формат ответа:
-
-		    ```
-		    200 OK HTTP/1.1
-		    Content-Type: application/json
-		    ...
-
-		    {
-		    	"current": 500.5,
-		    	"withdrawn": 42
-		    }
-		    ```
-
-		- `401` — пользователь не авторизован.
-		- `500` — внутренняя ошибка сервера.
-	*/
 
 	if customerID == 0 {
 		return nil, perror.ErrCustomerInvalidCredentials
 	}
-	//TODO implement
-	return nil, nil
+
+	const sql = `
+		SELECT id, customer_id, "current", withdrawn, updated_at
+		FROM balances
+		WHERE customer_id = $1
+	`
+
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, customerID)
+	if err != nil {
+		return nil, err
+	}
+
+	balance, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Balance])
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("%w, %w", perror.ErrBalanceCustomerNotFound, err)
+		}
+		return nil, err
+	}
+
+	return &balance, nil
 }
 
 // BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
 func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
-
-	/*
-		#### **Получение информации о выводе средств**
-
-		Хендлер: `GET /api/user/withdrawals`.
-
-		Хендлер доступен только авторизованному пользователю.
-		Факты выводов в выдаче должны быть отсортированы по времени вывода от самых новых к самым старым.
-		Формат даты — RFC3339.
-
-		Формат запроса:
-
-		```
-		GET /api/user/withdrawals HTTP/1.1
-		Content-Length: 0
-		```
-
-		Возможные коды ответа:
-
-		- `200` — успешная обработка запроса.
-
-		  Формат ответа:
-
-		    ```
-		    200 OK HTTP/1.1
-		    Content-Type: application/json
-		    ...
-
-		    [
-		        {
-		            "order": "2377225624",
-		            "sum": 500,
-		            "processed_at": "2020-12-09T16:09:57+03:00"
-		        }
-		    ]
-		    ```
-
-		- `204` - нет ни одного списания.
-		- `401` — пользователь не авторизован.
-		- `500` — внутренняя ошибка сервера.
-	*/
 
 	if customerID == 0 {
 		return nil, perror.ErrCustomerInvalidCredentials
@@ -136,7 +80,7 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 
 // BalanceWithdraw - списание средств с баланса покупателя
 func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error {
-	//TODO implement
+	//TODO implement - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
 	/*
 			#### **Запрос на списание средств**
 
@@ -176,7 +120,11 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 	return nil
 }
 
-// BalanceAccrual - начисление баллов к заказу
+/*
+BalanceAccrual - начисление баллов к заказу
+
+ВАЖНО: использует внутри себя транзакцию с повторными попытками!
+*/
 func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) error {
 	/*
 		- найти заказ по номеру
@@ -224,11 +172,11 @@ func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) err
 func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint64, accrual float64) error {
 
 	const sql = `
-		INSERT INTO balances (customer_id, current, withdrawn, created_at, updated_at)
-		VALUES ($1, $2, 0, NOW(), NOW())
+		INSERT INTO balances (customer_id, "current", withdrawn, updated_at)
+		VALUES ($1, $2, 0, NOW())
 		ON CONFLICT (customer_id)
 		DO UPDATE SET
-			"current" = "current" + EXCLUDED.current,
+			"current" = balances."current" + EXCLUDED."current",
 			updated_at = NOW()
 	`
 

@@ -16,7 +16,7 @@ func assertCustomer(t *testing.T, expectedCustomer *model.Customer, actualCustom
 	assert.Equalf(t, expectedCustomer.Login, actualCustomer.Login, "expectedCustomer: %+v", expectedCustomer)
 	assert.Equalf(t, expectedCustomer.PasswordHash, actualCustomer.PasswordHash, "expectedCustomer: %+v", expectedCustomer)
 	assert.Greaterf(t, actualCustomer.ID, uint64(0), "expectedCustomer: %+v", expectedCustomer)
-	assert.GreaterOrEqualf(t, time.Now(), actualCustomer.CreatedAt, "expectedCustomer: %+v", expectedCustomer)
+	assert.WithinDurationf(t, time.Now(), actualCustomer.CreatedAt, time.Minute, "expectedCustomer: %+v", expectedCustomer)
 }
 
 func TestStorage_CustomerCreateErrCustomerAlreadyExists(t *testing.T) {
