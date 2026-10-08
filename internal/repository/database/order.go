@@ -40,16 +40,30 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 		return perror.ErrOrderInvalidModel
 	}
 
-	err := s.orderCreate(ctx, order)
+	// возможно, заказ уже загружен.
+	orderFound, err := s.orderFindByNumber(ctx, order.Number)
+	switch {
+	case err == nil:
+		if orderFound.CustomerID == order.CustomerID {
+			return perror.ErrOrderAlreadyUploadedByCustomer
+		}
+		return perror.ErrOrderAlreadyUploadedByOther
+	case !errors.Is(err, perror.ErrOrderNotFound):
+		return err
+	}
+
+	// заказа нет — создаём.
+	err = s.orderCreate(ctx, order)
 	if err == nil {
 		return nil
 	}
 
+	// гонка: кто-то вставил между SELECT и INSERT.
 	if !isPgErrorCode(err, pgErrUniqueViolationCode) {
 		return err
 	}
 
-	orderFound, err := s.orderFindByNumber(ctx, order.Number)
+	orderFound, err = s.orderFindByNumber(ctx, order.Number)
 	if err != nil {
 		return err
 	}
@@ -57,7 +71,6 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	if orderFound.CustomerID == order.CustomerID {
 		return perror.ErrOrderAlreadyUploadedByCustomer
 	}
-
 	return perror.ErrOrderAlreadyUploadedByOther
 }
 
