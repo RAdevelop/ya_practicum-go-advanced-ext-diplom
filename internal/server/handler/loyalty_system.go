@@ -162,6 +162,9 @@ func (ls LoyaltySystem) Orders(w http.ResponseWriter, r *http.Request) {
 	orders, err := ls.loyaltyManager.Orders(r.Context(), customerDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Orders", "err", err)
+		if errors.Is(err, perror.ErrOrderNotFound) {
+			err = nil
+		}
 	}
 
 	ls.responseJSON(w, orders, len(orders) == 0, err)
@@ -182,6 +185,9 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 	balance, err := ls.loyaltyManager.Balance(r.Context(), customerDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Balance", "err", err)
+		if errors.Is(err, perror.ErrBalanceCustomerNotFound) {
+			err = nil
+		}
 	}
 
 	ls.responseJSON(w, balance, false, err)
@@ -205,13 +211,13 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !validator.IsValidLuhn(balanceWithdraw.OrderNumber) {
-		ls.appContext.Logger.Error("BalanceWithdraw", "invalid orderNumber", balanceWithdraw.OrderNumber)
+		ls.appContext.Logger.Error("BalanceWithdraw", "invalid orderNumber", balanceWithdraw)
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
 
 	if balanceWithdraw.Sum <= 0 {
-		ls.appContext.Logger.Error("BalanceWithdraw", "invalid sum", balanceWithdraw.Sum)
+		ls.appContext.Logger.Error("BalanceWithdraw", "invalid sum", balanceWithdraw)
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
@@ -255,6 +261,9 @@ func (ls LoyaltySystem) BalanceWithdrawals(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		ls.appContext.Logger.Error("BalanceWithdrawals", "err", err)
+		if errors.Is(err, perror.ErrWithdrawalNotFound) {
+			err = nil
+		}
 	}
 
 	ls.responseJSON(w, withdrawals, len(withdrawals) == 0, err)

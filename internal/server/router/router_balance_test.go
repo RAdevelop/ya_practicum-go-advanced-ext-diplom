@@ -54,6 +54,21 @@ func Test_GetBalance(t *testing.T) {
 			},
 		},
 		{
+			name: "StatusOK_ErrBalanceCustomerNotFound",
+			given: given{
+				inputCustomerDTO:   testCustomerDTO,
+				outBalance:         dto.Balance{},
+				outBalanceErr:      perror.ErrBalanceCustomerNotFound,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
+				authHeaderSet:      authHeaderSetCorrect,
+			},
+			want: want{
+				httpStatus:   http.StatusOK,
+				responseBody: `{"current":0,"withdrawn":0}`,
+				contentType:  "application/json",
+			},
+		},
+		{
 			name: "StatusUnauthorized",
 			given: given{
 				inputCustomerDTO: nil, // причина StatusUnauthorized
@@ -347,6 +362,21 @@ func Test_GetWithdrawals(t *testing.T) {
 				inputCustomerDTO:   testCustomerDTO,
 				outWithdrawals:     nil,
 				outWithdrawalsErr:  nil,
+				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsOnce,
+				authHeaderSet:      authHeaderSetCorrect,
+			},
+			want: want{
+				httpStatus:   http.StatusNoContent,
+				responseBody: ``,
+				contentType:  "application/json",
+			},
+		},
+		{
+			name: "StatusNoContent",
+			given: given{
+				inputCustomerDTO:   testCustomerDTO,
+				outWithdrawals:     nil,
+				outWithdrawalsErr:  perror.ErrWithdrawalNotFound,
 				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawalsOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},

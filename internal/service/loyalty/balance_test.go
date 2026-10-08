@@ -125,6 +125,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 					{
 						ID:          1,
 						CustomerID:  1,
+						OrderID:     1,
 						Order:       "4532015112830366",
 						Sum:         19.0,
 						ProcessedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),

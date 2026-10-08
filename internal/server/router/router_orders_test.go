@@ -74,6 +74,21 @@ func Test_GetOrders(t *testing.T) {
 			},
 		},
 		{
+			name: "StatusNoContent",
+			given: given{
+				inputCustomerDTO:   testCustomerDTO,
+				outOrderList:       nil,
+				outOrderError:      perror.ErrOrderNotFound,
+				makeLoyaltyManager: makeLoyaltyManagerOrdersOnce,
+				authHeaderSet:      authHeaderSetCorrect,
+			},
+			want: want{
+				httpStatus:   http.StatusNoContent,
+				responseBody: ``,
+				contentType:  "application/json",
+			},
+		},
+		{
 			name: "StatusInternalServerError",
 			given: given{
 				inputCustomerDTO:   testCustomerDTO,

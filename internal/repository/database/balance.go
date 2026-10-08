@@ -52,19 +52,25 @@ func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*
 		- `401` — пользователь не авторизован.
 		- `500` — внутренняя ошибка сервера.
 	*/
+
+	if customerID == 0 {
+		return nil, perror.ErrCustomerInvalidCredentials
+	}
+	//TODO implement
 	return nil, nil
 }
 
 // BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
 func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
-	//TODO implement
 
 	/*
 		#### **Получение информации о выводе средств**
 
 		Хендлер: `GET /api/user/withdrawals`.
 
-		Хендлер доступен только авторизованному пользователю. Факты выводов в выдаче должны быть отсортированы по времени вывода от самых новых к самым старым. Формат даты — RFC3339.
+		Хендлер доступен только авторизованному пользователю.
+		Факты выводов в выдаче должны быть отсортированы по времени вывода от самых новых к самым старым.
+		Формат даты — RFC3339.
 
 		Формат запроса:
 
@@ -97,7 +103,34 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 		- `401` — пользователь не авторизован.
 		- `500` — внутренняя ошибка сервера.
 	*/
-	return nil, nil
+
+	if customerID == 0 {
+		return nil, perror.ErrCustomerInvalidCredentials
+	}
+
+	const sql = `
+		SELECT w.id, w.order_id, w.sum, w.processed_at, o.number AS "order", o.customer_id
+		FROM withdrawals AS w 
+		JOIN orders AS o ON(o.id = w.order_id)
+		WHERE o.customer_id = $1
+		ORDER BY w.processed_at DESC
+	`
+
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, customerID)
+	if err != nil {
+		return nil, err
+	}
+
+	withdrawals, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Withdrawal])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(withdrawals) == 0 {
+		return nil, perror.ErrWithdrawalNotFound
+	}
+
+	return withdrawals, nil
 }
 
 // BalanceWithdraw - списание средств с баланса покупателя

@@ -10,11 +10,13 @@ import (
 // Balance - получение текущего баланса пользователя
 func (lm *Manager) Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error) {
 	balanceModel, err := lm.storage.BalanceByCustomerID(ctx, customerDTO.ID)
+
+	var balance dto.Balance
 	if err != nil {
-		return dto.Balance{}, err
+		return balance, err
 	}
 
-	balance := dto.Balance{
+	balance = dto.Balance{
 		Current:   balanceModel.Current,
 		Withdrawn: balanceModel.Withdrawn,
 	}
