@@ -8,7 +8,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
-	statusOuter "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/outer"
+	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -244,9 +244,9 @@ func Test_BalanceWithdraw(t *testing.T) {
 func Test_BalanceAccrual(t *testing.T) {
 
 	type given struct {
-		inputAccrual dto.Accrual
+		inputAccrual dto.AccrualInner
 		outErr       error
-		makeStorage  func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage
+		makeStorage  func(t *testing.T, inputAccrual dto.AccrualInner, outErr error) LoyaltyStorage
 	}
 	type want struct {
 		err error
@@ -260,13 +260,13 @@ func Test_BalanceAccrual(t *testing.T) {
 		{
 			name: "success",
 			given: given{
-				inputAccrual: dto.Accrual{
+				inputAccrual: dto.AccrualInner{
 					Order:   "4532015112830366",
-					Status:  statusOuter.AccrualProcessed,
+					Status:  statusInner.AccrualProcessed,
 					Accrual: 111.0,
 				},
 				outErr: nil,
-				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+				makeStorage: func(t *testing.T, inputAccrual dto.AccrualInner, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
 
 					accrualModel := model.Accrual{
@@ -285,12 +285,12 @@ func Test_BalanceAccrual(t *testing.T) {
 		{
 			name: "ErrAccrualApply",
 			given: given{
-				inputAccrual: dto.Accrual{
+				inputAccrual: dto.AccrualInner{
 					Order:  "4532015112830366",
-					Status: statusOuter.AccrualProcessing,
+					Status: statusInner.AccrualProcessing,
 				},
 				outErr: perror.ErrAccrualApply,
-				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+				makeStorage: func(t *testing.T, inputAccrual dto.AccrualInner, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
 
 					accrualModel := model.Accrual{
@@ -308,12 +308,12 @@ func Test_BalanceAccrual(t *testing.T) {
 		{
 			name: "ErrAccrualAlreadyProcessed",
 			given: given{
-				inputAccrual: dto.Accrual{
+				inputAccrual: dto.AccrualInner{
 					Order:  "4532015112830366",
-					Status: statusOuter.AccrualProcessing,
+					Status: statusInner.AccrualProcessing,
 				},
 				outErr: perror.ErrOrderAccrualAlreadyProcessed,
-				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+				makeStorage: func(t *testing.T, inputAccrual dto.AccrualInner, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
 
 					accrualModel := model.Accrual{
@@ -331,12 +331,12 @@ func Test_BalanceAccrual(t *testing.T) {
 		{
 			name: "ErrBalanceIncrement",
 			given: given{
-				inputAccrual: dto.Accrual{
+				inputAccrual: dto.AccrualInner{
 					Order:  "4532015112830366",
-					Status: statusOuter.AccrualProcessing,
+					Status: statusInner.AccrualProcessing,
 				},
 				outErr: perror.ErrBalanceIncrement,
-				makeStorage: func(t *testing.T, inputAccrual dto.Accrual, outErr error) LoyaltyStorage {
+				makeStorage: func(t *testing.T, inputAccrual dto.AccrualInner, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
 
 					accrualModel := model.Accrual{

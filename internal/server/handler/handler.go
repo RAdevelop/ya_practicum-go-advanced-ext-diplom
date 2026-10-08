@@ -25,7 +25,7 @@ type LoyaltyManageable interface {
 	// BalanceWithdraw - списание средств
 	BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error
 	// BalanceAccrual - начисление баллов к заказу
-	BalanceAccrual(ctx context.Context, accrual dto.Accrual) error
+	BalanceAccrual(ctx context.Context, accrual dto.AccrualInner) error
 	// UserRegister - регистрация покупателя
 	UserRegister(ctx context.Context, customerCredentials dto.CustomerCredentials, jwtSecret string) (string, error)
 	// UserLogin - авторизация покупателя

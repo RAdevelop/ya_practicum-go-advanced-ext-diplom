@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
@@ -190,6 +191,7 @@ func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) err
 	// на случай dead-lock или аналогичных ситуаций
 	_, err := retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
 		err := s.DB.RunInTransaction(ctx, func(ctx context.Context) error {
+
 			order, err := s.orderFindByNumber(ctx, accrual.Order)
 			if err != nil {
 				return err

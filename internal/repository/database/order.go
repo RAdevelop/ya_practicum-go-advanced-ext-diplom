@@ -29,7 +29,7 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 		return perror.ErrOrderInvalidModel
 	}
 
-	// возможно, заказ уже загружен.
+	// возможно, заказ уже загружен
 	orderFound, err := s.orderFindByNumber(ctx, order.Number)
 	switch {
 	case err == nil:
@@ -41,13 +41,13 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 		return err
 	}
 
-	// заказа нет — создаём.
+	// заказа нет — создаём
 	err = s.orderCreate(ctx, order)
 	if err == nil {
 		return nil
 	}
 
-	// гонка: кто-то вставил между SELECT и INSERT.
+	// гонка: кто-то вставил между SELECT и INSERT
 	if !isPgErrorCode(err, pgErrUniqueViolationCode) {
 		return err
 	}
@@ -145,7 +145,7 @@ func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
 }
 
 // orderFindByNumber - поиск заказа по его номеру
-func (s *Storage) orderFindByNumber(ctx context.Context, number string) (*model.Order, error) {
+func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*model.Order, error) {
 
 	const sql = `
 		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
@@ -153,7 +153,7 @@ func (s *Storage) orderFindByNumber(ctx context.Context, number string) (*model.
 		WHERE "number" = $1
 	`
 
-	rows, err := s.DB.Executor(ctx).Query(ctx, sql, number)
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderNumber)
 	if err != nil {
 		return nil, err
 	}

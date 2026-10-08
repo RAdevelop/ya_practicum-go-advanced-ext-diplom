@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	statusOuter "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/outer"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -52,9 +53,16 @@ type Customer struct {
 	Login string `json:"login"`
 }
 
-// Accrual - Начисление от внешней системы
-type Accrual struct {
+// AccrualOuter - Начисление от внешней системы
+type AccrualOuter struct {
 	Order   string              `json:"order"`             // Номер заказа
 	Status  statusOuter.Accrual `json:"status"`            // Статус расчёта начисления
+	Accrual float64             `json:"accrual,omitempty"` // Рассчитанные баллы к начислению
+}
+
+// AccrualInner - Начисление от внешней системы со внутренним статусом
+type AccrualInner struct {
+	Order   string              `json:"order"`             // Номер заказа
+	Status  statusInner.Accrual `json:"status"`            // Статус расчёта начисления
 	Accrual float64             `json:"accrual,omitempty"` // Рассчитанные баллы к начислению
 }

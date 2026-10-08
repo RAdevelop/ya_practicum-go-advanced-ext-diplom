@@ -106,7 +106,7 @@ func (_c *MockLoyaltyManageable_Balance_Call) RunAndReturn(run func(ctx context.
 }
 
 // BalanceAccrual provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) BalanceAccrual(ctx context.Context, accrual dto.Accrual) error {
+func (_mock *MockLoyaltyManageable) BalanceAccrual(ctx context.Context, accrual dto.AccrualInner) error {
 	ret := _mock.Called(ctx, accrual)
 
 	if len(ret) == 0 {
@@ -114,7 +114,7 @@ func (_mock *MockLoyaltyManageable) BalanceAccrual(ctx context.Context, accrual 
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.Accrual) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, dto.AccrualInner) error); ok {
 		r0 = returnFunc(ctx, accrual)
 	} else {
 		r0 = ret.Error(0)
@@ -129,20 +129,20 @@ type MockLoyaltyManageable_BalanceAccrual_Call struct {
 
 // BalanceAccrual is a helper method to define mock.On call
 //   - ctx context.Context
-//   - accrual dto.Accrual
+//   - accrual dto.AccrualInner
 func (_e *MockLoyaltyManageable_Expecter) BalanceAccrual(ctx any, accrual any) *MockLoyaltyManageable_BalanceAccrual_Call {
 	return &MockLoyaltyManageable_BalanceAccrual_Call{Call: _e.mock.On("BalanceAccrual", ctx, accrual)}
 }
 
-func (_c *MockLoyaltyManageable_BalanceAccrual_Call) Run(run func(ctx context.Context, accrual dto.Accrual)) *MockLoyaltyManageable_BalanceAccrual_Call {
+func (_c *MockLoyaltyManageable_BalanceAccrual_Call) Run(run func(ctx context.Context, accrual dto.AccrualInner)) *MockLoyaltyManageable_BalanceAccrual_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 dto.Accrual
+		var arg1 dto.AccrualInner
 		if args[1] != nil {
-			arg1 = args[1].(dto.Accrual)
+			arg1 = args[1].(dto.AccrualInner)
 		}
 		run(
 			arg0,
@@ -157,7 +157,7 @@ func (_c *MockLoyaltyManageable_BalanceAccrual_Call) Return(err error) *MockLoya
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_BalanceAccrual_Call) RunAndReturn(run func(ctx context.Context, accrual dto.Accrual) error) *MockLoyaltyManageable_BalanceAccrual_Call {
+func (_c *MockLoyaltyManageable_BalanceAccrual_Call) RunAndReturn(run func(ctx context.Context, accrual dto.AccrualInner) error) *MockLoyaltyManageable_BalanceAccrual_Call {
 	_c.Call.Return(run)
 	return _c
 }
