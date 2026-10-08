@@ -104,29 +104,51 @@ func (db *DB) RunInTransaction(ctx context.Context, fn func(ctx context.Context)
 		opts = txOpts[0]
 	}
 
-	tx, err := db.pool.BeginTx(ctx, opts)
+	// Уже внутри транзакции — используем SAVEPOINT.
+	// ВАЖНО: txOpts здесь игнорируются — savepoint не может менять
+	// уровень изоляции, он определяется внешней транзакцией.
+	if parent, ok := db.txFromContext(ctx); ok && parent != nil {
+		sp, err := parent.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("begin savepoint: %w", err)
+		}
 
+		spCtx := db.contextWithTx(ctx, sp)
+		if err = fn(spCtx); err != nil {
+			_ = sp.Rollback(context.WithoutCancel(ctx))
+			return err
+		}
+		return sp.Commit(ctx)
+	}
+
+	// Новая (верхняя) транзакция.
+	tx, err := db.pool.BeginTx(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 
+	// Гарантированный откат, если Commit не был вызван
+	// (паника, ранний return, отмена контекста).
+	committed := false
 	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback(ctx)
-			panic(p)
+		if !committed {
+			_ = tx.Rollback(context.WithoutCancel(ctx))
 		}
 	}()
 
 	// Создаём контекст с транзакцией
 	txCtx := db.contextWithTx(ctx, tx)
 
-	// Передаём txCtx внутрь callback fn — именно его будут использовать storage.*
-	if err = fn(txCtx); err != nil {
-		_ = tx.Rollback(ctx)
-		return err
+	if err := fn(txCtx); err != nil {
+		return err // defer откатит
 	}
 
-	return tx.Commit(ctx) // Commit/Rollback используют исходный ctx для дедлайна или отмены
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+	committed = true
+
+	return nil
 }
 
 func (db *DB) Executor(ctx context.Context) ExecutorAble {
