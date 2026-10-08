@@ -191,7 +191,7 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 				},
 				makeStorage: func(t *testing.T, inputStatuses []statusInner.Accrual, outOrdersModel []model.Order, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
-					storage.EXPECT().OrdersAwaitingAccrual(inputStatuses).Return(outOrdersModel, outErr)
+					storage.EXPECT().OrdersAwaitingAccrual(t.Context(), inputStatuses).Return(outOrdersModel, outErr)
 					return storage
 				},
 			},
@@ -216,7 +216,7 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 				outOrdersModel: nil,
 				makeStorage: func(t *testing.T, inputStatuses []statusInner.Accrual, outOrdersModel []model.Order, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
-					storage.EXPECT().OrdersAwaitingAccrual(inputStatuses).Return(outOrdersModel, outErr)
+					storage.EXPECT().OrdersAwaitingAccrual(t.Context(), inputStatuses).Return(outOrdersModel, outErr)
 					return storage
 				},
 			},
@@ -231,7 +231,7 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputStatuses, tt.given.outOrdersModel, tt.want.err))
 
-			orders, err := loyaltyManager.OrdersAwaitingAccrual(tt.given.inputStatuses)
+			orders, err := loyaltyManager.OrdersAwaitingAccrual(t.Context(), tt.given.inputStatuses)
 			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.orders, orders, "given: %+v", tt.given)
 		})

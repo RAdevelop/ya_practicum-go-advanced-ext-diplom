@@ -483,8 +483,8 @@ func (_c *MockLoyaltyStorage_OrderUpload_Call) RunAndReturn(run func(ctx context
 }
 
 // OrdersAwaitingAccrual provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrdersAwaitingAccrual(accruals []inner.Accrual) ([]model.Order, error) {
-	ret := _mock.Called(accruals)
+func (_mock *MockLoyaltyStorage) OrdersAwaitingAccrual(ctx context.Context, statuses []inner.Accrual) ([]model.Order, error) {
+	ret := _mock.Called(ctx, statuses)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrdersAwaitingAccrual")
@@ -492,18 +492,18 @@ func (_mock *MockLoyaltyStorage) OrdersAwaitingAccrual(accruals []inner.Accrual)
 
 	var r0 []model.Order
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]inner.Accrual) ([]model.Order, error)); ok {
-		return returnFunc(accruals)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []inner.Accrual) ([]model.Order, error)); ok {
+		return returnFunc(ctx, statuses)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]inner.Accrual) []model.Order); ok {
-		r0 = returnFunc(accruals)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []inner.Accrual) []model.Order); ok {
+		r0 = returnFunc(ctx, statuses)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Order)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([]inner.Accrual) error); ok {
-		r1 = returnFunc(accruals)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []inner.Accrual) error); ok {
+		r1 = returnFunc(ctx, statuses)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -516,19 +516,25 @@ type MockLoyaltyStorage_OrdersAwaitingAccrual_Call struct {
 }
 
 // OrdersAwaitingAccrual is a helper method to define mock.On call
-//   - accruals []inner.Accrual
-func (_e *MockLoyaltyStorage_Expecter) OrdersAwaitingAccrual(accruals any) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
-	return &MockLoyaltyStorage_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", accruals)}
+//   - ctx context.Context
+//   - statuses []inner.Accrual
+func (_e *MockLoyaltyStorage_Expecter) OrdersAwaitingAccrual(ctx any, statuses any) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
+	return &MockLoyaltyStorage_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", ctx, statuses)}
 }
 
-func (_c *MockLoyaltyStorage_OrdersAwaitingAccrual_Call) Run(run func(accruals []inner.Accrual)) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
+func (_c *MockLoyaltyStorage_OrdersAwaitingAccrual_Call) Run(run func(ctx context.Context, statuses []inner.Accrual)) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 []inner.Accrual
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].([]inner.Accrual)
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []inner.Accrual
+		if args[1] != nil {
+			arg1 = args[1].([]inner.Accrual)
 		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -539,7 +545,7 @@ func (_c *MockLoyaltyStorage_OrdersAwaitingAccrual_Call) Return(orders []model.O
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_OrdersAwaitingAccrual_Call) RunAndReturn(run func(accruals []inner.Accrual) ([]model.Order, error)) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
+func (_c *MockLoyaltyStorage_OrdersAwaitingAccrual_Call) RunAndReturn(run func(ctx context.Context, statuses []inner.Accrual) ([]model.Order, error)) *MockLoyaltyStorage_OrdersAwaitingAccrual_Call {
 	_c.Call.Return(run)
 	return _c
 }

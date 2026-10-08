@@ -36,25 +36,28 @@ TODO судя по всему, надо будет делать методы е�
 */
 
 func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
-
 	if !order.IsCorrect() {
 		return perror.ErrOrderInvalidModel
 	}
 
-	orderFound, err := s.orderFindByNumber(ctx, order.Number)
-	if err != nil {
-		if errors.Is(err, perror.ErrOrderNotFound) {
-			return s.orderCreate(ctx, order)
-		}
+	err := s.orderCreate(ctx, order)
+	if err == nil {
+		return nil
+	}
+
+	if !isPgErrorCode(err, pgErrUniqueViolationCode) {
 		return err
 	}
 
-	if orderFound.CustomerID == order.ID {
-		orderFound = nil
+	orderFound, err := s.orderFindByNumber(ctx, order.Number)
+	if err != nil {
+		return err
+	}
+
+	if orderFound.CustomerID == order.CustomerID {
 		return perror.ErrOrderAlreadyUploadedByCustomer
 	}
 
-	orderFound = nil
 	return perror.ErrOrderAlreadyUploadedByOther
 }
 
@@ -87,25 +90,47 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 
 	orders, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Order])
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w, %w", perror.ErrOrderNotFound, err)
-		}
 		return nil, err
 	}
 
 	if len(orders) == 0 {
 		orders = nil
-		return nil, fmt.Errorf("%w, %w", perror.ErrOrderNotFound, err)
+		return nil, fmt.Errorf("%w", perror.ErrOrderNotFound)
 	}
 
 	return orders, nil
 }
 
 // OrdersAwaitingAccrual - заказы, ожидающие начисления
-func (s *Storage) OrdersAwaitingAccrual(statuses []statusInner.Accrual) ([]model.Order, error) {
+func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error) {
 
-	//TODO implement
-	return nil, nil
+	const sql = `
+	SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at FROM orders  WHERE status = ANY($1)
+	ORDER BY uploaded_at DESC
+	OFFSET 0 LIMIT 100
+	`
+
+	orderStatuses := make([]string, 0, len(statuses))
+	for _, status := range statuses {
+		orderStatuses = append(orderStatuses, status.String())
+	}
+
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderStatuses)
+	if err != nil {
+		return nil, err
+	}
+
+	orders, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Order])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(orders) == 0 {
+		orders = nil
+		return nil, perror.ErrOrderNotFound
+	}
+
+	return orders, nil
 }
 
 // orderCreate - создание нового заказа
@@ -114,11 +139,7 @@ func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
 	const sql = `INSERT INTO orders ("number", customer_id, status) VALUES ($1, $2, $3)`
 	_, err := s.DB.Executor(ctx).Exec(ctx, sql, order.Number, order.CustomerID, order.Status.String())
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // orderFindByNumber - поиск заказа по его номеру
@@ -128,17 +149,17 @@ func (s *Storage) orderFindByNumber(ctx context.Context, number string) (*model.
 		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
 		FROM orders
 		WHERE "number" = $1
-		`
+	`
 
-	row, err := s.DB.Executor(ctx).Query(ctx, sql, number)
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, number)
 	if err != nil {
 		return nil, err
 	}
 
-	order, err := pgx.CollectOneRow(row, pgx.RowToStructByName[model.Order])
+	order, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Order])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w, %w", perror.ErrOrderNotFound, err)
+			return nil, perror.ErrOrderNotFound
 		}
 
 		return nil, err

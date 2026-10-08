@@ -28,7 +28,7 @@ import (
 type LoyaltyStorage interface {
 	OrderUpload(ctx context.Context, order model.Order) error
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
-	OrdersAwaitingAccrual([]statusInner.Accrual) ([]model.Order, error)
+	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error)
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error)
 	BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error
