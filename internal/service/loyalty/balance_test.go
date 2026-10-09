@@ -52,7 +52,6 @@ func Test_Balance(t *testing.T) {
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
 				outBalance: &model.Balance{
-					ID:         1,
 					CustomerID: 1,
 					Current:    19.05,
 					Withdrawn:  2019.05,
@@ -123,7 +122,6 @@ func Test_BalanceWithdrawals(t *testing.T) {
 				inputCustomerDTO: testCustomerDTO,
 				outWithdrawals: []model.Withdrawal{
 					{
-						ID:          1,
 						CustomerID:  1,
 						OrderID:     1,
 						Order:       "4532015112830366",

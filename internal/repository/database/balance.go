@@ -31,7 +31,7 @@ func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*
 	}
 
 	const sql = `
-		SELECT id, customer_id, "current", withdrawn, updated_at
+		SELECT customer_id, "current", withdrawn, updated_at
 		FROM balances
 		WHERE customer_id = $1
 	`
@@ -68,7 +68,7 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 	}
 
 	const sql = `
-		SELECT w.id, w.order_id, w.sum, w.processed_at, o.number AS "order", o.customer_id
+		SELECT w.order_id, w.sum, w.processed_at, o.number AS "order", o.customer_id
 		FROM withdrawals AS w 
 		JOIN orders AS o ON(o.id = w.order_id)
 		WHERE o.customer_id = $1
@@ -96,7 +96,10 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 BalanceWithdraw - списание средств с баланса покупателя
 
 Errors:
-- perror.
+  - perror.ErrBalanceCustomerNotFound
+  - perror.ErrOrderNotFound
+  - perror.ErrBalanceInsufficient
+  - db error
 */
 func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error {
 	//TODO implement - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
@@ -136,7 +139,44 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 		 - помнить о транзакции и/или блокировки записей в таблицАХ!
 		 - помнить, что баланс не должен уходить в минус. Если расчет показывает отрицательное значение - возвращать ошибку (не достаточно средств)!
 	*/
-	return nil
+
+	if !withdrawal.IsCorrect() {
+		return perror.ErrWithdrawalInvalid
+	}
+
+	_, err := retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
+		err := s.DB.RunInTransaction(ctx, func(ctx context.Context) error {
+
+			//проверить, что заказ существует и он принадлежит покупателю
+			order, err := s.orderFindByNumber(ctx, withdrawal.Order)
+			if err != nil {
+				return err
+			}
+			if order.CustomerID != withdrawal.CustomerID {
+				return perror.ErrOrderNotFound
+			}
+
+			//получить текущий баланс покупателя
+			balance, err := s.BalanceByCustomerID(ctx, withdrawal.CustomerID)
+			if err != nil {
+				return err
+			}
+			//проверить, что значение списания меньше или равно, чем есть на балансе у покупателя
+			if withdrawal.Sum > balance.Current {
+				return perror.ErrBalanceInsufficient
+			}
+			//TODO добавить списание в историю - по заказам и списаниям уникальные запсии
+			//TODO обновить баланс покупателя - обновить списание
+
+			return nil
+
+		}, pgx.TxOptions{IsoLevel: pgx.Serializable})
+
+		return struct{}{}, err
+
+	}, uint(1), new(uint(3)))
+
+	return err
 }
 
 /*
@@ -197,10 +237,20 @@ func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) err
 balanceCustomerIncrement - увеличиваем баланс покупателя на указанное количество баллов
 
 Errors:
+  - perror.ErrCustomerInvalidCredentials
   - perror.ErrBalanceIncrement
+  - perror.ErrAccrualApply
   - db error
 */
 func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint64, accrual float64) error {
+
+	if customerID == 0 {
+		return perror.ErrCustomerInvalidCredentials
+	}
+
+	if accrual <= 0 {
+		return perror.ErrAccrualApply
+	}
 
 	const sql = `
 		INSERT INTO balances (customer_id, "current", withdrawn, updated_at)

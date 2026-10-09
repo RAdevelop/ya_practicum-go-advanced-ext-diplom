@@ -29,4 +29,5 @@ var (
 	ErrAccrualApply         = errors.New("error accrual apply")
 
 	ErrWithdrawalNotFound = errors.New("withdrawal not found")
+	ErrWithdrawalInvalid  = errors.New("withdrawal invalid")
 )
