@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
@@ -21,7 +22,6 @@ BalanceByCustomerID - Получение текущего баланса пол�
 
 Errors:
   - perror.ErrCustomerInvalidCredentials
-  - perror.ErrBalanceCustomerNotFound
   - db error
 */
 func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error) {
@@ -45,7 +45,7 @@ func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w, %w", perror.ErrBalanceCustomerNotFound, err)
+			return &model.Balance{CustomerID: customerID, UpdatedAt: time.Now()}, nil
 		}
 		return nil, err
 	}
@@ -96,49 +96,12 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 BalanceWithdraw - списание средств с баланса покупателя
 
 Errors:
-  - perror.ErrBalanceCustomerNotFound
   - perror.ErrOrderNotFound
   - perror.ErrBalanceInsufficient
+  - perror.ErrWithdrawalAlreadyProcessed
   - db error
 */
 func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error {
-	//TODO implement - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
-	/*
-			#### **Запрос на списание средств**
-
-			Хендлер: `POST /api/user/balance/withdraw`
-
-			Хендлер доступен только авторизованному пользователю. Номер заказа представляет собой гипотетический номер нового заказа пользователя в счет оплаты которого списываются баллы.
-
-			Примечание: для успешного списания достаточно успешной регистрации запроса, никаких внешних систем начисления не предусмотрено и не требуется реализовывать.
-
-			Формат запроса:
-
-			```
-			POST /api/user/balance/withdraw HTTP/1.1
-			Content-Type: application/json
-
-			{
-				"order": "2377225624",
-			    "sum": 751
-			}
-			```
-
-			Здесь `order` — номер заказа, а `sum` — сумма баллов к списанию в счёт оплаты.
-
-			Возможные коды ответа:
-
-			- `200` — успешная обработка запроса;
-			- `401` — пользователь не авторизован;
-			- `402` — на счету недостаточно средств;
-			- `422` — неверный номер заказа;
-			- `500` — внутренняя ошибка сервера.
-
-		TODO надо будет
-		 - перерассчитывать текущий баланс покупателя при успешном списании баллов
-		 - помнить о транзакции и/или блокировки записей в таблицАХ!
-		 - помнить, что баланс не должен уходить в минус. Если расчет показывает отрицательное значение - возвращать ошибку (не достаточно средств)!
-	*/
 
 	if !withdrawal.IsCorrect() {
 		return perror.ErrWithdrawalInvalid
@@ -152,7 +115,7 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 			if err != nil {
 				return err
 			}
-			if order.CustomerID != withdrawal.CustomerID {
+			if order.CustomerID != withdrawal.CustomerID || !order.Status.IsFinal() {
 				return perror.ErrOrderNotFound
 			}
 
@@ -165,8 +128,17 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 			if withdrawal.Sum > balance.Current {
 				return perror.ErrBalanceInsufficient
 			}
-			//TODO добавить списание в историю - по заказам и списаниям уникальные запсии
-			//TODO обновить баланс покупателя - обновить списание
+			//добавить списание в историю
+			withdrawal.OrderID = order.ID
+			err = s.balanceWithdrawHistoryUpdate(ctx, withdrawal)
+			if err != nil {
+				return err
+			}
+			//обновить баланс покупателя
+			err = s.balanceCustomerDecrement(ctx, withdrawal)
+			if err != nil {
+				return err
+			}
 
 			return nil
 
@@ -264,6 +236,69 @@ func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint6
 	_, err := s.DB.Executor(ctx).Exec(ctx, sql, customerID, accrual)
 	if err != nil {
 		return fmt.Errorf("%w, %w", perror.ErrBalanceIncrement, err)
+	}
+
+	return nil
+}
+
+/*
+balanceWithdrawHistoryUpdate - добавление информации о списании по заказу
+
+Errors:
+  - perror.ErrWithdrawalAlreadyProcessed
+  - db error
+*/
+func (s *Storage) balanceWithdrawHistoryUpdate(ctx context.Context, withdrawal model.Withdrawal) error {
+
+	if !withdrawal.IsCorrect() {
+		return perror.ErrWithdrawalInvalid
+	}
+
+	const sql = `
+ 		INSERT INTO withdrawals(order_id, "sum")
+ 		VALUES ($1, $2)
+	`
+	_, err := s.DB.Executor(ctx).Exec(ctx, sql, withdrawal.OrderID, withdrawal.Sum)
+	if err != nil {
+		if isPgErrorCode(err, pgErrUniqueViolationCode) {
+			return perror.ErrWithdrawalAlreadyProcessed
+		}
+		return err
+	}
+
+	return nil
+}
+
+/*
+balanceCustomerDecrement - списание с баланса покупателя
+
+Errors:
+  - perror.ErrWithdrawalInvalid
+  - perror.ErrBalanceDecrement
+  - db error
+*/
+func (s *Storage) balanceCustomerDecrement(ctx context.Context, withdrawal model.Withdrawal) error {
+
+	if !withdrawal.IsCorrect() {
+		return perror.ErrWithdrawalInvalid
+	}
+
+	const sql = `
+		UPDATE balances
+		SET 
+		    "current"   = "current" - $1,
+		    "withdrawn" = "withdrawn" + $1,
+		    updated_at = NOW()
+		WHERE customer_id = $2 AND "current" >= $1
+	`
+
+	tag, err := s.DB.Executor(ctx).Exec(ctx, sql, withdrawal.Sum, withdrawal.CustomerID)
+	if err != nil {
+		return fmt.Errorf("%w, %w", perror.ErrBalanceDecrement, err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return perror.ErrBalanceDecrement
 	}
 
 	return nil

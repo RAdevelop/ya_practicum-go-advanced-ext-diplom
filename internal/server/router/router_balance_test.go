@@ -54,11 +54,11 @@ func Test_GetBalance(t *testing.T) {
 			},
 		},
 		{
-			name: "StatusOK_ErrBalanceCustomerNotFound",
+			name: "StatusOK",
 			given: given{
 				inputCustomerDTO:   testCustomerDTO,
 				outBalance:         dto.Balance{},
-				outBalanceErr:      perror.ErrBalanceCustomerNotFound,
+				outBalanceErr:      nil,
 				makeLoyaltyManager: makeLoyaltyManagerBalanceOnce,
 				authHeaderSet:      authHeaderSetCorrect,
 			},

@@ -15,9 +15,9 @@ var (
 	ErrOrderAlreadyUploadedByOther    = errors.New("order already uploaded by another customer")
 	ErrOrderAccrualAlreadyProcessed   = errors.New("accrual already processed")
 
-	ErrBalanceInsufficient     = errors.New("balance insufficient")
-	ErrBalanceIncrement        = errors.New("balance increment error")
-	ErrBalanceCustomerNotFound = errors.New("customer not found")
+	ErrBalanceInsufficient = errors.New("balance insufficient")
+	ErrBalanceIncrement    = errors.New("balance increment error")
+	ErrBalanceDecrement    = errors.New("balance decrement error")
 
 	ErrTokenInvalid                 = errors.New("invalid token")
 	ErrTokenUnexpectedSigningMethod = errors.New("unexpected signing method for token")
@@ -28,6 +28,7 @@ var (
 	ErrAccrualStatusInvalid = errors.New("invalid accrual status")
 	ErrAccrualApply         = errors.New("error accrual apply")
 
-	ErrWithdrawalNotFound = errors.New("withdrawal not found")
-	ErrWithdrawalInvalid  = errors.New("withdrawal invalid")
+	ErrWithdrawalNotFound         = errors.New("withdrawal not found")
+	ErrWithdrawalInvalid          = errors.New("withdrawal invalid")
+	ErrWithdrawalAlreadyProcessed = errors.New("withdrawal already processed for order")
 )

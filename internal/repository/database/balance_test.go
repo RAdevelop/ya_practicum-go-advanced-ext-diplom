@@ -40,17 +40,6 @@ func TestStorage_BalanceByCustomerID(t *testing.T) {
 			},
 		},
 		{
-			name: "ErrBalanceCustomerNotFound",
-			given: given{
-				customerID:   1,
-				ordersCreate: []model.Order{},
-				accruals:     []model.Accrual{},
-			},
-			want: want{
-				err: perror.ErrBalanceCustomerNotFound,
-			},
-		},
-		{
 			name: "success",
 			given: given{
 				customerID: 1,
@@ -113,10 +102,7 @@ func TestStorage_BalanceByCustomerID(t *testing.T) {
 						accrualsSum += accrual.Accrual
 					}
 
-					assert.Equalf(t, accrualsSum, balance.Current, "given:%+v", tt.given)
-					assert.Equalf(t, tt.given.customerID, balance.CustomerID, "given:%+v", tt.given)
-					assert.Equalf(t, float64(0), balance.Withdrawn, "given:%+v", tt.given)
-					assert.WithinDurationf(t, time.Now(), balance.UpdatedAt, time.Minute, "given:%+v", tt.given)
+					checkBalance(t, tt.given.customerID, accrualsSum, 0, balance, tt.given)
 				}
 
 				return errForTransactionRollback
@@ -225,6 +211,240 @@ func TestStorage_BalanceWithdrawalsByCustomerID(t *testing.T) {
 	t.Skip("TODO implement")
 }
 func TestStorage_BalanceWithdraw(t *testing.T) {
-	//TODO implement
-	t.Skip("TODO implement")
+
+	type want struct {
+		withdrawal  model.Withdrawal
+		expectedErr error
+	}
+
+	type given struct {
+		customer     *model.Customer
+		ordersCreate []model.Order
+		accruals     []model.Accrual
+		withdrawals  []want
+	}
+
+	customerModel := &model.Customer{
+		Login:        "john",
+		PasswordHash: "PasswordHash",
+	}
+
+	tests := []struct {
+		name  string
+		given given
+	}{
+		{
+			name: "ErrWithdrawalInvalid",
+			given: given{
+				customer:     customerModel,
+				ordersCreate: []model.Order{},
+				accruals:     []model.Accrual{},
+				withdrawals: []want{
+					{
+						withdrawal:  model.Withdrawal{},
+						expectedErr: perror.ErrWithdrawalInvalid,
+					},
+				},
+			},
+		},
+		{
+			name: "ErrOrderNotFound",
+			given: given{
+				customer: customerModel,
+				ordersCreate: []model.Order{
+					{
+						Number: "4532015112830366",
+						//CustomerID: для первого заказа в таком списке в тесте ниже будет подставлен id созданного покупателя,
+						Status: statusInner.AccrualNew,
+					},
+				},
+				accruals: []model.Accrual{
+					{
+						Order:   "4532015112830366",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 20,
+					},
+				},
+				withdrawals: []want{
+					{
+						withdrawal: model.Withdrawal{
+							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
+							Order: "4532015112830368", // ErrOrderNotFound ТАКОГО ЗАКАЗА НЕТ У ПОКУПАТЕЛЯ
+							Sum:   20,
+						},
+						expectedErr: perror.ErrOrderNotFound,
+					},
+				},
+			},
+		},
+		{
+			name: "ErrBalanceInsufficient",
+			given: given{
+				customer: customerModel,
+				ordersCreate: []model.Order{
+					{
+						Number: "4532015112830366",
+						//CustomerID: для первого заказа в таком списке в тесте ниже будет подставлен id созданного покупателя,
+						Status: statusInner.AccrualNew,
+					},
+				},
+				accruals: []model.Accrual{
+					{
+						Order:   "4532015112830366",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 20,
+					},
+				},
+				withdrawals: []want{
+					{
+						withdrawal: model.Withdrawal{
+							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
+							Order: "4532015112830366",
+							Sum:   21, // сумма списания больше чем есть на балансе
+						},
+						expectedErr: perror.ErrBalanceInsufficient,
+					},
+				},
+			},
+		},
+		{
+			name: "ErrBalanceInsufficient",
+			given: given{
+				customer: customerModel,
+				ordersCreate: []model.Order{
+					{
+						Number: "4532015112830366",
+						//CustomerID: для первого заказа в таком списке в тесте ниже будет подставлен id созданного покупателя,
+						Status: statusInner.AccrualNew,
+					},
+				},
+				accruals: []model.Accrual{
+					{
+						Order:   "4532015112830366",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 20,
+					},
+				},
+				withdrawals: []want{
+					{
+						withdrawal: model.Withdrawal{
+							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
+							Order: "4532015112830366",
+							Sum:   20,
+						},
+						expectedErr: nil,
+					},
+					{
+						withdrawal: model.Withdrawal{
+							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
+							Order: "4532015112830366",
+							Sum:   20,
+						},
+						expectedErr: perror.ErrBalanceInsufficient, //ВТОРОЕ СПИСАНИЕ ПО ТОМУ ЖЕ ЗАКАЗУ
+					},
+				},
+			},
+		},
+		{
+			name: "success",
+			given: given{
+				customer: customerModel,
+				ordersCreate: []model.Order{
+					{
+						Number: "4532015112830366",
+						//CustomerID: для первого заказа в таком списке в тесте ниже будет подставлен id созданного покупателя,
+						Status: statusInner.AccrualNew,
+					},
+				},
+				accruals: []model.Accrual{
+					{
+						Order:   "4532015112830366",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 20,
+					},
+				},
+				withdrawals: []want{
+					{
+						withdrawal: model.Withdrawal{
+							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
+							Order: "4532015112830366",
+							Sum:   20,
+						},
+						expectedErr: nil,
+					},
+				},
+			},
+		},
+	}
+
+	storage := setUpStorage(t)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := storage.DB.RunInTransaction(t.Context(), func(ctx context.Context) error {
+
+				//создать покупателя
+				customer, err := storage.CustomerCreate(ctx, tt.given.customer)
+				assert.NoErrorf(t, err, "given:%+v", tt.given)
+
+				//создать заказ(ы)
+				for i, order := range tt.given.ordersCreate {
+					if i == 0 {
+						tt.given.ordersCreate[i].CustomerID = customer.ID
+						order.CustomerID = customer.ID
+					}
+					err = storage.OrderUpload(ctx, order)
+					assert.NoError(t, err, "given:%+v", tt.given)
+				}
+
+				//начислить баллы к заказу
+				var expectedCurrent float64
+				for _, accrual := range tt.given.accruals {
+					err = storage.BalanceAccrual(ctx, accrual)
+					assert.NoError(t, err, "given:%+v", tt.given)
+					expectedCurrent += accrual.Accrual
+				}
+
+				//получить текущий баланс покупателя
+				balance, err := storage.BalanceByCustomerID(ctx, customer.ID)
+				assert.NoError(t, err, "given:%+v", tt.given)
+
+				checkBalance(t, customer.ID, expectedCurrent, 0, balance, tt.given)
+
+				//выполнить списание
+				var expectedWithdrawn float64
+				for _, withdrawal := range tt.given.withdrawals {
+
+					withdrawal.withdrawal.CustomerID = customer.ID
+
+					err = storage.BalanceWithdraw(ctx, withdrawal.withdrawal)
+					assert.ErrorIsf(t, err, withdrawal.expectedErr, "given:%+v", tt.given)
+
+					if err == nil {
+						expectedCurrent = balance.Current - withdrawal.withdrawal.Sum
+						expectedWithdrawn = balance.Withdrawn + withdrawal.withdrawal.Sum
+					}
+				}
+
+				//получить текущий баланс покупателя
+				balance, err = storage.BalanceByCustomerID(ctx, customer.ID)
+				assert.NoError(t, err, "given:%+v", tt.given)
+
+				checkBalance(t, customer.ID, expectedCurrent, expectedWithdrawn, balance, tt.given)
+
+				return errForTransactionRollback
+			}, pgx.TxOptions{IsoLevel: pgx.Serializable})
+
+			assert.Error(t, err)
+		})
+	}
+}
+
+func checkBalance(t *testing.T, expectedCustomerID uint64, expectedCurrent float64, expectedWithdrawn float64, balance *model.Balance, given any) {
+	t.Helper()
+
+	assert.Equalf(t, expectedCurrent, balance.Current, "balance Current, given:%+v", given)
+	assert.Equalf(t, expectedCustomerID, balance.CustomerID, "CustomerID, given:%+v", given)
+	assert.Equalf(t, expectedWithdrawn, balance.Withdrawn, "balance Withdrawn, given:%+v", given)
+	assert.WithinDurationf(t, time.Now(), balance.UpdatedAt, time.Minute, "balance UpdatedAt, given:%+v", given)
 }

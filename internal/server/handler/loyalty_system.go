@@ -185,9 +185,6 @@ func (ls LoyaltySystem) Balance(w http.ResponseWriter, r *http.Request) {
 	balance, err := ls.loyaltyManager.Balance(r.Context(), customerDTO)
 	if err != nil {
 		ls.appContext.Logger.Error("Balance", "err", err)
-		if errors.Is(err, perror.ErrBalanceCustomerNotFound) {
-			err = nil
-		}
 	}
 
 	ls.responseJSON(w, balance, false, err)
