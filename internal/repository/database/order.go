@@ -12,18 +12,15 @@ import (
 )
 
 /*
-TODO судя по всему, надо будет делать методы еще для:
-  - в таблице orders поле ID скорее всего избыточное! так как таблица истории заказов будет "соединяться" все равно по "номеру заказа".
-   - иначе придется делать сначала поиск заказа по номеру, потом получать его ID, потом вставлять в таблицу истории?!
-   - с другой стороны, все равно надо делать "поиск" заказа по его номеру, иначе в истории начисления могут быть "фантомные" записи, не привязанные ни к одному заказу!
-    - а в этом случае, ID заказа уже будет известен...
-    - такую операцию делать в транзакции?! :
-	  - найти заказ
-	  - положить балы в историю начисления
-	  - обновить текущий баланс пользователя
-*/
+OrderUpload - создание нового заказа
 
-// OrderUpload - создание нового заказа
+Errors:
+  - perror.ErrOrderInvalidModel
+  - perror.ErrOrderAlreadyUploadedByCustomer
+  - perror.ErrOrderAlreadyUploadedByOther
+  - perror.ErrOrderNotFound
+  - db error
+*/
 func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	if !order.IsCorrect() {
 		return perror.ErrOrderInvalidModel
@@ -63,7 +60,14 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	return perror.ErrOrderAlreadyUploadedByOther
 }
 
-// OrdersByCustomerID - получение списка заказов указанного покупателя
+/*
+OrdersByCustomerID - получение списка заказов указанного покупателя
+
+Errors:
+  - perror.ErrCustomerInvalidCredentials
+  - perror.ErrOrderNotFound
+  - db error
+*/
 func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error) {
 
 	if customerID == 0 {
@@ -103,7 +107,13 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 	return orders, nil
 }
 
-// OrdersAwaitingAccrual - заказы, ожидающие начисления
+/*
+OrdersAwaitingAccrual - заказы, ожидающие начисления
+
+Errors:
+  - perror.ErrOrderNotFound
+  - db error
+*/
 func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error) {
 
 	const sql = `
@@ -135,7 +145,12 @@ func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusIn
 	return orders, nil
 }
 
-// orderCreate - создание нового заказа
+/*
+orderCreate - создание нового заказа
+
+Errors:
+  - db error
+*/
 func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
 
 	const sql = `INSERT INTO orders ("number", customer_id, status) VALUES ($1, $2, $3)`
@@ -144,7 +159,13 @@ func (s *Storage) orderCreate(ctx context.Context, order model.Order) error {
 	return err
 }
 
-// orderFindByNumber - поиск заказа по его номеру
+/*
+orderFindByNumber - поиск заказа по его номеру
+
+Errors:
+  - perror.ErrOrderNotFound
+  - db error
+*/
 func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*model.Order, error) {
 
 	const sql = `
@@ -170,7 +191,13 @@ func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*m
 	return &order, nil
 }
 
-// orderAccrualUpdate - сохранить начисленные баллы по заказу
+/*
+orderAccrualUpdate - сохранить начисленные баллы по заказу
+
+Errors:
+  - perror.ErrOrderAccrualAlreadyProcessed
+  - db error
+*/
 func (s *Storage) orderAccrualUpdate(ctx context.Context, accrual model.Accrual) error {
 
 	const sql = `

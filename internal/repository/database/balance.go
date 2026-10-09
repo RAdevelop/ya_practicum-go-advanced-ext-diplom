@@ -16,7 +16,14 @@ TODO учитывать:
  - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
 */
 
-// BalanceByCustomerID - Получение текущего баланса пользователя
+/*
+BalanceByCustomerID - Получение текущего баланса пользователя
+
+Errors:
+  - perror.ErrCustomerInvalidCredentials
+  - perror.ErrBalanceCustomerNotFound
+  - db error
+*/
 func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error) {
 
 	if customerID == 0 {
@@ -46,7 +53,14 @@ func (s *Storage) BalanceByCustomerID(ctx context.Context, customerID uint64) (*
 	return &balance, nil
 }
 
-// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
+/*
+BalanceWithdrawalsByCustomerID - Получение информации о выводе средств
+
+Errors:
+  - perror.ErrCustomerInvalidCredentials
+  - perror.ErrWithdrawalNotFound
+  - db error
+*/
 func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID uint64) ([]model.Withdrawal, error) {
 
 	if customerID == 0 {
@@ -78,7 +92,12 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 	return withdrawals, nil
 }
 
-// BalanceWithdraw - списание средств с баланса покупателя
+/*
+BalanceWithdraw - списание средств с баланса покупателя
+
+Errors:
+- perror.
+*/
 func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdrawal) error {
 	//TODO implement - помнить о транзакциях и/или блокировка записей перед начислением/списанием баллов
 	/*
@@ -124,6 +143,12 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 BalanceAccrual - начисление баллов к заказу
 
 ВАЖНО: использует внутри себя транзакцию с повторными попытками!
+
+Errors:
+  - perror.ErrOrderAccrualAlreadyProcessed
+  - perror.ErrOrderNotFound
+  - perror.ErrBalanceIncrement
+  - db error
 */
 func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) error {
 	/*
@@ -168,7 +193,13 @@ func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) err
 	return err
 }
 
-// balanceCustomerIncrement - увеличиваем баланс покупателя на указанное количество баллов
+/*
+balanceCustomerIncrement - увеличиваем баланс покупателя на указанное количество баллов
+
+Errors:
+  - perror.ErrBalanceIncrement
+  - db error
+*/
 func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint64, accrual float64) error {
 
 	const sql = `

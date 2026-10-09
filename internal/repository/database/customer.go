@@ -11,7 +11,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// CustomerCreate - создание нового покупателя
+/*
+CustomerCreate - создание нового покупателя
+
+Errors:
+  - perror.ErrCustomerInvalidModel
+  - perror.ErrCustomerAlreadyExists
+  - db error
+*/
 func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) (*model.Customer, error) {
 
 	if !customer.IsCorrect() {
@@ -43,7 +50,13 @@ func (s *Storage) CustomerCreate(ctx context.Context, customer *model.Customer) 
 	return customer, nil
 }
 
-// CustomerFindByLogin - поиск покупателя по логину
+/*
+CustomerFindByLogin - поиск покупателя по логину
+
+Errors:
+  - perror.ErrCustomerNotFound
+  - db error
+*/
 func (s *Storage) CustomerFindByLogin(ctx context.Context, login string) (*model.Customer, error) {
 
 	if strings.TrimSpace(login) == "" {
