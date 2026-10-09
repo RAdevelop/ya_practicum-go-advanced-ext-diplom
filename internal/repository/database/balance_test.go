@@ -207,8 +207,163 @@ func TestStorage_BalanceAccrual(t *testing.T) {
 }
 
 func TestStorage_BalanceWithdrawalsByCustomerID(t *testing.T) {
-	//TODO implement
-	t.Skip("TODO implement")
+
+	type given struct {
+		customer     *model.Customer
+		ordersCreate []model.Order
+		accruals     []model.Accrual
+		withdrawals  []model.Withdrawal
+	}
+	type want struct {
+		err        error
+		customerID *uint64
+	}
+
+	customerModel := &model.Customer{
+		Login:        "john",
+		PasswordHash: "PasswordHash",
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "ErrCustomerInvalidCredentials",
+			given: given{
+				customer:     customerModel,
+				ordersCreate: []model.Order{},
+				accruals:     []model.Accrual{},
+				withdrawals:  []model.Withdrawal{},
+			},
+			want: want{
+				customerID: new(uint64(0)),
+				err:        perror.ErrCustomerInvalidCredentials,
+			},
+		},
+		{
+			name: "ErrWithdrawalNotFound",
+			given: given{
+				customer:     customerModel,
+				ordersCreate: []model.Order{},
+				accruals:     []model.Accrual{},
+				withdrawals:  []model.Withdrawal{},
+			},
+			want: want{
+				customerID: nil,
+				err:        perror.ErrWithdrawalNotFound,
+			},
+		},
+		{
+			name: "success",
+			given: given{
+				customer: customerModel,
+				ordersCreate: []model.Order{
+					{
+						Number: "4532015112830366",
+						Status: statusInner.AccrualNew,
+					},
+					{
+						Number: "4532015112830368",
+						Status: statusInner.AccrualNew,
+					},
+				},
+				accruals: []model.Accrual{
+					{
+						Order:   "4532015112830366",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 25,
+					},
+					{
+						Order:   "4532015112830368",
+						Status:  statusInner.AccrualProcessed,
+						Accrual: 25,
+					},
+				},
+				withdrawals: []model.Withdrawal{
+					{
+						Order: "4532015112830366",
+						Sum:   25,
+					},
+					{
+						Order: "4532015112830368",
+						Sum:   25,
+					},
+				},
+			},
+			want: want{
+				customerID: nil,
+				err:        nil,
+			},
+		},
+	}
+
+	storage := setUpStorage(t)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := storage.DB.RunInTransaction(t.Context(), func(ctx context.Context) error {
+
+				//создать покупателя
+				customer, err := storage.CustomerCreate(ctx, tt.given.customer)
+				assert.NoError(t, err, "given:%+v", tt.given)
+
+				//добавить к нему заказы
+				for _, order := range tt.given.ordersCreate {
+					order.CustomerID = customer.ID
+					err = storage.OrderUpload(ctx, order)
+					assert.NoError(t, err, "given:%+v", tt.given)
+				}
+
+				//начислить по заказам баллы
+				var expectedCurrent float64
+				for _, accrual := range tt.given.accruals {
+					err = storage.BalanceAccrual(ctx, accrual)
+					assert.NoError(t, err, "given:%+v", tt.given)
+					expectedCurrent += accrual.Accrual
+				}
+
+				//выполнить списание
+
+				for _, withdrawal := range tt.given.withdrawals {
+					withdrawal.CustomerID = customer.ID
+					err = storage.BalanceWithdraw(ctx, withdrawal)
+					assert.NoError(t, err, "given:%+v", tt.given)
+					expectedCurrent -= withdrawal.Sum
+				}
+
+				// для подмены на другой id покупателя
+				var customerID uint64
+				if tt.want.customerID == nil {
+					customerID = customer.ID
+				} else {
+					customerID = *tt.want.customerID
+				}
+
+				//получить историю списаний
+				withdrawals, err := storage.BalanceWithdrawalsByCustomerID(ctx, customerID)
+				assert.ErrorIsf(t, err, tt.want.err, "given:%+v", tt.given)
+
+				if customerID > 0 {
+
+					var expectedWithdrawn float64
+					for _, withdrawal := range withdrawals {
+						expectedWithdrawn += withdrawal.Sum
+					}
+
+					balance, err := storage.BalanceByCustomerID(ctx, customerID)
+					assert.NoError(t, err, "given:%+v", tt.given)
+					assert.Equal(t, expectedCurrent, balance.Current, "balance Current, given:%+v", tt.given)
+					assert.Equal(t, expectedWithdrawn, balance.Withdrawn, "balance Withdrawn, given:%+v", tt.given)
+				}
+
+				return errForTransactionRollback
+			}, pgx.TxOptions{IsoLevel: pgx.Serializable})
+
+			assert.Error(t, err)
+		})
+	}
 }
 func TestStorage_BalanceWithdraw(t *testing.T) {
 
