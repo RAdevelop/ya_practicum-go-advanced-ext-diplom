@@ -79,7 +79,7 @@ func main() {
 
 		serverApp := server.New(appContext, loyaltyManager)
 
-		err := serverApp.Run(ctx)
+		err = serverApp.Run(ctx)
 		if err != nil {
 			logApp.Error("Server.Shutdown", "error", err)
 		}

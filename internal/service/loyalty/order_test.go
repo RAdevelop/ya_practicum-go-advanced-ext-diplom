@@ -231,7 +231,7 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputStatuses, tt.given.outOrdersModel, tt.want.err))
 
-			orders, err := loyaltyManager.OrdersAwaitingAccrual(t.Context(), tt.given.inputStatuses)
+			orders, err := loyaltyManager.OrdersAwaitingAccrual(t.Context())
 			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 			assert.Equalf(t, tt.want.orders, orders, "given: %+v", tt.given)
 		})

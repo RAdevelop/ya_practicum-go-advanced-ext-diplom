@@ -7,7 +7,6 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler/middleware"
-	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 )
 
 //go:generate mockery
@@ -17,7 +16,7 @@ type LoyaltyManageable interface {
 	// Orders - получение списка загруженных номеров заказов для покупателя
 	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
 	// OrdersAwaitingAccrual - заказы, ожидающие начисления
-	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]dto.Order, error)
+	OrdersAwaitingAccrual(ctx context.Context) ([]dto.Order, error)
 	// Balance - получение текущего баланса пользователя
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
 	// BalanceWithdrawals - получение информации о выводе средств
