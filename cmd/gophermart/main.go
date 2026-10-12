@@ -50,6 +50,8 @@ func main() {
 	appFlags.databaseURI = flag.String("d", "", `адрес подключения к базе данных`)
 	appFlags.accrualSystemAddress = flag.String("r", "localhost:8081", `адрес системы расчёта начислений`)
 
+	flag.Parse()
+
 	cfgServer := config.New(envSrv)
 	cfgDB := configDb.New(envDB)
 
@@ -90,6 +92,15 @@ func main() {
 		wait := make(chan os.Signal, 1)
 		signal.Notify(wait, syscall.SIGINT, syscall.SIGTERM)
 		<-wait
+		ctxCancel()
+	}()
+
+	// Ждём сигнал завершения.
+	go func() {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+		<-stop
+		logApp.Info("server shutting down")
 		ctxCancel()
 	}()
 
