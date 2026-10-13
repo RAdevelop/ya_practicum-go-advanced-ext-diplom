@@ -71,6 +71,7 @@ test-vr: ## Запустить тесты с подробным выводом �
 
 .PHONY: test-p
 test-p: ## Запустить тесты практикума
+	@make rebuild
 	@echo "$(GREEN)=== Running tests (practicum) ===$(NC)"
 	@go build -o ./cmd/gophermart/gophermart ./cmd/gophermart/*.go \
 	&& ./gophermarttest-darwin-amd64 \

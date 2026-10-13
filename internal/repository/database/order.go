@@ -116,9 +116,12 @@ Errors:
 */
 func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual, limit uint) ([]model.Order, error) {
 
+	//TODO добавить составной индекс по (status, updated_at)?!
 	const sql = `
-	SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at FROM orders  WHERE status = ANY($1)
-	ORDER BY uploaded_at DESC
+	SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
+	FROM orders  
+	WHERE status = ANY($1) AND updated_at < NOW() - INTERVAL '5 seconds'
+	ORDER BY uploaded_at ASC
 	OFFSET 0 LIMIT $2
 	`
 
@@ -182,7 +185,7 @@ func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*m
 	order, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Order])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, perror.ErrOrderNotFound
+			return nil, fmt.Errorf("%w: orderNumber: %s", perror.ErrOrderNotFound, orderNumber)
 		}
 
 		return nil, err
