@@ -87,6 +87,9 @@ func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList
 			err := a.loyaltyManager.BalanceAccrual(ctx, accrualInner)
 			if err != nil {
 				//TODO или тут как раз вызывать метод для DLQ очереди?! и тогда уже можно пачку создать, и очередь DLQ сохранять пачкой
+				if errors.Is(err, perror.ErrOrderAccrualAlreadyProcessed) {
+					continue
+				}
 				errs = append(errs, err)
 			}
 		}
