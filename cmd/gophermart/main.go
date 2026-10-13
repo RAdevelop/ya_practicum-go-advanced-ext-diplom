@@ -15,6 +15,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/config"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/service/loyalty"
+	"golang.org/x/sync/errgroup"
 )
 
 type applicationFlags struct {
@@ -25,7 +26,7 @@ type applicationFlags struct {
 
 func main() {
 
-	ctx, ctxCancel := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(context.Background())
 	logApp := logger.New()
 
 	envSrv, err := config.NewEnv()
@@ -77,34 +78,39 @@ func main() {
 	go func() {
 		defer wg.Done()
 
+	}()
+
+	g.Go(func() error {
 		serverApp := server.New(appContext, loyaltyManager)
 
-		err = serverApp.Run(ctx)
-		if err != nil {
-			logApp.Error("Server.Shutdown", "error", err)
-		}
-	}()
-
-	wg.Add(1)
-	// ожидаем сигнал завершения приложения
-	go func() {
-		defer wg.Done()
-		wait := make(chan os.Signal, 1)
-		signal.Notify(wait, syscall.SIGINT, syscall.SIGTERM)
-		<-wait
-		ctxCancel()
-	}()
+		return serverApp.Run(ctx)
+	})
+	/*
+		TODO
+		g.Go(func() error {
+			accrualReceiver := NewAccrualReceiver(....)
+			accrualReceiver.Run(ctx)
+			return nil
+		})
+	*/
 
 	// Ждём сигнал завершения.
-	go func() {
+	g.Go(func() error {
 		stop := make(chan os.Signal, 1)
 		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-		<-stop
-		logApp.Info("server shutting down")
-		ctxCancel()
-	}()
 
-	wg.Wait()
+		select {
+		case <-stop:
+			logApp.Info("server shutting down")
+			return nil
+		case <-ctx.Done():
+			return nil
+		}
+	})
+
+	if err = g.Wait(); err != nil {
+		logApp.Info("application stopped", "error", err)
+	}
 }
 
 func serverConfigUpdateByFlags(serverConfig *config.Config, appFlags *applicationFlags) {
