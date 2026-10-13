@@ -424,8 +424,8 @@ func (_c *MockLoyaltyManageable_Orders_Call) RunAndReturn(run func(ctx context.C
 }
 
 // OrdersAwaitingAccrual provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) OrdersAwaitingAccrual(ctx context.Context) ([]dto.Order, error) {
-	ret := _mock.Called(ctx)
+func (_mock *MockLoyaltyManageable) OrdersAwaitingAccrual(ctx context.Context, limit uint) ([]dto.Order, error) {
+	ret := _mock.Called(ctx, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrdersAwaitingAccrual")
@@ -433,18 +433,18 @@ func (_mock *MockLoyaltyManageable) OrdersAwaitingAccrual(ctx context.Context) (
 
 	var r0 []dto.Order
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]dto.Order, error)); ok {
-		return returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) ([]dto.Order, error)); ok {
+		return returnFunc(ctx, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []dto.Order); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) []dto.Order); ok {
+		r0 = returnFunc(ctx, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.Order)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint) error); ok {
+		r1 = returnFunc(ctx, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -458,18 +458,24 @@ type MockLoyaltyManageable_OrdersAwaitingAccrual_Call struct {
 
 // OrdersAwaitingAccrual is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockLoyaltyManageable_Expecter) OrdersAwaitingAccrual(ctx any) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
-	return &MockLoyaltyManageable_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", ctx)}
+//   - limit uint
+func (_e *MockLoyaltyManageable_Expecter) OrdersAwaitingAccrual(ctx any, limit any) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+	return &MockLoyaltyManageable_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", ctx, limit)}
 }
 
-func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Run(run func(ctx context.Context)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Run(run func(ctx context.Context, limit uint)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
+		var arg1 uint
+		if args[1] != nil {
+			arg1 = args[1].(uint)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -480,7 +486,7 @@ func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Return(orders []dto.
 	return _c
 }
 
-func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) RunAndReturn(run func(ctx context.Context) ([]dto.Order, error)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
+func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) RunAndReturn(run func(ctx context.Context, limit uint) ([]dto.Order, error)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
 	_c.Call.Return(run)
 	return _c
 }

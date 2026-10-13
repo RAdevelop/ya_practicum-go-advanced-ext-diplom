@@ -298,7 +298,7 @@ func TestStorage_OrdersAwaitingAccrual(t *testing.T) {
 				}
 
 				//найти заказы в статусе
-				orders, err := storage.OrdersAwaitingAccrual(ctx, tt.given.inputStatuses)
+				orders, err := storage.OrdersAwaitingAccrual(ctx, tt.given.inputStatuses, 100)
 				assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
 
 				if tt.want.err != nil {

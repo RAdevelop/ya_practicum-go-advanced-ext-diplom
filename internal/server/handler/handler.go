@@ -16,7 +16,7 @@ type LoyaltyManageable interface {
 	// Orders - получение списка загруженных номеров заказов для покупателя
 	Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)
 	// OrdersAwaitingAccrual - заказы, ожидающие начисления
-	OrdersAwaitingAccrual(ctx context.Context) ([]dto.Order, error)
+	OrdersAwaitingAccrual(ctx context.Context, limit uint) ([]dto.Order, error)
 	// Balance - получение текущего баланса пользователя
 	Balance(ctx context.Context, customerDTO *dto.Customer) (dto.Balance, error)
 	// BalanceWithdrawals - получение информации о выводе средств

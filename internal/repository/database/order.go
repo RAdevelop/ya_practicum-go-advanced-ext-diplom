@@ -114,12 +114,12 @@ Errors:
   - perror.ErrOrderNotFound
   - db error
 */
-func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error) {
+func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual, limit uint) ([]model.Order, error) {
 
 	const sql = `
 	SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at FROM orders  WHERE status = ANY($1)
 	ORDER BY uploaded_at DESC
-	OFFSET 0 LIMIT 100
+	OFFSET 0 LIMIT $2
 	`
 
 	orderStatuses := make([]string, 0, len(statuses))
@@ -127,7 +127,7 @@ func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusIn
 		orderStatuses = append(orderStatuses, status.String())
 	}
 
-	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderStatuses)
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderStatuses, limit)
 	if err != nil {
 		return nil, err
 	}

@@ -40,14 +40,14 @@ func (lm *Manager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto
 }
 
 // OrdersAwaitingAccrual - заказы, ожидающие начисления
-func (lm *Manager) OrdersAwaitingAccrual(ctx context.Context) ([]dto.Order, error) {
+func (lm *Manager) OrdersAwaitingAccrual(ctx context.Context, limit uint) ([]dto.Order, error) {
 
 	statuses := []statusInner.Accrual{
 		statusInner.AccrualNew,
 		statusInner.AccrualProcessing,
 	}
 
-	ordersModel, err := lm.storage.OrdersAwaitingAccrual(ctx, statuses)
+	ordersModel, err := lm.storage.OrdersAwaitingAccrual(ctx, statuses, limit)
 	if err != nil {
 		return nil, err
 	}

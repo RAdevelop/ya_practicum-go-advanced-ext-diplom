@@ -5,10 +5,10 @@ import (
 	"flag"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/client"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/logger"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database"
 	configDb "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/repository/database/config"
@@ -26,19 +26,22 @@ type applicationFlags struct {
 
 func main() {
 
-	g, ctx := errgroup.WithContext(context.Background())
+	ctx, cancelApp := context.WithCancel(context.Background())
+	defer cancelApp()
+
+	g, ctx := errgroup.WithContext(ctx)
 	logApp := logger.New()
 
 	envSrv, err := config.NewEnv()
 	if err != nil {
 		logApp.Error("Error initializing environment service", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	envDB, err := configDb.NewEnv()
 	if err != nil {
 		logApp.Error("Error initializing environment db", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	/*
@@ -66,33 +69,25 @@ func main() {
 	db, err := database.NewDB(ctx, cfgDB, logApp)
 	if err != nil {
 		logApp.Error("Error initializing database", "error", err)
-		return
+		os.Exit(1)
 	}
+	defer db.Close()
+
 	loyaltyStorage := database.NewStorage(db)
 	loyaltyManager := loyalty.NewManager(loyaltyStorage)
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
 	// запускаем http сервер
-	go func() {
-		defer wg.Done()
-
-	}()
-
 	g.Go(func() error {
 		serverApp := server.New(appContext, loyaltyManager)
 
 		return serverApp.Run(ctx)
 	})
-	/*
-		TODO
-		g.Go(func() error {
-			accrualReceiver := NewAccrualReceiver(....)
-			accrualReceiver.Run(ctx)
-			return nil
-		})
-	*/
+
+	g.Go(func() error {
+		accrualReceiver := client.NewAccrualReceiver(appContext, loyaltyManager)
+		accrualReceiver.Run(ctx)
+		return nil
+	})
 
 	// Ждём сигнал завершения.
 	g.Go(func() error {
@@ -102,6 +97,7 @@ func main() {
 		select {
 		case <-stop:
 			logApp.Info("server shutting down")
+			cancelApp()
 			return nil
 		case <-ctx.Done():
 			return nil
@@ -109,8 +105,11 @@ func main() {
 	})
 
 	if err = g.Wait(); err != nil {
-		logApp.Info("application stopped", "error", err)
+		logApp.Error("application stopped", "error", err)
+		os.Exit(1)
 	}
+
+	logApp.Info("application stopped gracefully")
 }
 
 func serverConfigUpdateByFlags(serverConfig *config.Config, appFlags *applicationFlags) {

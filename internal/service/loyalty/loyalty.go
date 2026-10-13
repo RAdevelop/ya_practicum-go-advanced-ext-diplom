@@ -31,7 +31,7 @@ type LoyaltyStorage interface {
 	// OrdersByCustomerID - получение списка заказов указанного покупателя
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
 	// OrdersAwaitingAccrual - заказы, ожидающие начисления
-	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual) ([]model.Order, error)
+	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual, limit uint) ([]model.Order, error)
 	// BalanceByCustomerID - Получение текущего баланса пользователя
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств

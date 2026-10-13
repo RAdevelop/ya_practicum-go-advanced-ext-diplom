@@ -15,7 +15,7 @@ type HTTPAgent struct {
 	client *resty.Client
 }
 
-func NewClient(appContext appcontext.AppContext) *HTTPAgent {
+func NewClient(appContext *appcontext.AppContext) *HTTPAgent {
 
 	httpClient := resty.New()
 	httpClient.SetBaseURL(appContext.ServerConfig.AccrualSystemAddress())
