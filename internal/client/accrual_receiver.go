@@ -72,6 +72,10 @@ func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList
 		errs := make([]error, 0, len(resList))
 
 		for _, accrual := range resList {
+			if ctx.Err() != nil {
+				errs = append(errs, ctx.Err())
+				break
+			}
 
 			accrualInner := dto.AccrualInner{
 				Order:   accrual.Order,
@@ -194,7 +198,7 @@ func (a *AccrualReceiver) parseRetryAfter(resp *http.Response) time.Duration {
 func (a *AccrualReceiver) parseAccrual(resp *http.Response) (*dto.AccrualOuter, error) {
 	var accrual dto.AccrualOuter
 	if err := json.NewDecoder(resp.Body).Decode(&accrual); err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
+		return nil, fmt.Errorf("decode accrual: %w", err)
 	}
 	return &accrual, nil
 }
