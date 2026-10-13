@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,18 +54,44 @@ func (a *AccrualReceiver) Run(ctx context.Context) {
 	a.pipeline.Run(ctx)
 }
 
+/*
+afterResultCollect - выполняем действия для полученных результатов
+
+В частности, обновляем данные в БД по заказам, балансам...
+*/
 func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList []*dto.AccrualOuter) error {
 
 	return func(ctx context.Context, resList []*dto.AccrualOuter) error {
-		//TODO del
-		log.Printf("run afterResultCollect with resList: %+v", resList)
 
-		//TODO implement call a.loyaltyManager
+		/*
+			- вызывать a.loyaltyManager.BalanceAccrual() - но он для одной записи, а не для пачек
+				- обновлять пачками?! но у одного заказа может быть начисление, а у другого нет. или будет ошибка.
+					- тогда кто-то получит свои баллы, а кто-то нет, или не так быстро...
+		*/
 
-		return nil
+		errs := make([]error, 0, len(resList))
+
+		for _, accrual := range resList {
+
+			accrualInner := dto.AccrualInner{
+				Order:   accrual.Order,
+				Accrual: accrual.Accrual,
+			}
+
+			accrualInner.Status.ConvertFromOuter(accrual.Status)
+
+			err := a.loyaltyManager.BalanceAccrual(ctx, accrualInner)
+			if err != nil {
+				//TODO или тут как раз вызывать метод для DLQ очереди?! и тогда уже можно пачку создать, и очередь DLQ сохранять пачкой
+				errs = append(errs, err)
+			}
+		}
+
+		return errors.Join(errs...)
 	}
 }
 
+// dataForJobGet - получаем список заказов, для которых будет проверять результаты начисления
 func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSize uint) ([]dto.Order, error) {
 
 	return func(ctx context.Context, dataBatchSize uint) ([]dto.Order, error) {
@@ -78,6 +103,7 @@ func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSiz
 	}
 }
 
+// runJob - выполняем задачу (запрос к системе начисления для заказа)
 func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.Order) (*dto.AccrualOuter, error) {
 
 	initialRateLimit := rate.Limit(5)
@@ -104,6 +130,7 @@ func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.Order) (*d
 	}
 }
 
+// accrualOrderGet - получаем результат начисления по заказу
 func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *rate_limiter.AdaptiveLimiter, data dto.Order) (*dto.AccrualOuter, error) {
 
 	httpResponse, err := retryer.RetryExponential(ctx, func(ctx context.Context) (*http.Response, error) {

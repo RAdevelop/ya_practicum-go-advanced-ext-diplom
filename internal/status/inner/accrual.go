@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
+	statusOuter "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/outer"
 )
 
 // Accrual — статус начисления баллов для заказа.
@@ -16,8 +17,8 @@ type Accrual struct {
 
 var (
 	AccrualNew        = Accrual{"NEW"}        // Заказ загружен в систему, но не попал в обработку
-	AccrualProcessing = Accrual{"PROCESSING"} // Вознаграждение за заказ рассчитывается
 	AccrualInvalid    = Accrual{"INVALID"}    // Система расчёта вознаграждений отказала в расчёте
+	AccrualProcessing = Accrual{"PROCESSING"} // Вознаграждение за заказ рассчитывается
 	AccrualProcessed  = Accrual{"PROCESSED"}  // Данные по заказу проверены и информация о расчёте успешно получена
 )
 
@@ -92,4 +93,18 @@ func (s *Accrual) Scan(src any) error {
 
 func normalize(raw string) Accrual {
 	return Accrual{value: strings.ToUpper(strings.TrimSpace(raw))}
+}
+
+func (s *Accrual) ConvertFromOuter(outerStatus statusOuter.Accrual) {
+
+	switch outerStatus {
+	case statusOuter.AccrualProcessed:
+		*s = AccrualProcessed
+	case statusOuter.AccrualProcessing:
+		*s = AccrualProcessing
+	case statusOuter.AccrualInvalid:
+		*s = AccrualInvalid
+	case statusOuter.AccrualRegistered:
+		*s = AccrualNew
+	}
 }
