@@ -283,12 +283,12 @@ func TestStorage_BalanceWithdrawalsByCustomerID(t *testing.T) {
 				},
 				withdrawals: []model.Withdrawal{
 					{
-						Order: "4532015112830366",
-						Sum:   25,
+						OrderNumber: "4532015112830366",
+						Sum:         25,
 					},
 					{
-						Order: "4532015112830368",
-						Sum:   25,
+						OrderNumber: "4532015112830368",
+						Sum:         25,
 					},
 				},
 			},
@@ -403,36 +403,6 @@ func TestStorage_BalanceWithdraw(t *testing.T) {
 			},
 		},
 		{
-			name: "ErrOrderNotFound",
-			given: given{
-				customer: customerModel,
-				ordersCreate: []model.Order{
-					{
-						Number: "4532015112830366",
-						//CustomerID: для первого заказа в таком списке в тесте ниже будет подставлен id созданного покупателя,
-						Status: statusInner.AccrualNew,
-					},
-				},
-				accruals: []model.Accrual{
-					{
-						Order:   "4532015112830366",
-						Status:  statusInner.AccrualProcessed,
-						Accrual: 20,
-					},
-				},
-				withdrawals: []want{
-					{
-						withdrawal: model.Withdrawal{
-							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
-							Order: "4532015112830368", // ErrOrderNotFound ТАКОГО ЗАКАЗА НЕТ У ПОКУПАТЕЛЯ
-							Sum:   20,
-						},
-						expectedErr: perror.ErrOrderNotFound,
-					},
-				},
-			},
-		},
-		{
 			name: "ErrBalanceInsufficient",
 			given: given{
 				customer: customerModel,
@@ -454,8 +424,8 @@ func TestStorage_BalanceWithdraw(t *testing.T) {
 					{
 						withdrawal: model.Withdrawal{
 							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
-							Order: "4532015112830366",
-							Sum:   21, // сумма списания больше чем есть на балансе
+							OrderNumber: "4532015112830366",
+							Sum:         21, // сумма списания больше чем есть на балансе
 						},
 						expectedErr: perror.ErrBalanceInsufficient,
 					},
@@ -484,16 +454,16 @@ func TestStorage_BalanceWithdraw(t *testing.T) {
 					{
 						withdrawal: model.Withdrawal{
 							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
-							Order: "4532015112830366",
-							Sum:   20,
+							OrderNumber: "4532015112830366",
+							Sum:         20,
 						},
 						expectedErr: nil,
 					},
 					{
 						withdrawal: model.Withdrawal{
 							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
-							Order: "4532015112830366",
-							Sum:   20,
+							OrderNumber: "4532015112830366",
+							Sum:         20,
 						},
 						expectedErr: perror.ErrBalanceInsufficient, //ВТОРОЕ СПИСАНИЕ ПО ТОМУ ЖЕ ЗАКАЗУ
 					},
@@ -522,8 +492,8 @@ func TestStorage_BalanceWithdraw(t *testing.T) {
 					{
 						withdrawal: model.Withdrawal{
 							//CustomerID: для всех списаний в таком списке в тесте ниже будет подставлен id созданного покупателя,
-							Order: "4532015112830366",
-							Sum:   20,
+							OrderNumber: "4532015112830366",
+							Sum:         20,
 						},
 						expectedErr: nil,
 					},

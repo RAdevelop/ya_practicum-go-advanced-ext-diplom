@@ -36,7 +36,7 @@ func (lm *Manager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Cust
 	withdrawals := make([]dto.Withdrawal, 0, len(withdrawalsModel))
 	for _, withdrawal := range withdrawalsModel {
 		withdrawals = append(withdrawals, dto.Withdrawal{
-			Order:       withdrawal.Order,
+			Order:       withdrawal.OrderNumber,
 			Sum:         withdrawal.Sum,
 			ProcessedAt: withdrawal.ProcessedAt,
 		})
@@ -50,9 +50,9 @@ func (lm *Manager) BalanceWithdrawals(ctx context.Context, customerDTO *dto.Cust
 func (lm *Manager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Customer, withdraw dto.BalanceWithdraw) error {
 
 	withdrawal := model.Withdrawal{
-		CustomerID: customerDTO.ID,
-		Order:      withdraw.OrderNumber,
-		Sum:        withdraw.Sum,
+		CustomerID:  customerDTO.ID,
+		OrderNumber: withdraw.OrderNumber,
+		Sum:         withdraw.Sum,
 	}
 
 	return lm.storage.BalanceWithdraw(ctx, withdrawal)

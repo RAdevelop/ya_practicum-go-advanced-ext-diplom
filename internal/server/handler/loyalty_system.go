@@ -234,9 +234,6 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	case errors.Is(err, perror.ErrBalanceInsufficient):
 		ls.appContext.Logger.Error("BalanceWithdraw", "ErrBalanceInsufficient", err)
 		http.Error(w, "", http.StatusPaymentRequired)
-	case errors.Is(err, perror.ErrOrderNotFound):
-		ls.appContext.Logger.Error("BalanceWithdraw", "ErrOrderNotFound", err)
-		http.Error(w, "", http.StatusUnprocessableEntity)
 	default:
 		ls.appContext.Logger.Error("BalanceWithdraw", "err", err)
 		http.Error(w, "", http.StatusInternalServerError)

@@ -8,7 +8,6 @@ import (
 
 // Order - Заказ
 type Order struct {
-	ID         uint64              `db:"id"`
 	Number     string              `db:"number"`
 	CustomerID uint64              `db:"customer_id"`
 	Status     statusInner.Accrual `db:"status"`

@@ -123,8 +123,7 @@ func Test_BalanceWithdrawals(t *testing.T) {
 				outWithdrawals: []model.Withdrawal{
 					{
 						CustomerID:  1,
-						OrderID:     1,
-						Order:       "4532015112830366",
+						OrderNumber: "4532015112830366",
 						Sum:         19.0,
 						ProcessedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 					},
@@ -184,9 +183,9 @@ func Test_BalanceWithdraw(t *testing.T) {
 	makeStorage := func(t *testing.T, inputCustomerDTO *dto.Customer, inputWithdraw dto.BalanceWithdraw, outErr error) LoyaltyStorage {
 		storage := NewMockLoyaltyStorage(t)
 		withdrawal := model.Withdrawal{
-			CustomerID: inputCustomerDTO.ID,
-			Order:      inputWithdraw.OrderNumber,
-			Sum:        inputWithdraw.Sum,
+			CustomerID:  inputCustomerDTO.ID,
+			OrderNumber: inputWithdraw.OrderNumber,
+			Sum:         inputWithdraw.Sum,
 		}
 		storage.EXPECT().BalanceWithdraw(t.Context(), withdrawal).Return(outErr)
 

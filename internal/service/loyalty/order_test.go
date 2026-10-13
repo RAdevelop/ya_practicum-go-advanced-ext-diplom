@@ -105,7 +105,6 @@ func Test_Orders(t *testing.T) {
 				inputCustomerDTO: testCustomerDTO,
 				outOrders: []model.Order{
 					{
-						ID:         uint64(1),
 						Number:     "4532015112830366",
 						CustomerID: uint64(1),
 						Accrual:    0,
@@ -180,7 +179,6 @@ func Test_OrdersAwaitingAccrual(t *testing.T) {
 				},
 				outOrdersModel: []model.Order{
 					{
-						ID:         uint64(1),
 						Number:     "4532015112830366",
 						CustomerID: uint64(1),
 						Status:     statusInner.AccrualNew,

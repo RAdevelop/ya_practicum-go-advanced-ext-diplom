@@ -82,7 +82,7 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 	*/
 
 	const sql = `
-		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
+		SELECT "number", customer_id, status, accrual, uploaded_at, updated_at
 		FROM orders
 		WHERE customer_id = $1
 		ORDER BY uploaded_at DESC
@@ -118,9 +118,9 @@ func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusIn
 
 	//TODO добавить составной индекс по (status, updated_at)?!
 	const sql = `
-	SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
+	SELECT "number", customer_id, status, accrual, uploaded_at, updated_at
 	FROM orders  
-	WHERE status = ANY($1) AND updated_at < NOW() - INTERVAL '5 seconds'
+	WHERE status = ANY($1) -- AND updated_at < NOW() - INTERVAL '5 seconds'
 	ORDER BY uploaded_at ASC
 	OFFSET 0 LIMIT $2
 	`
@@ -172,7 +172,7 @@ Errors:
 func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*model.Order, error) {
 
 	const sql = `
-		SELECT id, "number", customer_id, status, accrual, uploaded_at, updated_at
+		SELECT "number", customer_id, status, accrual, uploaded_at, updated_at
 		FROM orders
 		WHERE "number" = $1
 	`

@@ -63,10 +63,9 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 	}
 
 	const sql = `
-		SELECT w.order_id, w.sum, w.processed_at, o.number AS "order", o.customer_id
-		FROM withdrawals AS w 
-		JOIN orders AS o ON(o.id = w.order_id)
-		WHERE o.customer_id = $1
+		SELECT w.order_number, w.sum, w.processed_at, w.customer_id
+		FROM withdrawals AS w
+		WHERE w.customer_id = $1
 		ORDER BY w.processed_at DESC
 	`
 
@@ -91,7 +90,6 @@ func (s *Storage) BalanceWithdrawalsByCustomerID(ctx context.Context, customerID
 BalanceWithdraw - списание средств с баланса покупателя
 
 Errors:
-  - perror.ErrOrderNotFound
   - perror.ErrBalanceInsufficient
   - perror.ErrWithdrawalAlreadyProcessed
   - db error
@@ -104,16 +102,6 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 
 	_, err := retryer.RetryLinear(ctx, func(ctx context.Context) (struct{}, error) {
 		err := s.DB.RunInTransaction(ctx, func(ctx context.Context) error {
-
-			//проверить, что заказ существует и он принадлежит покупателю
-			order, err := s.orderFindByNumber(ctx, withdrawal.Order)
-			if err != nil {
-				return err
-			}
-			if order.CustomerID != withdrawal.CustomerID || !order.Status.IsFinal() {
-				return perror.ErrOrderNotFound
-			}
-
 			//получить текущий баланс покупателя
 			balance, err := s.BalanceByCustomerID(ctx, withdrawal.CustomerID)
 			if err != nil {
@@ -124,7 +112,6 @@ func (s *Storage) BalanceWithdraw(ctx context.Context, withdrawal model.Withdraw
 				return perror.ErrBalanceInsufficient
 			}
 			//добавить списание в историю
-			withdrawal.OrderID = order.ID
 			err = s.balanceWithdrawHistoryUpdate(ctx, withdrawal)
 			if err != nil {
 				return err
@@ -250,10 +237,10 @@ func (s *Storage) balanceWithdrawHistoryUpdate(ctx context.Context, withdrawal m
 	}
 
 	const sql = `
- 		INSERT INTO withdrawals(order_id, "sum")
- 		VALUES ($1, $2)
+ 		INSERT INTO withdrawals(order_number, customer_id, "sum")
+ 		VALUES ($1, $2, $3)
 	`
-	_, err := s.DB.Executor(ctx).Exec(ctx, sql, withdrawal.OrderID, withdrawal.Sum)
+	_, err := s.DB.Executor(ctx).Exec(ctx, sql, withdrawal.OrderNumber, withdrawal.CustomerID, withdrawal.Sum)
 	if err != nil {
 		if isPgErrorCode(err, pgErrUniqueViolationCode) {
 			return perror.ErrWithdrawalAlreadyProcessed

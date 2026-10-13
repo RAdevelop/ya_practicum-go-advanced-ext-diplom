@@ -182,24 +182,6 @@ func Test_PostBalanceWithdraw(t *testing.T) {
 			},
 		},
 		{
-			name: "StatusUnprocessableEntity order not found by order number",
-			given: given{
-				inputCustomerDTO: testCustomerDTO,
-				inputWithdraw: dto.BalanceWithdraw{
-					OrderNumber: "4532015112830366",
-					Sum:         19.05,
-				},
-				outBalanceErr:      perror.ErrOrderNotFound,
-				makeLoyaltyManager: makeLoyaltyManagerBalanceWithdrawOnce,
-				authHeaderSet:      authHeaderSetCorrect,
-			},
-			want: want{
-				httpStatus:   http.StatusUnprocessableEntity,
-				responseBody: ``,
-				contentType:  "text/plain; charset=utf-8",
-			},
-		},
-		{
 			name: "StatusPaymentRequired",
 			given: given{
 				inputCustomerDTO: testCustomerDTO,
