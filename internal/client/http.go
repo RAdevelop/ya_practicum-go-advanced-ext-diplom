@@ -26,7 +26,7 @@ func NewClient(appContext *appcontext.AppContext) *HTTPAgent {
 }
 
 // AccrualOrderGet - получение информации о расчёте начислений баллов лояльности
-func (a HTTPAgent) AccrualOrderGet(ctx context.Context, orderNumber string) (*http.Response, error) {
+func (a *HTTPAgent) AccrualOrderGet(ctx context.Context, orderNumber string) (*http.Response, error) {
 
 	res, err := a.client.R().SetContext(ctx).SetHeader("Accept", "application/json").
 		SetDoNotParseResponse(true).

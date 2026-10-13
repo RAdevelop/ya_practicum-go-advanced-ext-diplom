@@ -9,7 +9,7 @@ import (
 
 const (
 	baseInterval     = 1 * time.Second
-	maxSleepInterval = 10 * time.Second
+	maxSleepInterval = 30 * time.Second
 )
 
 /*

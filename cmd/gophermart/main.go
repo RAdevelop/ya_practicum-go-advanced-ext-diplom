@@ -52,7 +52,7 @@ func main() {
 	appFlags := &applicationFlags{}
 	appFlags.runAddress = flag.String("a", "localhost:8080", `адрес и порт запуска сервиса`)
 	appFlags.databaseURI = flag.String("d", "", `адрес подключения к базе данных`)
-	appFlags.accrualSystemAddress = flag.String("r", "localhost:8081", `адрес системы расчёта начислений`)
+	appFlags.accrualSystemAddress = flag.String("r", "http://localhost:8081", `адрес системы расчёта начислений`)
 
 	flag.Parse()
 

@@ -68,6 +68,10 @@ func (a *AdaptiveLimiter) Limit() rate.Limit {
 // OnRateLimit - вызывать в случае наступления "события" превышения лимита запросов к АПИ
 func (a *AdaptiveLimiter) OnRateLimit(ctx context.Context, retryAfter time.Duration) {
 
+	if retryAfter == 0 {
+		retryAfter = time.Second
+	}
+
 	var newLimit rate.Limit
 	var needPause bool
 
@@ -88,11 +92,10 @@ func (a *AdaptiveLimiter) OnRateLimit(ctx context.Context, retryAfter time.Durat
 		a.limiter.SetLimit(newLimit)
 		a.slowStartThreshold = newLimit // порог падает
 		a.successes = 0
-		if retryAfter > 0 {
-			a.paused = true
-			a.limiter.SetLimit(0)
-			needPause = true
-		}
+
+		a.paused = true
+		a.limiter.SetLimit(0)
+		needPause = true
 	}()
 
 	// пауза на Retry-After — блокируем всех

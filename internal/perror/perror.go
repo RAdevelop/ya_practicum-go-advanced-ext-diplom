@@ -31,4 +31,6 @@ var (
 	ErrWithdrawalNotFound         = errors.New("withdrawal not found")
 	ErrWithdrawalInvalid          = errors.New("withdrawal invalid")
 	ErrWithdrawalAlreadyProcessed = errors.New("withdrawal already processed for order")
+
+	ErrAccrualOrderNotRegistered = errors.New("order not registered in accrual system")
 )
