@@ -19,7 +19,6 @@ import (
 	"context"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
-	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 )
 
 // LoyaltyStorage - интерфейс для определения работы с хранилищем данных по программе лояльности
@@ -30,8 +29,12 @@ type LoyaltyStorage interface {
 	OrderUpload(ctx context.Context, order model.Order) error
 	// OrdersByCustomerID - получение списка заказов указанного покупателя
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
-	// OrdersAwaitingAccrual - заказы, ожидающие начисления
-	OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual, limit uint) ([]model.Order, error)
+	// OrderAccrualQueue - заказы, ожидающие начисления
+	OrderAccrualQueue(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error)
+	// OrderAccrualQueueUpdate - обновляем состояние очереди для заказов
+	OrderAccrualQueueUpdate(ctx context.Context, orderNumbers []string) error
+	// OrderAccrualQueueDelete - удаляем из очереди заказы, которые получили финальный статус начисления
+	OrderAccrualQueueDelete(ctx context.Context, orderNumbers []string) error
 	// BalanceByCustomerID - Получение текущего баланса пользователя
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств

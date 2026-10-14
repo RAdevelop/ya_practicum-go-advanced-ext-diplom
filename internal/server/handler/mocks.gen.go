@@ -292,6 +292,188 @@ func (_c *MockLoyaltyManageable_BalanceWithdrawals_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// OrderAccrualQueue provides a mock function for the type MockLoyaltyManageable
+func (_mock *MockLoyaltyManageable) OrderAccrualQueue(ctx context.Context, limit uint) ([]dto.OrderAccrualQueue, error) {
+	ret := _mock.Called(ctx, limit)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OrderAccrualQueue")
+	}
+
+	var r0 []dto.OrderAccrualQueue
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) ([]dto.OrderAccrualQueue, error)); ok {
+		return returnFunc(ctx, limit)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) []dto.OrderAccrualQueue); ok {
+		r0 = returnFunc(ctx, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.OrderAccrualQueue)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uint) error); ok {
+		r1 = returnFunc(ctx, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockLoyaltyManageable_OrderAccrualQueue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrderAccrualQueue'
+type MockLoyaltyManageable_OrderAccrualQueue_Call struct {
+	*mock.Call
+}
+
+// OrderAccrualQueue is a helper method to define mock.On call
+//   - ctx context.Context
+//   - limit uint
+func (_e *MockLoyaltyManageable_Expecter) OrderAccrualQueue(ctx any, limit any) *MockLoyaltyManageable_OrderAccrualQueue_Call {
+	return &MockLoyaltyManageable_OrderAccrualQueue_Call{Call: _e.mock.On("OrderAccrualQueue", ctx, limit)}
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueue_Call) Run(run func(ctx context.Context, limit uint)) *MockLoyaltyManageable_OrderAccrualQueue_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uint
+		if args[1] != nil {
+			arg1 = args[1].(uint)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueue_Call) Return(orderAccrualQueues []dto.OrderAccrualQueue, err error) *MockLoyaltyManageable_OrderAccrualQueue_Call {
+	_c.Call.Return(orderAccrualQueues, err)
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueue_Call) RunAndReturn(run func(ctx context.Context, limit uint) ([]dto.OrderAccrualQueue, error)) *MockLoyaltyManageable_OrderAccrualQueue_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OrderAccrualQueueDelete provides a mock function for the type MockLoyaltyManageable
+func (_mock *MockLoyaltyManageable) OrderAccrualQueueDelete(ctx context.Context, orderNumbers []string) error {
+	ret := _mock.Called(ctx, orderNumbers)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OrderAccrualQueueDelete")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) error); ok {
+		r0 = returnFunc(ctx, orderNumbers)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLoyaltyManageable_OrderAccrualQueueDelete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrderAccrualQueueDelete'
+type MockLoyaltyManageable_OrderAccrualQueueDelete_Call struct {
+	*mock.Call
+}
+
+// OrderAccrualQueueDelete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - orderNumbers []string
+func (_e *MockLoyaltyManageable_Expecter) OrderAccrualQueueDelete(ctx any, orderNumbers any) *MockLoyaltyManageable_OrderAccrualQueueDelete_Call {
+	return &MockLoyaltyManageable_OrderAccrualQueueDelete_Call{Call: _e.mock.On("OrderAccrualQueueDelete", ctx, orderNumbers)}
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueDelete_Call) Run(run func(ctx context.Context, orderNumbers []string)) *MockLoyaltyManageable_OrderAccrualQueueDelete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueDelete_Call) Return(err error) *MockLoyaltyManageable_OrderAccrualQueueDelete_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueDelete_Call) RunAndReturn(run func(ctx context.Context, orderNumbers []string) error) *MockLoyaltyManageable_OrderAccrualQueueDelete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OrderAccrualQueueUpdate provides a mock function for the type MockLoyaltyManageable
+func (_mock *MockLoyaltyManageable) OrderAccrualQueueUpdate(ctx context.Context, orderNumbers []string) error {
+	ret := _mock.Called(ctx, orderNumbers)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OrderAccrualQueueUpdate")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) error); ok {
+		r0 = returnFunc(ctx, orderNumbers)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockLoyaltyManageable_OrderAccrualQueueUpdate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrderAccrualQueueUpdate'
+type MockLoyaltyManageable_OrderAccrualQueueUpdate_Call struct {
+	*mock.Call
+}
+
+// OrderAccrualQueueUpdate is a helper method to define mock.On call
+//   - ctx context.Context
+//   - orderNumbers []string
+func (_e *MockLoyaltyManageable_Expecter) OrderAccrualQueueUpdate(ctx any, orderNumbers any) *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call {
+	return &MockLoyaltyManageable_OrderAccrualQueueUpdate_Call{Call: _e.mock.On("OrderAccrualQueueUpdate", ctx, orderNumbers)}
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call) Run(run func(ctx context.Context, orderNumbers []string)) *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call) Return(err error) *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call) RunAndReturn(run func(ctx context.Context, orderNumbers []string) error) *MockLoyaltyManageable_OrderAccrualQueueUpdate_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // OrderUpload provides a mock function for the type MockLoyaltyManageable
 func (_mock *MockLoyaltyManageable) OrderUpload(ctx context.Context, customerDTO *dto.Customer, number string) error {
 	ret := _mock.Called(ctx, customerDTO, number)
@@ -419,74 +601,6 @@ func (_c *MockLoyaltyManageable_Orders_Call) Return(orders []dto.Order, err erro
 }
 
 func (_c *MockLoyaltyManageable_Orders_Call) RunAndReturn(run func(ctx context.Context, customerDTO *dto.Customer) ([]dto.Order, error)) *MockLoyaltyManageable_Orders_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// OrdersAwaitingAccrual provides a mock function for the type MockLoyaltyManageable
-func (_mock *MockLoyaltyManageable) OrdersAwaitingAccrual(ctx context.Context, limit uint) ([]dto.Order, error) {
-	ret := _mock.Called(ctx, limit)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OrdersAwaitingAccrual")
-	}
-
-	var r0 []dto.Order
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) ([]dto.Order, error)); ok {
-		return returnFunc(ctx, limit)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) []dto.Order); ok {
-		r0 = returnFunc(ctx, limit)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]dto.Order)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uint) error); ok {
-		r1 = returnFunc(ctx, limit)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// MockLoyaltyManageable_OrdersAwaitingAccrual_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrdersAwaitingAccrual'
-type MockLoyaltyManageable_OrdersAwaitingAccrual_Call struct {
-	*mock.Call
-}
-
-// OrdersAwaitingAccrual is a helper method to define mock.On call
-//   - ctx context.Context
-//   - limit uint
-func (_e *MockLoyaltyManageable_Expecter) OrdersAwaitingAccrual(ctx any, limit any) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
-	return &MockLoyaltyManageable_OrdersAwaitingAccrual_Call{Call: _e.mock.On("OrdersAwaitingAccrual", ctx, limit)}
-}
-
-func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Run(run func(ctx context.Context, limit uint)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 uint
-		if args[1] != nil {
-			arg1 = args[1].(uint)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) Return(orders []dto.Order, err error) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
-	_c.Call.Return(orders, err)
-	return _c
-}
-
-func (_c *MockLoyaltyManageable_OrdersAwaitingAccrual_Call) RunAndReturn(run func(ctx context.Context, limit uint) ([]dto.Order, error)) *MockLoyaltyManageable_OrdersAwaitingAccrual_Call {
 	_c.Call.Return(run)
 	return _c
 }

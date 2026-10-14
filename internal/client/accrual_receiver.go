@@ -28,7 +28,7 @@ AccrualReceiver
 type AccrualReceiver struct {
 	appContext     *appcontext.AppContext
 	loyaltyManager handler.LoyaltyManageable
-	pipeline       *Pipeline[dto.Order, dto.AccrualOuter]
+	pipeline       *Pipeline[dto.OrderAccrualQueue, dto.AccrualOuter]
 }
 
 var errRetry = errors.New("retry")
@@ -99,19 +99,19 @@ func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList
 }
 
 // dataForJobGet - получаем список заказов, для которых будет проверять результаты начисления
-func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSize uint) ([]dto.Order, error) {
+func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSize uint) ([]dto.OrderAccrualQueue, error) {
 
-	return func(ctx context.Context, dataBatchSize uint) ([]dto.Order, error) {
-		return retryer.RetryLinear(ctx, func(ctx context.Context) ([]dto.Order, error) {
+	return func(ctx context.Context, dataBatchSize uint) ([]dto.OrderAccrualQueue, error) {
+		return retryer.RetryLinear(ctx, func(ctx context.Context) ([]dto.OrderAccrualQueue, error) {
 
-			return a.loyaltyManager.OrdersAwaitingAccrual(ctx, dataBatchSize)
+			return a.loyaltyManager.OrderAccrualQueue(ctx, dataBatchSize)
 
 		}, uint(1), new(uint(3)))
 	}
 }
 
 // runJob - выполняем задачу (запрос к системе начисления для заказа)
-func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.Order) (*dto.AccrualOuter, error) {
+func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 
 	initialRateLimit := rate.Limit(5)
 	minRateLimit := rate.Limit(0.5)
@@ -121,7 +121,7 @@ func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.Order) (*d
 	client := NewClient(a.appContext)
 	rateLimiter := rate_limiter.NewAdaptiveLimiter(initialRateLimit, minRateLimit, maxRateLimit, burstRateLimit)
 
-	return func(ctx context.Context, data dto.Order) (*dto.AccrualOuter, error) {
+	return func(ctx context.Context, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 		for {
 			if err := rateLimiter.Wait(ctx); err != nil {
 				return nil, err
@@ -138,10 +138,10 @@ func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.Order) (*d
 }
 
 // accrualOrderGet - получаем результат начисления по заказу
-func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *rate_limiter.AdaptiveLimiter, data dto.Order) (*dto.AccrualOuter, error) {
+func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *rate_limiter.AdaptiveLimiter, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 
 	httpResponse, err := retryer.RetryExponential(ctx, func(ctx context.Context) (*http.Response, error) {
-		return client.AccrualOrderGet(ctx, data.Number)
+		return client.AccrualOrderGet(ctx, data.OrderNumber)
 	}, uint(2), new(uint(3)))
 
 	if err != nil {

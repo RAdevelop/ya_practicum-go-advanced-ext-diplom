@@ -38,30 +38,3 @@ func (lm *Manager) Orders(ctx context.Context, customerDTO *dto.Customer) ([]dto
 	ordersModel = nil
 	return orders, nil
 }
-
-// OrdersAwaitingAccrual - заказы, ожидающие начисления
-func (lm *Manager) OrdersAwaitingAccrual(ctx context.Context, limit uint) ([]dto.Order, error) {
-
-	statuses := []statusInner.Accrual{
-		statusInner.AccrualNew,
-		statusInner.AccrualProcessing,
-	}
-
-	ordersModel, err := lm.storage.OrdersAwaitingAccrual(ctx, statuses, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	orders := make([]dto.Order, 0, len(ordersModel))
-	for _, order := range ordersModel {
-		orders = append(orders, dto.Order{
-			Number:     order.Number,
-			Status:     order.Status,
-			Accrual:    order.Accrual,
-			UploadedAt: order.UploadedAt,
-		})
-	}
-
-	ordersModel = nil
-	return orders, nil
-}

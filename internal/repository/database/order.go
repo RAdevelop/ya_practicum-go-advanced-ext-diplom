@@ -41,6 +41,10 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 	// заказа нет — создаём
 	err = s.orderCreate(ctx, order)
 	if err == nil {
+		if !order.Status.IsFinal() {
+			// добавляем в очередь
+			return s.orderAddToAccrualQueue(ctx, order.Number)
+		}
 		return nil
 	}
 
@@ -102,47 +106,6 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 	if len(orders) == 0 {
 		orders = nil
 		return nil, fmt.Errorf("%w", perror.ErrOrderNotFound)
-	}
-
-	return orders, nil
-}
-
-/*
-OrdersAwaitingAccrual - заказы, ожидающие начисления
-
-Errors:
-  - perror.ErrOrderNotFound
-  - db error
-*/
-func (s *Storage) OrdersAwaitingAccrual(ctx context.Context, statuses []statusInner.Accrual, limit uint) ([]model.Order, error) {
-
-	//TODO добавить составной индекс по (status, updated_at)?!
-	const sql = `
-	SELECT "number", customer_id, status, accrual, uploaded_at, updated_at
-	FROM orders  
-	WHERE status = ANY($1) -- AND updated_at < NOW() - INTERVAL '5 seconds'
-	ORDER BY uploaded_at ASC
-	OFFSET 0 LIMIT $2
-	`
-
-	orderStatuses := make([]string, 0, len(statuses))
-	for _, status := range statuses {
-		orderStatuses = append(orderStatuses, status.String())
-	}
-
-	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderStatuses, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	orders, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Order])
-	if err != nil {
-		return nil, err
-	}
-
-	if len(orders) == 0 {
-		orders = nil
-		return nil, perror.ErrOrderNotFound
 	}
 
 	return orders, nil
