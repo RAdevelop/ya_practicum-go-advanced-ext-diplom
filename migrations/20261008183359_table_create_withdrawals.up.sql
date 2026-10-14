@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS withdrawals (
-    order_number VARCHAR(20) PRIMARY KEY NOT NULL,
+    order_number VARCHAR(20) PRIMARY KEY NOT NULL CHECK (order_number != ''),
     customer_id BIGINT NOT NULL CHECK (customer_id >= 0),
     "sum" NUMERIC(10, 2) NOT NULL CHECK ("sum" >= 0),
     processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()

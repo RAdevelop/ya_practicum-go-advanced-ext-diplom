@@ -60,13 +60,6 @@ func (lm *Manager) BalanceWithdraw(ctx context.Context, customerDTO *dto.Custome
 
 // BalanceAccrual - начисление баллов к заказу
 func (lm *Manager) BalanceAccrual(ctx context.Context, accrual dto.AccrualInner) error {
-
-	/*
-		TODO в месте вызова метода надо будет маппить statusOuter -> statusInner
-			или все же делать это здесь?
-			а так же, надо будет делать проверку на IsFinal() - если начисление пришло НЕ с IsFinal() статусом, то вернуть ошибку?!
-			и не делать начислений!?!
-	*/
 	accrualModel := model.Accrual{
 		Order:   accrual.Order,
 		Status:  accrual.Status,
