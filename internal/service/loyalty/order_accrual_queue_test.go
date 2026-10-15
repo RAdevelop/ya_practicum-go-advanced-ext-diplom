@@ -1,6 +1,7 @@
 package loyalty
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -93,10 +94,102 @@ func Test_OrderAccrualQueue(t *testing.T) {
 }
 
 func Test_OrderAccrualQueueUpdate(t *testing.T) {
-	t.Skip("TODO implement")
-	//TODO implement
-}
-func Test_OrderAccrualQueueDelete(t *testing.T) {
-	t.Skip("TODO implement")
-	//TODO implement
+
+	type given struct {
+		inputOrderAccrualQueue []dto.OrderAccrualQueue
+		inputOrderForUpdate    []string
+		inputOrderForDelete    []string
+		makeStorage            func(t *testing.T, inputOrderForUpdate []string, inputOrderForDelete []string, err error) LoyaltyStorage
+	}
+
+	makeStorage := func(t *testing.T, inputOrderForUpdate []string, inputOrderForDelete []string, err error) LoyaltyStorage {
+		storage := NewMockLoyaltyStorage(t)
+		storage.EXPECT().OrderAccrualQueueUpdate(t.Context(), inputOrderForUpdate, inputOrderForDelete).Return(err)
+		return storage
+	}
+
+	makeStorageOrderAccrualQueueUpdateNever := func(t *testing.T, inputOrderForUpdate []string, inputOrderForDelete []string, err error) LoyaltyStorage {
+		storage := NewMockLoyaltyStorage(t)
+		return storage
+	}
+	type want struct {
+		err error
+	}
+
+	tests := []struct {
+		name  string
+		given given
+		want  want
+	}{
+		{
+			name: "success",
+			given: given{
+				inputOrderAccrualQueue: []dto.OrderAccrualQueue{
+					{
+						OrderNumber: "4532015112830366",
+						NeedUpdate:  true,
+					},
+					{
+						OrderNumber: "4532015112830368",
+						NeedUpdate:  false,
+					},
+				},
+				inputOrderForUpdate: []string{
+					"4532015112830366",
+				},
+				inputOrderForDelete: []string{
+					"4532015112830368",
+				},
+				makeStorage: makeStorage,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "StorageOrderAccrualQueueUpdateNeverCalled",
+			given: given{
+				inputOrderAccrualQueue: []dto.OrderAccrualQueue{},
+				inputOrderForUpdate:    []string{},
+				inputOrderForDelete:    []string{},
+				makeStorage:            makeStorageOrderAccrualQueueUpdateNever,
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		{
+			name: "error",
+			given: given{
+				inputOrderAccrualQueue: []dto.OrderAccrualQueue{
+					{
+						OrderNumber: "4532015112830366",
+						NeedUpdate:  true,
+					},
+					{
+						OrderNumber: "4532015112830368",
+						NeedUpdate:  false,
+					},
+				},
+				inputOrderForUpdate: []string{
+					"4532015112830366",
+				},
+				inputOrderForDelete: []string{
+					"4532015112830368",
+				},
+				makeStorage: makeStorage,
+			},
+			want: want{
+				err: errors.New("something went wrong"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loyaltyManager := NewManager(tt.given.makeStorage(t, tt.given.inputOrderForUpdate, tt.given.inputOrderForDelete, tt.want.err))
+
+			err := loyaltyManager.OrderAccrualQueueUpdate(t.Context(), tt.given.inputOrderAccrualQueue)
+			assert.ErrorIsf(t, err, tt.want.err, "given: %+v", tt.given)
+		})
+	}
 }
