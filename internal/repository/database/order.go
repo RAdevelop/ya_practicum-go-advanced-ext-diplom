@@ -26,42 +26,44 @@ func (s *Storage) OrderUpload(ctx context.Context, order model.Order) error {
 		return perror.ErrOrderInvalidModel
 	}
 
-	// возможно, заказ уже загружен
-	orderFound, err := s.orderFindByNumber(ctx, order.Number)
-	switch {
-	case err == nil:
+	return s.DB.RunInTransaction(ctx, func(ctx context.Context) error {
+		// возможно, заказ уже загружен
+		orderFound, err := s.orderFindByNumber(ctx, order.Number)
+		switch {
+		case err == nil:
+			if orderFound.CustomerID == order.CustomerID {
+				return fmt.Errorf("orderNumber %s, %w", order.Number, perror.ErrOrderAlreadyUploadedByCustomer)
+			}
+			return fmt.Errorf("orderNumber %s, %w", order.Number, perror.ErrOrderAlreadyUploadedByOther)
+		case !errors.Is(err, perror.ErrOrderNotFound):
+			return fmt.Errorf("orderNumber %s, %w", order.Number, err)
+		}
+
+		// заказа нет — создаём
+		err = s.orderCreate(ctx, order)
+		if err == nil {
+			if !order.Status.IsFinal() {
+				// добавляем в очередь
+				return s.orderAddToAccrualQueue(ctx, order.Number)
+			}
+			return nil
+		}
+
+		// гонка: кто-то вставил между SELECT и INSERT
+		if !isPgErrorCode(err, pgErrUniqueViolationCode) {
+			return err
+		}
+
+		orderFound, err = s.orderFindByNumber(ctx, order.Number)
+		if err != nil {
+			return err
+		}
+
 		if orderFound.CustomerID == order.CustomerID {
-			return perror.ErrOrderAlreadyUploadedByCustomer
+			return fmt.Errorf("orderNumber %s, %w", order.Number, perror.ErrOrderAlreadyUploadedByCustomer)
 		}
-		return perror.ErrOrderAlreadyUploadedByOther
-	case !errors.Is(err, perror.ErrOrderNotFound):
-		return err
-	}
-
-	// заказа нет — создаём
-	err = s.orderCreate(ctx, order)
-	if err == nil {
-		if !order.Status.IsFinal() {
-			// добавляем в очередь
-			return s.orderAddToAccrualQueue(ctx, order.Number)
-		}
-		return nil
-	}
-
-	// гонка: кто-то вставил между SELECT и INSERT
-	if !isPgErrorCode(err, pgErrUniqueViolationCode) {
-		return err
-	}
-
-	orderFound, err = s.orderFindByNumber(ctx, order.Number)
-	if err != nil {
-		return err
-	}
-
-	if orderFound.CustomerID == order.CustomerID {
-		return perror.ErrOrderAlreadyUploadedByCustomer
-	}
-	return perror.ErrOrderAlreadyUploadedByOther
+		return fmt.Errorf("orderNumber %s, %w", order.Number, perror.ErrOrderAlreadyUploadedByOther)
+	}, pgx.TxOptions{IsoLevel: pgx.Serializable})
 }
 
 /*
@@ -75,7 +77,7 @@ Errors:
 func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error) {
 
 	if customerID == 0 {
-		return nil, perror.ErrCustomerInvalidCredentials
+		return nil, fmt.Errorf(`customerID cannot be 0, %w`, perror.ErrCustomerInvalidCredentials)
 	}
 
 	/*
@@ -95,17 +97,17 @@ func (s *Storage) OrdersByCustomerID(ctx context.Context, customerID uint64) ([]
 
 	rows, err := s.DB.Executor(ctx).Query(ctx, sql, customerID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`customerID: %d, %w`, customerID, perror.ErrCustomerInvalidCredentials)
 	}
 
 	orders, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Order])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`customerID: %d, %w`, customerID, perror.ErrCustomerInvalidCredentials)
 	}
 
 	if len(orders) == 0 {
 		orders = nil
-		return nil, fmt.Errorf("%w", perror.ErrOrderNotFound)
+		return nil, fmt.Errorf(`customerID: %d, %w`, customerID, perror.ErrOrderNotFound)
 	}
 
 	return orders, nil
@@ -142,7 +144,7 @@ func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*m
 
 	rows, err := s.DB.Executor(ctx).Query(ctx, sql, orderNumber)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("orderNumber: %s, %w", orderNumber, err)
 	}
 
 	order, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Order])
@@ -151,7 +153,7 @@ func (s *Storage) orderFindByNumber(ctx context.Context, orderNumber string) (*m
 			return nil, fmt.Errorf("%w: orderNumber: %s", perror.ErrOrderNotFound, orderNumber)
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("orderNumber: %s: %w", orderNumber, err)
 	}
 
 	return &order, nil
@@ -182,11 +184,11 @@ func (s *Storage) orderAccrualUpdate(ctx context.Context, accrual model.Accrual)
 
 	tag, err := s.DB.Executor(ctx).Exec(ctx, sql, accrual.Status.String(), accrual.Accrual, accrual.Order, statuses)
 	if err != nil {
-		return err
+		return fmt.Errorf("orderNumber: %s: %w", accrual.Order, err)
 	}
 
 	if tag.RowsAffected() == 0 {
-		return perror.ErrOrderAccrualAlreadyProcessed
+		return fmt.Errorf("orderNumber: %s: %w", accrual.Order, perror.ErrOrderAccrualAlreadyProcessed)
 	}
 
 	return nil

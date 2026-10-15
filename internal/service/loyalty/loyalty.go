@@ -32,9 +32,7 @@ type LoyaltyStorage interface {
 	// OrderAccrualQueue - заказы, ожидающие начисления
 	OrderAccrualQueue(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error)
 	// OrderAccrualQueueUpdate - обновляем состояние очереди для заказов
-	OrderAccrualQueueUpdate(ctx context.Context, orderNumbers []string) error
-	// OrderAccrualQueueDelete - удаляем из очереди заказы, которые получили финальный статус начисления
-	OrderAccrualQueueDelete(ctx context.Context, orderNumbers []string) error
+	OrderAccrualQueueUpdate(ctx context.Context, orderForUpdate []string, orderForDelete []string) error
 	// BalanceByCustomerID - Получение текущего баланса пользователя
 	BalanceByCustomerID(ctx context.Context, customerID uint64) (*model.Balance, error)
 	// BalanceWithdrawalsByCustomerID - Получение информации о выводе средств

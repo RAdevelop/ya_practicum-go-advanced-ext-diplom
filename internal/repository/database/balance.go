@@ -165,7 +165,7 @@ func (s *Storage) BalanceAccrual(ctx context.Context, accrual model.Accrual) err
 			}
 
 			if order.Status.IsFinal() {
-				return perror.ErrOrderAccrualAlreadyProcessed
+				return fmt.Errorf("orderNumber: %s: %w", order.Number, perror.ErrOrderAccrualAlreadyProcessed)
 			}
 
 			err = s.orderAccrualUpdate(ctx, accrual)
@@ -217,7 +217,7 @@ func (s *Storage) balanceCustomerIncrement(ctx context.Context, customerID uint6
 
 	_, err := s.DB.Executor(ctx).Exec(ctx, sql, customerID, accrual)
 	if err != nil {
-		return fmt.Errorf("%w, %w", perror.ErrBalanceIncrement, err)
+		return fmt.Errorf("customerID: %d, %w, %w", customerID, perror.ErrBalanceIncrement, err)
 	}
 
 	return nil

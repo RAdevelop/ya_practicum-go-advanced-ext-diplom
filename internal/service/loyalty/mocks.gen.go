@@ -492,74 +492,17 @@ func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) RunAndReturn(run func(ctx c
 	return _c
 }
 
-// OrderAccrualQueueDelete provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrderAccrualQueueDelete(ctx context.Context, orderNumbers []string) error {
-	ret := _mock.Called(ctx, orderNumbers)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OrderAccrualQueueDelete")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) error); ok {
-		r0 = returnFunc(ctx, orderNumbers)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockLoyaltyStorage_OrderAccrualQueueDelete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OrderAccrualQueueDelete'
-type MockLoyaltyStorage_OrderAccrualQueueDelete_Call struct {
-	*mock.Call
-}
-
-// OrderAccrualQueueDelete is a helper method to define mock.On call
-//   - ctx context.Context
-//   - orderNumbers []string
-func (_e *MockLoyaltyStorage_Expecter) OrderAccrualQueueDelete(ctx any, orderNumbers any) *MockLoyaltyStorage_OrderAccrualQueueDelete_Call {
-	return &MockLoyaltyStorage_OrderAccrualQueueDelete_Call{Call: _e.mock.On("OrderAccrualQueueDelete", ctx, orderNumbers)}
-}
-
-func (_c *MockLoyaltyStorage_OrderAccrualQueueDelete_Call) Run(run func(ctx context.Context, orderNumbers []string)) *MockLoyaltyStorage_OrderAccrualQueueDelete_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 []string
-		if args[1] != nil {
-			arg1 = args[1].([]string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *MockLoyaltyStorage_OrderAccrualQueueDelete_Call) Return(err error) *MockLoyaltyStorage_OrderAccrualQueueDelete_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockLoyaltyStorage_OrderAccrualQueueDelete_Call) RunAndReturn(run func(ctx context.Context, orderNumbers []string) error) *MockLoyaltyStorage_OrderAccrualQueueDelete_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // OrderAccrualQueueUpdate provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrderAccrualQueueUpdate(ctx context.Context, orderNumbers []string) error {
-	ret := _mock.Called(ctx, orderNumbers)
+func (_mock *MockLoyaltyStorage) OrderAccrualQueueUpdate(ctx context.Context, orderForUpdate []string, orderForDelete []string) error {
+	ret := _mock.Called(ctx, orderForUpdate, orderForDelete)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrderAccrualQueueUpdate")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, []string) error); ok {
-		r0 = returnFunc(ctx, orderNumbers)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []string, []string) error); ok {
+		r0 = returnFunc(ctx, orderForUpdate, orderForDelete)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -573,12 +516,13 @@ type MockLoyaltyStorage_OrderAccrualQueueUpdate_Call struct {
 
 // OrderAccrualQueueUpdate is a helper method to define mock.On call
 //   - ctx context.Context
-//   - orderNumbers []string
-func (_e *MockLoyaltyStorage_Expecter) OrderAccrualQueueUpdate(ctx any, orderNumbers any) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
-	return &MockLoyaltyStorage_OrderAccrualQueueUpdate_Call{Call: _e.mock.On("OrderAccrualQueueUpdate", ctx, orderNumbers)}
+//   - orderForUpdate []string
+//   - orderForDelete []string
+func (_e *MockLoyaltyStorage_Expecter) OrderAccrualQueueUpdate(ctx any, orderForUpdate any, orderForDelete any) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
+	return &MockLoyaltyStorage_OrderAccrualQueueUpdate_Call{Call: _e.mock.On("OrderAccrualQueueUpdate", ctx, orderForUpdate, orderForDelete)}
 }
 
-func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) Run(run func(ctx context.Context, orderNumbers []string)) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
+func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) Run(run func(ctx context.Context, orderForUpdate []string, orderForDelete []string)) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -588,9 +532,14 @@ func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) Run(run func(ctx cont
 		if args[1] != nil {
 			arg1 = args[1].([]string)
 		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -601,7 +550,7 @@ func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) Return(err error) *Mo
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) RunAndReturn(run func(ctx context.Context, orderNumbers []string) error) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
+func (_c *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call) RunAndReturn(run func(ctx context.Context, orderForUpdate []string, orderForDelete []string) error) *MockLoyaltyStorage_OrderAccrualQueueUpdate_Call {
 	_c.Call.Return(run)
 	return _c
 }

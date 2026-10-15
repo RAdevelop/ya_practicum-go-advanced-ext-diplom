@@ -30,11 +30,23 @@ func (lm *Manager) OrderAccrualQueue(ctx context.Context, limit uint) ([]dto.Ord
 }
 
 // OrderAccrualQueueUpdate - обновляем состояние очереди для заказов
-func (lm *Manager) OrderAccrualQueueUpdate(ctx context.Context, orderNumbers []string) error {
-	return lm.storage.OrderAccrualQueueUpdate(ctx, orderNumbers)
-}
+func (lm *Manager) OrderAccrualQueueUpdate(ctx context.Context, orderAccrualQueue []dto.OrderAccrualQueue) error {
 
-// OrderAccrualQueueDelete - удаляем из очереди заказы, которые получили финальный статус начисления
-func (lm *Manager) OrderAccrualQueueDelete(ctx context.Context, orderNumbers []string) error {
-	return lm.storage.OrderAccrualQueueDelete(ctx, orderNumbers)
+	if len(orderAccrualQueue) == 0 {
+		return nil
+	}
+
+	orderForUpdate := make([]string, 0, len(orderAccrualQueue))
+	orderForDelete := make([]string, 0, len(orderAccrualQueue))
+
+	for _, order := range orderAccrualQueue {
+
+		if order.NeedUpdate {
+			orderForUpdate = append(orderForUpdate, order.OrderNumber)
+		} else {
+			orderForDelete = append(orderForDelete, order.OrderNumber)
+		}
+	}
+
+	return lm.storage.OrderAccrualQueueUpdate(ctx, orderForUpdate, orderForDelete)
 }

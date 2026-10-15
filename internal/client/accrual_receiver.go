@@ -59,19 +59,15 @@ afterResultCollect - выполняем действия для полученн
 
 В частности, обновляем данные в БД по заказам, балансам...
 */
-func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList []*dto.AccrualOuter) error {
+func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, accrualResults []*dto.AccrualOuter) error {
 
-	return func(ctx context.Context, resList []*dto.AccrualOuter) error {
+	return func(ctx context.Context, accrualResults []*dto.AccrualOuter) error {
 
-		/*
-			- вызывать a.loyaltyManager.BalanceAccrual() - но он для одной записи, а не для пачек
-				- обновлять пачками?! но у одного заказа может быть начисление, а у другого нет. или будет ошибка.
-					- тогда кто-то получит свои баллы, а кто-то нет, или не так быстро...
-		*/
+		errs := make([]error, 0, len(accrualResults))
+		//номера заказов, по которым надо будет удалить или изменить данные в очереди
+		orderAccrualQueueUpdate := make([]dto.OrderAccrualQueue, 0, len(accrualResults))
 
-		errs := make([]error, 0, len(resList))
-
-		for _, accrual := range resList {
+		for _, accrual := range accrualResults {
 			if ctx.Err() != nil {
 				errs = append(errs, ctx.Err())
 				break
@@ -85,11 +81,27 @@ func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, resList
 			accrualInner.Status.ConvertFromOuter(accrual.Status)
 
 			err := a.loyaltyManager.BalanceAccrual(ctx, accrualInner)
-			if err != nil {
-				//TODO или тут как раз вызывать метод для DLQ очереди?! и тогда уже можно пачку создать, и очередь DLQ сохранять пачкой
-				if errors.Is(err, perror.ErrOrderAccrualAlreadyProcessed) {
-					continue
+
+			accrualQueue := dto.OrderAccrualQueue{
+				OrderNumber: accrualInner.Order,
+			}
+			switch {
+			case err == nil, errors.Is(err, perror.ErrOrderAccrualAlreadyProcessed):
+
+				if !accrual.Status.IsFinal() {
+					accrualQueue.NeedUpdate = true
 				}
+
+			default:
+				errs = append(errs, err)
+				continue
+			}
+
+			orderAccrualQueueUpdate = append(orderAccrualQueueUpdate, accrualQueue)
+		}
+
+		if len(orderAccrualQueueUpdate) > 0 {
+			if err := a.loyaltyManager.OrderAccrualQueueUpdate(ctx, orderAccrualQueueUpdate); err != nil {
 				errs = append(errs, err)
 			}
 		}
