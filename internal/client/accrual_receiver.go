@@ -45,7 +45,7 @@ func NewAccrualReceiver(appContext *appcontext.AppContext, loyaltyManager handle
 		loyaltyManager: loyaltyManager,
 	}
 
-	a.pipeline = NewPipeline(appContext.Logger, maxJobs, dataBatchSize, minBackoff, maxBackoff, a.dataForJobGet(), a.runJob(), a.afterResultCollect())
+	a.pipeline = NewPipeline(appContext.Logger, maxJobs, dataBatchSize, minBackoff, maxBackoff, a.onJobGet(), a.onRunJob(), a.onResultCollect())
 
 	return a
 }
@@ -55,11 +55,11 @@ func (a *AccrualReceiver) Run(ctx context.Context) {
 }
 
 /*
-afterResultCollect - выполняем действия для полученных результатов
+onResultCollect - выполняем действия для полученных результатов
 
 В частности, обновляем данные в БД по заказам, балансам...
 */
-func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, accrualResults []*dto.AccrualOuter) error {
+func (a *AccrualReceiver) onResultCollect() func(ctx context.Context, accrualResults []*dto.AccrualOuter) error {
 
 	return func(ctx context.Context, accrualResults []*dto.AccrualOuter) error {
 
@@ -110,8 +110,8 @@ func (a *AccrualReceiver) afterResultCollect() func(ctx context.Context, accrual
 	}
 }
 
-// dataForJobGet - получаем список заказов, для которых будет проверять результаты начисления
-func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSize uint) ([]dto.OrderAccrualQueue, error) {
+// onJobGet - получаем список заказов, для которых будет проверять результаты начисления
+func (a *AccrualReceiver) onJobGet() func(ctx context.Context, dataBatchSize uint) ([]dto.OrderAccrualQueue, error) {
 
 	return func(ctx context.Context, dataBatchSize uint) ([]dto.OrderAccrualQueue, error) {
 		return retryer.RetryLinear(ctx, func(ctx context.Context) ([]dto.OrderAccrualQueue, error) {
@@ -122,8 +122,8 @@ func (a *AccrualReceiver) dataForJobGet() func(ctx context.Context, dataBatchSiz
 	}
 }
 
-// runJob - выполняем задачу (запрос к системе начисления для заказа)
-func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
+// onRunJob - выполняем задачу (запрос к системе начисления для заказа)
+func (a *AccrualReceiver) onRunJob() func(ctx context.Context, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 
 	initialRateLimit := rate.Limit(5)
 	minRateLimit := rate.Limit(0.5)

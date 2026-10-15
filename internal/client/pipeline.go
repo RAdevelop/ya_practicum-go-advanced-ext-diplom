@@ -21,24 +21,24 @@ type jobResult[R any] struct {
 }
 
 type Pipeline[T any, R any] struct {
-	jobs               chan T
-	results            chan jobResult[R]
-	maxJobs            uint
-	dataBatchSize      uint
-	logger             Logger
-	minBackoff         time.Duration
-	maxBackoff         time.Duration
-	dataForJobGet      func(ctx context.Context, dataBatchSize uint) ([]T, error)
-	runJob             func(ctx context.Context, data T) (r *R, err error)
-	afterResultCollect func(ctx context.Context, resList []*R) error
+	jobs            chan T
+	results         chan jobResult[R]
+	maxJobs         uint
+	dataBatchSize   uint
+	logger          Logger
+	minBackoff      time.Duration
+	maxBackoff      time.Duration
+	onJobGet        func(ctx context.Context, dataBatchSize uint) ([]T, error)
+	onRunJob        func(ctx context.Context, data T) (r *R, err error)
+	onResultCollect func(ctx context.Context, resList []*R) error
 }
 
 func NewPipeline[T any, R any](logger Logger, maxJobs uint, dataBatchSize uint,
 	minBackoff time.Duration,
 	maxBackoff time.Duration,
-	dataForJobGet func(ctx context.Context, dataBatchSize uint) ([]T, error),
-	runJob func(ctx context.Context, data T) (r *R, err error),
-	afterResultCollect func(ctx context.Context, resList []*R) error,
+	onJobGet func(ctx context.Context, dataBatchSize uint) ([]T, error),
+	onRunJob func(ctx context.Context, data T) (r *R, err error),
+	onResultCollect func(ctx context.Context, resList []*R) error,
 ) *Pipeline[T, R] {
 
 	if minBackoff <= 0 {
@@ -63,16 +63,16 @@ func NewPipeline[T any, R any](logger Logger, maxJobs uint, dataBatchSize uint,
 	}
 
 	return &Pipeline[T, R]{
-		maxJobs:            maxJobs,
-		dataBatchSize:      dataBatchSize,
-		jobs:               make(chan T, maxJobs),
-		results:            make(chan jobResult[R], maxJobs),
-		minBackoff:         minBackoff,
-		maxBackoff:         maxBackoff,
-		dataForJobGet:      dataForJobGet,
-		runJob:             runJob,
-		afterResultCollect: afterResultCollect,
-		logger:             logger,
+		maxJobs:         maxJobs,
+		dataBatchSize:   dataBatchSize,
+		jobs:            make(chan T, maxJobs),
+		results:         make(chan jobResult[R], maxJobs),
+		minBackoff:      minBackoff,
+		maxBackoff:      maxBackoff,
+		onJobGet:        onJobGet,
+		onRunJob:        onRunJob,
+		onResultCollect: onResultCollect,
+		logger:          logger,
 	}
 }
 
@@ -101,14 +101,14 @@ func (p *Pipeline[T, R]) Run(ctx context.Context) {
 	wg.Wait()
 }
 
-// jobProduce - получает данные для задач из некоего источника (dataForJobGet), и отправляет в работу
+// jobProduce - получает данные для задач из некоего источника (onJobGet), и отправляет в работу
 func (p *Pipeline[T, R]) jobProduce(ctx context.Context) {
 	defer close(p.jobs)
 
 	backoff := p.minBackoff
 
 	for {
-		jobList, err := p.dataForJobGet(ctx, p.dataBatchSize)
+		jobList, err := p.onJobGet(ctx, p.dataBatchSize)
 		if err != nil {
 			if ctx.Err() != nil {
 				return
@@ -191,7 +191,7 @@ func (p *Pipeline[T, R]) worker(ctx context.Context, data T) (jobRes jobResult[R
 		}
 	}()
 
-	jobRes.Data, jobRes.Err = p.runJob(ctx, data)
+	jobRes.Data, jobRes.Err = p.onRunJob(ctx, data)
 
 	return
 }
@@ -210,7 +210,7 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 		batch = append(batch, result.Data)
 
 		if uint(len(batch)) >= p.dataBatchSize {
-			err := p.afterResultCollect(ctx, batch)
+			err := p.onResultCollect(ctx, batch)
 			if err != nil {
 				p.logger.Error("afterResultCollect: result failed", "error", err)
 			}
@@ -219,7 +219,7 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 	}
 
 	if len(batch) > 0 {
-		err := p.afterResultCollect(ctx, batch)
+		err := p.onResultCollect(ctx, batch)
 		if err != nil {
 			p.logger.Error("afterResultCollect: result failed", "err", err)
 		}
