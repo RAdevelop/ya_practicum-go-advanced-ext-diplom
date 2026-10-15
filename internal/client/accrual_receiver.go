@@ -12,7 +12,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/appcontext"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
-	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/rate_limiter"
+	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/ratelimiter"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/retryer"
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/server/handler"
 	"golang.org/x/time/rate"
@@ -131,7 +131,7 @@ func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.OrderAccru
 	burstRateLimit := 5
 
 	client := NewClient(a.appContext)
-	rateLimiter := rate_limiter.NewAdaptiveLimiter(initialRateLimit, minRateLimit, maxRateLimit, burstRateLimit)
+	rateLimiter := ratelimiter.NewAdaptiveLimiter(initialRateLimit, minRateLimit, maxRateLimit, burstRateLimit)
 
 	return func(ctx context.Context, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 		for {
@@ -150,7 +150,7 @@ func (a *AccrualReceiver) runJob() func(ctx context.Context, data dto.OrderAccru
 }
 
 // accrualOrderGet - получаем результат начисления по заказу
-func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *rate_limiter.AdaptiveLimiter, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
+func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *ratelimiter.AdaptiveLimiter, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 
 	httpResponse, err := retryer.RetryExponential(ctx, func(ctx context.Context) (*http.Response, error) {
 		return client.AccrualOrderGet(ctx, data.OrderNumber)
