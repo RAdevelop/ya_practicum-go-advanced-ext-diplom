@@ -34,7 +34,8 @@ jobs:
           --health-cmd pg_isready
           --health-interval 5s
           --health-timeout 5s
-          --health-retries 
+          --health-retries 5
+
 
     steps:
       - name: Checkout code
