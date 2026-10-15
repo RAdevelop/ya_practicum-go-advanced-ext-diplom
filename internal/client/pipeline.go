@@ -212,7 +212,6 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 		if uint(len(batch)) >= p.dataBatchSize {
 			err := p.afterResultCollect(ctx, batch)
 			if err != nil {
-				// TODO batch сохранять неудачную пачку в dead letter queue ?!
 				p.logger.Error("afterResultCollect: result failed", "error", err)
 			}
 			batch = batch[:0]
@@ -222,7 +221,6 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 	if len(batch) > 0 {
 		err := p.afterResultCollect(ctx, batch)
 		if err != nil {
-			// TODO batch сохранять неудачную пачку в dead letter queue ?!
 			p.logger.Error("afterResultCollect: result failed", "err", err)
 		}
 	}
