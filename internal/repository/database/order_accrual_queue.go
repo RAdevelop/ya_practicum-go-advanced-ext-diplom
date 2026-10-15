@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	"github.com/jackc/pgx/v5"
@@ -13,7 +14,7 @@ OrderAccrualQueue - заказы, ожидающие начисления
 Errors:
   - db error
 */
-func (s *Storage) OrderAccrualQueue(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error) {
+func (s *Storage) OrderAccrualQueue(ctx context.Context, nextCheckAtLessOrEq time.Time, limit uint) ([]model.OrderAccrualQueue, error) {
 
 	if limit == 0 {
 		return nil, nil
@@ -22,12 +23,12 @@ func (s *Storage) OrderAccrualQueue(ctx context.Context, limit uint) ([]model.Or
 	const sql = `
 	SELECT order_number, created_at, updated_at, next_check_at, attempts 
 	FROM order_accrual_queue
-	WHERE next_check_at <= NOW()
+	WHERE next_check_at <= $1
 	ORDER BY created_at ASC
-	OFFSET 0 LIMIT $1
+	OFFSET 0 LIMIT $2
 	`
 
-	rows, err := s.DB.Executor(ctx).Query(ctx, sql, limit)
+	rows, err := s.DB.Executor(ctx).Query(ctx, sql, nextCheckAtLessOrEq, limit)
 	if err != nil {
 		return nil, err
 	}

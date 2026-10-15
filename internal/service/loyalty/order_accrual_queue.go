@@ -2,6 +2,7 @@ package loyalty
 
 import (
 	"context"
+	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/dto"
 )
@@ -9,7 +10,7 @@ import (
 // OrderAccrualQueue - заказы, ожидающие начисления
 func (lm *Manager) OrderAccrualQueue(ctx context.Context, limit uint) ([]dto.OrderAccrualQueue, error) {
 
-	orderAccrualQueue, err := lm.storage.OrderAccrualQueue(ctx, limit)
+	orderAccrualQueue, err := lm.storage.OrderAccrualQueue(ctx, time.Now(), limit)
 	if err != nil {
 		return nil, err
 	}

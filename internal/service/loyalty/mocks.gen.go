@@ -6,6 +6,7 @@ package loyalty
 
 import (
 	"context"
+	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 	mock "github.com/stretchr/testify/mock"
@@ -425,8 +426,8 @@ func (_c *MockLoyaltyStorage_CustomerFindByLogin_Call) RunAndReturn(run func(ctx
 }
 
 // OrderAccrualQueue provides a mock function for the type MockLoyaltyStorage
-func (_mock *MockLoyaltyStorage) OrderAccrualQueue(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error) {
-	ret := _mock.Called(ctx, limit)
+func (_mock *MockLoyaltyStorage) OrderAccrualQueue(ctx context.Context, nextCheckAtLessOrEq time.Time, limit uint) ([]model.OrderAccrualQueue, error) {
+	ret := _mock.Called(ctx, nextCheckAtLessOrEq, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for OrderAccrualQueue")
@@ -434,18 +435,18 @@ func (_mock *MockLoyaltyStorage) OrderAccrualQueue(ctx context.Context, limit ui
 
 	var r0 []model.OrderAccrualQueue
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) ([]model.OrderAccrualQueue, error)); ok {
-		return returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, uint) ([]model.OrderAccrualQueue, error)); ok {
+		return returnFunc(ctx, nextCheckAtLessOrEq, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uint) []model.OrderAccrualQueue); ok {
-		r0 = returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, time.Time, uint) []model.OrderAccrualQueue); ok {
+		r0 = returnFunc(ctx, nextCheckAtLessOrEq, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.OrderAccrualQueue)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uint) error); ok {
-		r1 = returnFunc(ctx, limit)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, time.Time, uint) error); ok {
+		r1 = returnFunc(ctx, nextCheckAtLessOrEq, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -459,24 +460,30 @@ type MockLoyaltyStorage_OrderAccrualQueue_Call struct {
 
 // OrderAccrualQueue is a helper method to define mock.On call
 //   - ctx context.Context
+//   - nextCheckAtLessOrEq time.Time
 //   - limit uint
-func (_e *MockLoyaltyStorage_Expecter) OrderAccrualQueue(ctx any, limit any) *MockLoyaltyStorage_OrderAccrualQueue_Call {
-	return &MockLoyaltyStorage_OrderAccrualQueue_Call{Call: _e.mock.On("OrderAccrualQueue", ctx, limit)}
+func (_e *MockLoyaltyStorage_Expecter) OrderAccrualQueue(ctx any, nextCheckAtLessOrEq any, limit any) *MockLoyaltyStorage_OrderAccrualQueue_Call {
+	return &MockLoyaltyStorage_OrderAccrualQueue_Call{Call: _e.mock.On("OrderAccrualQueue", ctx, nextCheckAtLessOrEq, limit)}
 }
 
-func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) Run(run func(ctx context.Context, limit uint)) *MockLoyaltyStorage_OrderAccrualQueue_Call {
+func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) Run(run func(ctx context.Context, nextCheckAtLessOrEq time.Time, limit uint)) *MockLoyaltyStorage_OrderAccrualQueue_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 uint
+		var arg1 time.Time
 		if args[1] != nil {
-			arg1 = args[1].(uint)
+			arg1 = args[1].(time.Time)
+		}
+		var arg2 uint
+		if args[2] != nil {
+			arg2 = args[2].(uint)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -487,7 +494,7 @@ func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) Return(orderAccrualQueues [
 	return _c
 }
 
-func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) RunAndReturn(run func(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error)) *MockLoyaltyStorage_OrderAccrualQueue_Call {
+func (_c *MockLoyaltyStorage_OrderAccrualQueue_Call) RunAndReturn(run func(ctx context.Context, nextCheckAtLessOrEq time.Time, limit uint) ([]model.OrderAccrualQueue, error)) *MockLoyaltyStorage_OrderAccrualQueue_Call {
 	_c.Call.Return(run)
 	return _c
 }

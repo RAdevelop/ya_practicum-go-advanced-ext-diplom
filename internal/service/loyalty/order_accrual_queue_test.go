@@ -10,6 +10,7 @@ import (
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/perror"
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_OrderAccrualQueue(t *testing.T) {
@@ -48,7 +49,7 @@ func Test_OrderAccrualQueue(t *testing.T) {
 				},
 				makeStorage: func(t *testing.T, outOrdersModel []model.OrderAccrualQueue, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
-					storage.EXPECT().OrderAccrualQueue(t.Context(), uint(100)).Return(outOrdersModel, outErr)
+					storage.EXPECT().OrderAccrualQueue(t.Context(), mock.Anything, uint(100)).Return(outOrdersModel, outErr)
 					return storage
 				},
 			},
@@ -71,7 +72,7 @@ func Test_OrderAccrualQueue(t *testing.T) {
 				outOrderAccrualQueue: nil,
 				makeStorage: func(t *testing.T, outOrdersModel []model.OrderAccrualQueue, outErr error) LoyaltyStorage {
 					storage := NewMockLoyaltyStorage(t)
-					storage.EXPECT().OrderAccrualQueue(t.Context(), uint(100)).Return(outOrdersModel, outErr)
+					storage.EXPECT().OrderAccrualQueue(t.Context(), mock.Anything, uint(100)).Return(outOrdersModel, outErr)
 					return storage
 				},
 			},

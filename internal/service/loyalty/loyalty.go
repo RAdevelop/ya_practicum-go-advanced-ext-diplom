@@ -17,6 +17,7 @@ package loyalty
 
 import (
 	"context"
+	"time"
 
 	"github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/model"
 )
@@ -30,7 +31,7 @@ type LoyaltyStorage interface {
 	// OrdersByCustomerID - получение списка заказов указанного покупателя
 	OrdersByCustomerID(ctx context.Context, customerID uint64) ([]model.Order, error)
 	// OrderAccrualQueue - заказы, ожидающие начисления
-	OrderAccrualQueue(ctx context.Context, limit uint) ([]model.OrderAccrualQueue, error)
+	OrderAccrualQueue(ctx context.Context, nextCheckAtLessOrEq time.Time, limit uint) ([]model.OrderAccrualQueue, error)
 	// OrderAccrualQueueUpdate - обновляем состояние очереди для заказов
 	OrderAccrualQueueUpdate(ctx context.Context, orderForUpdate []string, orderForDelete []string) error
 	// BalanceByCustomerID - Получение текущего баланса пользователя
