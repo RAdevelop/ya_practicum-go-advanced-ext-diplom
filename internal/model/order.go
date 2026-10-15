@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"time"
 
 	statusInner "github.com/RAdevelop/ya_practicum-go-advanced-ext-diplom/internal/status/inner"
@@ -17,7 +18,7 @@ type Order struct {
 }
 
 func (o *Order) IsCorrect() bool {
-	if o == nil || o.Number == "" || o.CustomerID == 0 || !o.Status.Valid() {
+	if o == nil || strings.TrimSpace(o.Number) == "" || o.CustomerID == 0 || !o.Status.Valid() {
 		return false
 	}
 	return true

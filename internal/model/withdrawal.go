@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Withdrawal - Списание
 type Withdrawal struct {
@@ -11,7 +14,7 @@ type Withdrawal struct {
 }
 
 func (w *Withdrawal) IsCorrect() bool {
-	if w == nil || w.OrderNumber == "" || w.CustomerID == 0 || w.Sum <= 0 {
+	if w == nil || strings.TrimSpace(w.OrderNumber) == "" || w.CustomerID == 0 || w.Sum <= 0 {
 		return false
 	}
 	return true

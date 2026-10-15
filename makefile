@@ -15,6 +15,7 @@ DB_DSN=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTG
 DOCKER_COMPOSE := docker-compose
 GO_GENERATE := go generate ./internal/...
 GO_TEST := go test ./internal/...
+GO_TOOL_COVER := go tool cover ./internal/...
 
 # Цвета для вывода
 GREEN = \033[0;32m
@@ -32,6 +33,15 @@ help: ## Показать справку
 test-cover: ## Запустить проверку покрытия тестами
 	@echo "$(GREEN)=== Running tests ===$(NC)"
 	@${GO_TEST} -cover
+	@echo "$(GREEN)✅ Tests completed$(NC)"
+
+.PHONY: test-cover-total
+test-cover-total: ## Запустить проверку покрытия тестами - среднее по пакетам
+	@echo "$(GREEN)=== Running tests ===$(NC)"
+	@go test -cover ./internal/... | \
+		grep -oE 'coverage: [0-9.]+%' | \
+		grep -oE '[0-9.]+' | \
+		awk '{sum += $$1; n++} END {if (n > 0) printf "Average coverage: %.1f%%\n", sum/n}'
 	@echo "$(GREEN)✅ Tests completed$(NC)"
 
 .PHONY: test
