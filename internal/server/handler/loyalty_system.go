@@ -42,7 +42,7 @@ func (ls LoyaltySystem) UserRegister(w http.ResponseWriter, r *http.Request) {
 
 	var customerCredentials dto.CustomerCredentials
 	if err := json.NewDecoder(r.Body).Decode(&customerCredentials); err != nil {
-		ls.appContext.Logger.Error("UserRegister", "error", err)
+		ls.appContext.Logger.Warn("UserRegister", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
@@ -76,7 +76,7 @@ func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	var customerCredentials dto.CustomerCredentials
 	if err := json.NewDecoder(r.Body).Decode(&customerCredentials); err != nil {
-		ls.appContext.Logger.Error("UserLogin", "error", err)
+		ls.appContext.Logger.Warn("UserLogin", "error", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
@@ -116,7 +116,7 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 	orderNumber := strings.TrimSpace(string(reqBody))
 
 	if !validator.IsValidLuhn(orderNumber) {
-		ls.appContext.Logger.Error("OrderUpload", "invalid orderNumber", orderNumber)
+		ls.appContext.Logger.Warn("OrderUpload", "invalid orderNumber", orderNumber)
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
@@ -138,7 +138,7 @@ func (ls LoyaltySystem) OrderUpload(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 	case errors.Is(err, perror.ErrOrderAlreadyUploadedByOther):
-		ls.appContext.Logger.Error("OrderUpload", "order already uploaded by other customer", err)
+		ls.appContext.Logger.Warn("OrderUpload", "order already uploaded by other customer", err)
 		http.Error(w, "", http.StatusConflict)
 
 	default:
@@ -208,13 +208,13 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !validator.IsValidLuhn(balanceWithdraw.OrderNumber) {
-		ls.appContext.Logger.Error("BalanceWithdraw", "invalid orderNumber", balanceWithdraw)
+		ls.appContext.Logger.Warn("BalanceWithdraw", "invalid orderNumber", balanceWithdraw)
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
 
 	if balanceWithdraw.Sum <= 0 {
-		ls.appContext.Logger.Error("BalanceWithdraw", "invalid sum", balanceWithdraw)
+		ls.appContext.Logger.Warn("BalanceWithdraw", "invalid sum", balanceWithdraw)
 		http.Error(w, "", http.StatusUnprocessableEntity)
 		return
 	}
@@ -232,7 +232,7 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	case err == nil:
 		w.WriteHeader(http.StatusOK)
 	case errors.Is(err, perror.ErrBalanceInsufficient):
-		ls.appContext.Logger.Error("BalanceWithdraw", "ErrBalanceInsufficient", err)
+		ls.appContext.Logger.Warn("BalanceWithdraw", "ErrBalanceInsufficient", err)
 		http.Error(w, "", http.StatusPaymentRequired)
 	default:
 		ls.appContext.Logger.Error("BalanceWithdraw", "err", err)
@@ -277,14 +277,14 @@ func (ls LoyaltySystem) requestBodyClose(r *http.Request) {
 
 func (ls LoyaltySystem) requestBodyGet(w http.ResponseWriter, r *http.Request, methodName string) ([]byte, bool) {
 	if r.Body == nil || r.ContentLength == 0 {
-		ls.appContext.Logger.Error(methodName, "body is empty")
+		ls.appContext.Logger.Warn(methodName, "body is empty")
 		http.Error(w, "", http.StatusBadRequest)
 		return nil, true
 	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		ls.appContext.Logger.Error(methodName, "read body err", err)
+		ls.appContext.Logger.Warn(methodName, "read body err", err)
 		http.Error(w, "", http.StatusBadRequest)
 		return nil, true
 	}
