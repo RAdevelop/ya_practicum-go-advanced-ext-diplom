@@ -95,7 +95,7 @@ func (ls LoyaltySystem) UserLogin(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Authorization", "Bearer "+token)
 		w.WriteHeader(http.StatusOK)
 
-	case errors.Is(err, perror.ErrCustomerNotFound):
+	case errors.Is(err, perror.ErrCustomerNotFound), errors.Is(err, perror.ErrCustomerInvalidCredentials):
 		http.Error(w, "", http.StatusUnauthorized)
 
 	default:
