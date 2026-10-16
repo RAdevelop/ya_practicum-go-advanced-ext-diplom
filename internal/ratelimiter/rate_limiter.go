@@ -14,7 +14,7 @@ type AdaptiveLimiter struct {
 	mu                 sync.Mutex
 	minLimit           rate.Limit // Нижняя граница
 	maxLimit           rate.Limit // Верхняя граница
-	slowStartThreshold rate.Limit // Порог между slow start и congestion avoidance
+	slowStartThreshold rate.Limit // Порог между slow start (медленный старт) и congestion avoidance (избегание перегрузки)
 	stepUp             rate.Limit // Шаг линейного роста после порога
 	successes          int
 	successTarget      int
