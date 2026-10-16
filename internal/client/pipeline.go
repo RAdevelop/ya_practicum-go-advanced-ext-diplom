@@ -182,7 +182,7 @@ func (p *Pipeline[T, R]) jobConsume(ctx context.Context) {
 	wg.Wait()
 }
 
-// worker - выполняет p.runJob и пишет результат в отдельный канал
+// worker - выполняет p.runJob
 func (p *Pipeline[T, R]) worker(ctx context.Context, data T) (jobRes jobResult[R]) {
 
 	defer func() {
@@ -203,6 +203,16 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 	for result := range p.results {
 
 		if result.Err != nil {
+			/*
+				По-хорошему, тут нужно бизнес-правило, что делать с заказом в такой ситуации. Например:
+				- если в течении какого-то времени по заказу получаем ошибки от системы начисления, то:
+					- удалять из очереди такие заказы по достижении ошибок в количестве N штук, и перекладывать в DLQ очередь для отдельного разбора/анализа
+					- до достижения ошибок в количестве N штук, обновляем заказ в очереди - откладываем по нему следующую выборку
+				- в этом случае, надо данные для канала results (type jobResult[R any] struct {Data *R Err error}) дополнить входными данными:
+				type jobResult[R any] struct {inputData *In Data *R Err error}
+					- тогда по inputData (dto.OrderAccrualQueue) можно будет обработать такую ситуацию, зная номер заказа.
+					- в этом случае, текущая обработка if result.Err != nil - будет не нужна. Точнее, она перейдет в реализацию onResultCollect() вызывающей стороны.
+			*/
 			p.logger.Error("resultCollector: result failed", "error", result.Err)
 			continue
 		}
@@ -212,7 +222,7 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 		if uint(len(batch)) >= p.dataBatchSize {
 			err := p.onResultCollect(ctx, batch)
 			if err != nil {
-				p.logger.Error("afterResultCollect: result failed", "error", err)
+				p.logger.Error("resultCollector: result failed", "error", err)
 			}
 			batch = batch[:0]
 		}
@@ -221,7 +231,7 @@ func (p *Pipeline[T, R]) resultCollector(ctx context.Context) {
 	if len(batch) > 0 {
 		err := p.onResultCollect(ctx, batch)
 		if err != nil {
-			p.logger.Error("afterResultCollect: result failed", "err", err)
+			p.logger.Error("resultCollector: result failed", "err", err)
 		}
 	}
 }

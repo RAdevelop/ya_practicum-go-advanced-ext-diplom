@@ -153,7 +153,17 @@ func (a *AccrualReceiver) onRunJob() func(ctx context.Context, data dto.OrderAcc
 func (a *AccrualReceiver) accrualOrderGet(ctx context.Context, client *HTTPAgent, rateLimiter *ratelimiter.AdaptiveLimiter, data dto.OrderAccrualQueue) (*dto.AccrualOuter, error) {
 
 	httpResponse, err := retryer.RetryExponential(ctx, func(ctx context.Context) (*http.Response, error) {
-		return client.AccrualOrderGet(ctx, data.OrderNumber)
+		resp, err := client.AccrualOrderGet(ctx, data.OrderNumber)
+
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode == http.StatusRequestTimeout || resp.StatusCode >= http.StatusInternalServerError {
+			_ = resp.Body.Close()
+			return nil, retryer.NewRetriableErrorf(nil, "http status %d", resp.StatusCode)
+		}
+		return resp, nil
+
 	}, uint(2), new(uint(3)))
 
 	if err != nil {

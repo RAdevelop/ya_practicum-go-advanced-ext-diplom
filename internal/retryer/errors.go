@@ -2,6 +2,7 @@ package retryer
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"syscall"
@@ -20,9 +21,44 @@ const (
 	retriable
 )
 
+// RetriableError - кастомный тип повторяемой ошибки, чтобы можно на вызываемой стороне создать повторяемую ошибку
+type RetriableError struct {
+	Reason string
+	Err    error
+}
+
+func NewRetriableError(reason string, err error) *RetriableError {
+	return &RetriableError{Reason: reason, Err: err}
+}
+
+func NewRetriableErrorf(err error, formatReason string, args ...any) *RetriableError {
+	return &RetriableError{Reason: fmt.Sprintf(formatReason, args...), Err: err}
+}
+
+func (r *RetriableError) Error() string {
+	switch {
+	case r.Err != nil && r.Reason != "":
+		return fmt.Sprintf("%s: %v", r.Reason, r.Err)
+	case r.Err != nil:
+		return r.Err.Error()
+	case r.Reason != "":
+		return r.Reason
+	default:
+		return "retriable error"
+	}
+}
+
+func (r *RetriableError) Unwrap() error {
+	return r.Err
+}
+
 func IsRetriableError(err error) bool {
 	if err == nil {
 		return false
+	}
+
+	if _, ok := errors.AsType[*RetriableError](err); ok {
+		return true
 	}
 
 	if isRetriableNetworkError(err) == retriable {
