@@ -203,7 +203,7 @@ func (ls LoyaltySystem) BalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	err := json.Unmarshal(reqBody, &balanceWithdraw)
 	if err != nil {
 		ls.appContext.Logger.Error("Can't parse balanceWithdraw", "err", err)
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
