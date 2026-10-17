@@ -25,10 +25,33 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+      postgres-test:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: praktikum_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
+          mv migrate /usr/local/bin/migrate
+          which migrate
+
+      - name: Run migrations
+        run: |
+          migrate -path ./migrations -database 'postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' up
+          migrate -path ./migrations -database 'postgres://postgres:postgres@postgres-test:5432/praktikum_test?sslmode=disable' up
+          echo "DB_DSN_TEST=postgres://postgres:postgres@postgres-test:5432/praktikum_test?sslmode=disable" >> $GITHUB_ENV
 
       - name: Download autotests binaries
         uses: robinraju/release-downloader@v1.8
